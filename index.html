@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=22">
+  <link rel="stylesheet" href="css/styles.css?v=23">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -556,6 +556,13 @@
         <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading" x-text="enriqLoading?'🔎 lendo o site…':'✨ Puxar do site (redes, GMN, domínio, contato)'"></button>
         <span class="fs-12" x-show="enriqMsg" :style="(enriqMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="enriqMsg"></span>
       </div>
+      <div class="form-group" style="grid-column:1/-1" x-show="enriqResult && enriqResult.length">
+        <div class="fs-12" style="background:#dcfce7;border:1px solid #86efac;border-radius:9px;padding:10px 12px">
+          <div class="fw-700" style="color:#16a34a;margin-bottom:5px">✓ Capturado do site (já preenchido nos tópicos):</div>
+          <template x-for="it in (enriqResult||[])" :key="it.l"><div x-text="'• '+it.l+': '+it.v"></div></template>
+          <div class="text-3" style="margin-top:6px">Confira em 📱 Redes, no domínio (acima) e em 👥 Contatos · revise e <b>salve</b>.</div>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">SEO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
       <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
       <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
@@ -796,6 +803,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=22"></script>
+<script src="js/app.js?v=23"></script>
 </body>
 </html>

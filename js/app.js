@@ -116,7 +116,7 @@ document.addEventListener('alpine:init', () => {
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
     perfilAberto: true, // perfil do cliente (recolhível)
-    enriqLoading: false, enriqMsg: '', // enriquecimento a partir do site
+    enriqLoading: false, enriqMsg: '', enriqResult: null, // enriquecimento a partir do site
     secCli: 'empresa', // seção aberta no acordeão do modal de cliente
 
     // dados
@@ -255,28 +255,36 @@ document.addEventListener('alpine:init', () => {
     get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
     async puxarDoSite() {
       const url = (this.editing.site && this.editing.site.url) || '';
-      if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; return; }
-      this.enriqLoading = true; this.enriqMsg = '';
+      if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; this.enriqResult = null; return; }
+      this.enriqLoading = true; this.enriqMsg = ''; this.enriqResult = null;
       try {
         const r = await this.api('POST', '/enriquecer', { url }) || {};
-        const redes = r.redes || {}; let n = 0;
+        const redes = r.redes || {}, dom = r.dominio || {};
+        // Reatribui os containers inteiros (força a reatividade do Alpine).
+        const novasRedes = { ...this.editing.redes };
         ['instagram', 'facebook', 'linkedin', 'tiktok', 'youtube', 'gmn'].forEach(id => {
-          if (redes[id] && this.editing.redes[id]) { this.editing.redes[id].tem = true; this.editing.redes[id].url = redes[id]; n++; }
+          if (redes[id] && novasRedes[id]) novasRedes[id] = { ...novasRedes[id], tem: true, url: redes[id] };
         });
-        const dom = r.dominio || {};
-        if (dom.provedor && !this.editing.dominio.provedor) this.editing.dominio.provedor = dom.provedor;
-        if (dom.vencimento && !this.editing.dominio.vencimento) this.editing.dominio.vencimento = dom.vencimento;
+        this.editing.redes = novasRedes;
+        this.editing.dominio = {
+          ...this.editing.dominio,
+          provedor: this.editing.dominio.provedor || dom.provedor || '',
+          vencimento: this.editing.dominio.vencimento || dom.vencimento || '',
+        };
         if (r.email || r.telefone) {
-          if (!Array.isArray(this.editing.responsaveis) || !this.editing.responsaveis.length) this.addResponsavel();
-          const c0 = this.editing.responsaveis[0];
-          if (r.email && !c0.email) c0.email = r.email;
-          if (r.telefone && !c0.whatsapp) c0.whatsapp = r.telefone;
+          const resp = Array.isArray(this.editing.responsaveis) ? [...this.editing.responsaveis] : [];
+          if (!resp.length) resp.push({ ...respVazio(), id: MD.uid() });
+          resp[0] = { ...resp[0], email: resp[0].email || r.email || '', whatsapp: resp[0].whatsapp || r.telefone || '' };
+          this.editing.responsaveis = resp;
         }
-        const extras = [dom.provedor && 'provedor', dom.vencimento && 'vencimento', r.email && 'e-mail', r.telefone && 'telefone'].filter(Boolean);
-        this.enriqMsg = (n || extras.length)
-          ? ('✓ ' + (n ? n + ' rede(s)' : 'nenhuma rede') + (extras.length ? ' + ' + extras.join('/') : '') + '. Revise e salve.')
-          : 'Não achei dados no site. Confira a URL ou preencha à mão.';
-      } catch (e) { this.enriqMsg = e.message || 'Falha ao ler o site.'; }
+        const res = []; const addR = (l, v) => { if (v && String(v).trim()) res.push({ l, v: String(v) }); };
+        addR('Instagram', redes.instagram); addR('Facebook', redes.facebook); addR('LinkedIn', redes.linkedin);
+        addR('TikTok', redes.tiktok); addR('YouTube', redes.youtube); addR('Google Meu Negócio', redes.gmn);
+        addR('Domínio (provedor)', dom.provedor); addR('Vencimento do domínio', dom.vencimento);
+        addR('E-mail', r.email); addR('Telefone', r.telefone);
+        this.enriqResult = res;
+        this.enriqMsg = res.length ? '' : 'Não achei dados no site (confira a URL ou preencha à mão).';
+      } catch (e) { this.enriqMsg = e.message || 'Falha ao ler o site.'; this.enriqResult = null; }
       finally { this.enriqLoading = false; }
     },
     novoCliente() {
