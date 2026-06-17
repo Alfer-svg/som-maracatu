@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=17">
+  <link rel="stylesheet" href="css/styles.css?v=18">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -327,6 +327,7 @@
                   <span class="rede-nome"><img :src="redeIcon(r)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="r.label"><span x-text="r.label"></span></span>
                   <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,monitorCliente.redes[r.id].score||0)+'%;background:'+corScore(monitorCliente.redes[r.id].score)"></div></div>
                   <span class="rede-pct" :style="'color:'+corScore(monitorCliente.redes[r.id].score)" x-text="(monitorCliente.redes[r.id].score||0)+'%'"></span>
+                  <a x-show="monitorCliente.redes[r.id].url" :href="monitorCliente.redes[r.id].url" target="_blank" style="margin-left:8px;color:var(--blue);font-weight:700" title="abrir perfil">↗</a>
                 </div>
               </template>
               <div x-show="!redesDoCliente(monitorCliente).length" class="text-3">Nenhuma rede cadastrada pra este cliente.</div>
@@ -575,14 +576,18 @@
       <template x-for="r in REDES" :key="r.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.redes[r.id].tem"> <img :src="redeIcon(r)" width="15" height="15" :alt="r.label"> <span x-text="r.label"></span></label>
-          <input class="form-input" type="number" min="0" max="100" style="width:84px" x-model.number="editing.redes[r.id].score" :disabled="!editing.redes[r.id].tem" placeholder="%">
-          <div class="progress" style="flex:1" x-show="editing.redes[r.id].tem"><div :style="'width:'+Math.min(100,editing.redes[r.id].score||0)+'%;background:'+corScore(editing.redes[r.id].score)"></div></div>
+          <input class="form-input" type="number" min="0" max="100" style="width:70px" x-model.number="editing.redes[r.id].score" :disabled="!editing.redes[r.id].tem" placeholder="%">
+          <input class="form-input" style="flex:1;min-width:80px" x-model="editing.redes[r.id].url" :disabled="!editing.redes[r.id].tem" placeholder="link do perfil (opcional)">
         </div>
       </template>
 
       <!-- SITE / DOMÍNIO / HOSPEDAGEM -->
       <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">🌐 Site, domínio e hospedagem</div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site</label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading" x-text="enriqLoading?'🔎 lendo o site…':'✨ Puxar do site (redes, GMN, domínio, contato)'"></button>
+        <span class="fs-12" x-show="enriqMsg" :style="(enriqMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="enriqMsg"></span>
+      </div>
       <div class="form-group"><label class="form-label">SEO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
       <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
       <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
@@ -787,6 +792,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=17"></script>
+<script src="js/app.js?v=18"></script>
 </body>
 </html>

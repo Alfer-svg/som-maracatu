@@ -67,7 +67,9 @@ const adsVazio = () => ({ google: { ativo: false, qualidade: 0, saldo: 0 }, meta
 
 // Itens comuns pra guardar acesso (login/senha) no cofre.
 const ITENS_CRED = ['Instagram', 'Facebook', 'TikTok', 'YouTube', 'LinkedIn', 'Google Meu Negócio', 'Google Ads', 'Meta Business', 'Google Analytics', 'Search Console', 'Hospedagem', 'Domínio', 'Site / WordPress', 'E-mail', 'Outro'];
-const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0 }]));
+const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0, url: '' }]));
+// Merge profundo das redes salvas com o padrão (garante {tem,score,url} mesmo em clientes antigos).
+const redesMerge = (saved) => { const v = redesVazias(), s = saved || {}, out = {}; for (const k in v) out[k] = { ...v[k], ...(s[k] || {}) }; return out; };
 // Briefing/onboarding do cliente (espelha o onboarding da Maracatu Digital). Salvo em dados.briefing.
 const briefingVazio = () => ({
   publico: { faixaEtaria: '', escolaridade: '', sexo: '', alvo: '' },
@@ -106,6 +108,7 @@ document.addEventListener('alpine:init', () => {
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
     perfilAberto: true, // perfil do cliente (recolhível)
+    enriqLoading: false, enriqMsg: '', // enriquecimento a partir do site
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],
@@ -241,6 +244,28 @@ document.addEventListener('alpine:init', () => {
 
     // ───────────────── COMERCIAL: clientes ─────────────────
     get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
+    async puxarDoSite() {
+      const url = (this.editing.site && this.editing.site.url) || '';
+      if (!url) { this.enriqMsg = 'Informe a URL do site primeiro.'; return; }
+      this.enriqLoading = true; this.enriqMsg = '';
+      try {
+        const r = await this.api('POST', '/enriquecer', { url }) || {};
+        const redes = r.redes || {}; let n = 0;
+        ['instagram', 'facebook', 'linkedin', 'tiktok', 'youtube', 'gmn'].forEach(id => {
+          if (redes[id] && this.editing.redes[id]) { this.editing.redes[id].tem = true; this.editing.redes[id].url = redes[id]; n++; }
+        });
+        const dom = r.dominio || {};
+        if (dom.provedor && !this.editing.dominio.provedor) this.editing.dominio.provedor = dom.provedor;
+        if (dom.vencimento && !this.editing.dominio.vencimento) this.editing.dominio.vencimento = dom.vencimento;
+        if (r.email && !this.editing.email) this.editing.email = r.email;
+        if (r.telefone && !this.editing.telefone) this.editing.telefone = r.telefone;
+        const extras = [dom.provedor && 'provedor', dom.vencimento && 'vencimento', r.email && 'e-mail', r.telefone && 'telefone'].filter(Boolean);
+        this.enriqMsg = (n || extras.length)
+          ? ('✓ ' + (n ? n + ' rede(s)' : 'nenhuma rede') + (extras.length ? ' + ' + extras.join('/') : '') + '. Revise e salve.')
+          : 'Não achei dados no site. Confira a URL ou preencha à mão.';
+      } catch (e) { this.enriqMsg = e.message || 'Falha ao ler o site.'; }
+      finally { this.enriqLoading = false; }
+    },
     novoCliente() {
       this.editing = {
         id: '', cnpj: '', razaoSocial: '', empresa: '', slogan: '', inscEstadual: '',
@@ -260,7 +285,7 @@ document.addEventListener('alpine:init', () => {
       this.editing = {
         ...c,
         servicos: c.servicos || (c.servico ? [c.servico] : []),
-        redes: { ...redesVazias(), ...(c.redes || {}) },
+        redes: redesMerge(c.redes),
         site: { url: '', seo: 0, sgo: 0, ...(c.site || {}) },
         dominio: { provedor: '', vencimento: '', ...(c.dominio || {}) },
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
