@@ -96,6 +96,7 @@ document.addEventListener('alpine:init', () => {
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
+    cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],
@@ -256,9 +257,47 @@ document.addEventListener('alpine:init', () => {
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
     async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); },
-    async carregarCredenciais(clienteId) { this.revelar = {}; if (!clienteId) { this.credenciais = []; return; } try { this.credenciais = (await this.api('GET', '/credenciais/cliente/' + clienteId)) || []; } catch { this.credenciais = []; } },
+    async carregarCredenciais(clienteId) {
+      this.revelar = {}; this.cofreRevelado = {};
+      if (!clienteId) { this.credenciais = []; return; }
+      try { this.credenciais = (await this.api('GET', '/credenciais/cliente/' + clienteId)) || []; } catch { this.credenciais = []; }
+      if (this.cofreMasterDef === null) { try { this.cofreMasterDef = (await this.api('GET', '/credenciais/master/status')).definida; } catch {} }
+      if (this.cofreMaster) await this._revelarCofre(clienteId);
+    },
+    // ── Cofre / senha master ──
+    get cofreDesbloqueado() { return !!this.cofreMaster; },
+    senhaCred(cr) { return this.cofreRevelado[cr.id]; },
+    async _revelarCofre(clienteId) {
+      try {
+        const r = await this.api('POST', '/credenciais/revelar', { clienteId, master: this.cofreMaster });
+        const map = {}; (r || []).forEach(x => { map[x.id] = x.senha; }); this.cofreRevelado = map; return true;
+      } catch (e) { this.cofreMaster = ''; this.cofreRevelado = {}; this.cofreMsg = e.message || 'Senha master incorreta.'; return false; }
+    },
+    async abrirCofre() {
+      this.cofreA = ''; this.cofreB = ''; this.cofreAtual = ''; this.cofreMsg = '';
+      if (this.cofreMasterDef === null) { try { this.cofreMasterDef = (await this.api('GET', '/credenciais/master/status')).definida; } catch {} }
+      this.cofreModal = this.cofreMasterDef ? 'desbloquear' : 'definir';
+    },
+    abrirTrocaMaster() { this.cofreA = ''; this.cofreB = ''; this.cofreAtual = ''; this.cofreMsg = ''; this.cofreModal = 'trocar'; },
+    bloquearCofre() { this.cofreMaster = ''; this.cofreRevelado = {}; this.revelar = {}; },
+    async confirmarCofre() {
+      const m = this.cofreModal;
+      if (m === 'desbloquear') {
+        if (!this.cofreA) { this.cofreMsg = 'Digite a senha master.'; return; }
+        this.cofreMaster = this.cofreA;
+        if (await this._revelarCofre(this.monitorCliente.id)) this.cofreModal = null;
+      } else { // definir ou trocar
+        if (!this.cofreA || this.cofreA.length < 6) { this.cofreMsg = 'A senha master precisa de ao menos 6 caracteres.'; return; }
+        if (this.cofreA !== this.cofreB) { this.cofreMsg = 'As senhas não conferem.'; return; }
+        try {
+          await this.api('POST', '/credenciais/master', { nova: this.cofreA, atual: this.cofreAtual || '' });
+          this.cofreMasterDef = true; this.cofreMaster = this.cofreA;
+          await this._revelarCofre(this.monitorCliente.id); this.cofreModal = null;
+        } catch (e) { this.cofreMsg = e.message || 'Falha ao salvar a senha master.'; }
+      }
+    },
     novaCredencial() { const c = this.monitorCliente; this.credForm = { id: '', clienteId: c && c.id, item: 'Instagram', login: '', senha: '', url: '', notas: '' }; this.credModal = true; },
-    editarCredencial(c) { this.credForm = { ...c }; this.credModal = true; },
+    editarCredencial(c) { this.credForm = { ...c, senha: '' }; this.credModal = true; },
     async salvarCredencial() { const f = this.credForm; if (!f.clienteId && this.monitorCliente) f.clienteId = this.monitorCliente.id; if (!f.item) return alert('Informe o item.'); try { await this.api('POST', '/credenciais', f); await this.carregarCredenciais(f.clienteId); this.credModal = false; } catch (e) { alert(e.message); } },
     async excluirCredencial(c) { if (!confirm('Excluir o acesso "' + (c.item || '') + '"?')) return; try { await this.api('DELETE', '/credenciais/' + c.id); await this.carregarCredenciais(c.clienteId); } catch (e) { alert(e.message); } },
     async salvarCliente() {

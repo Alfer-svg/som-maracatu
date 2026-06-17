@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=11">
+  <link rel="stylesheet" href="css/styles.css?v=12">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -329,17 +329,27 @@
               </div>
               <div x-show="!briefingItens(monitorCliente).length && !briefingAtivos(monitorCliente).length" class="text-3" style="padding:6px 0">Briefing ainda não preenchido. Use "Editar ficha do cliente".</div>
 
-              <div class="ficha-sec-title">🔐 Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno da agência · guardados cifrados)</span></div>
+              <div class="ficha-sec-title">🔐 Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno · cifrados · liberados por senha master)</span></div>
+              <div class="flex items-center gap-2 mb-2">
+                <button class="btn btn-primary btn-sm" x-show="!cofreDesbloqueado" @click="abrirCofre()">🔒 Desbloquear acessos</button>
+                <template x-if="cofreDesbloqueado">
+                  <span class="flex items-center gap-2">
+                    <span class="badge" style="background:#dcfce7;color:#16a34a">🔓 desbloqueado</span>
+                    <button class="btn btn-ghost btn-sm" @click="bloquearCofre()">bloquear</button>
+                    <button class="btn btn-ghost btn-sm" @click="abrirTrocaMaster()">trocar senha master</button>
+                  </span>
+                </template>
+              </div>
               <template x-for="cr in credenciais" :key="cr.id">
                 <div class="flex items-center gap-2" style="padding:9px 0;border-bottom:1px solid var(--border)">
                   <span class="badge" style="background:#ede9fe;color:#6d28d9;min-width:96px;justify-content:center" x-text="cr.item"></span>
                   <div style="flex:1;min-width:0">
                     <div class="fs-12 fw-700" x-text="cr.login||'—'"></div>
-                    <div class="fs-12 text-3" style="font-family:monospace" x-text="revelar[cr.id] ? (cr.senha||'(vazio)') : '••••••••'"></div>
+                    <div class="fs-12 text-3" style="font-family:monospace" x-text="!cofreDesbloqueado ? '🔒 bloqueado' : (revelar[cr.id] ? (senhaCred(cr)||'(vazio)') : '••••••••')"></div>
                   </div>
                   <a x-show="cr.url" :href="cr.url" target="_blank" class="btn btn-ghost btn-sm">abrir</a>
-                  <button class="btn btn-ghost btn-sm" @click="revelar[cr.id]=!revelar[cr.id]" x-text="revelar[cr.id]?'ocultar':'ver'"></button>
-                  <button class="btn btn-ghost btn-sm" @click="navigator.clipboard.writeText(cr.senha||'')" title="Copiar senha">copiar</button>
+                  <button class="btn btn-ghost btn-sm" x-show="cofreDesbloqueado" @click="revelar[cr.id]=!revelar[cr.id]" x-text="revelar[cr.id]?'ocultar':'ver'"></button>
+                  <button class="btn btn-ghost btn-sm" x-show="cofreDesbloqueado" @click="navigator.clipboard.writeText(senhaCred(cr)||'')" title="Copiar senha">copiar</button>
                   <button class="btn btn-ghost btn-sm" @click="editarCredencial(cr)">✏️</button>
                   <button class="btn btn-ghost btn-sm" @click="excluirCredencial(cr)">🗑</button>
                 </div>
@@ -596,7 +606,7 @@
     <div class="modal-body">
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Item / plataforma</label><input class="form-input" x-model="credForm.item" list="itens-cred" placeholder="Instagram, Domínio, Hospedagem…"><datalist id="itens-cred"><template x-for="i in ITENS_CRED"><option :value="i"></option></template></datalist></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Login / usuário</label><input class="form-input" x-model="credForm.login" autocomplete="off"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha</label><input class="form-input" x-model="credForm.senha" autocomplete="off"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha <span class="text-3" x-show="credForm.id" style="font-weight:400;text-transform:none">— em branco mantém a atual</span></label><input class="form-input" x-model="credForm.senha" autocomplete="off" :placeholder="credForm.id?'••••••• (em branco mantém)':''"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">URL (opcional)</label><input class="form-input" x-model="credForm.url" placeholder="https://"></div>
       <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="credForm.notas"></textarea></div>
     </div>
@@ -608,6 +618,27 @@
   </div>
 </div>
 
-<script src="js/app.js?v=11"></script>
+<!-- SENHA MASTER DO COFRE -->
+<div class="modal-backdrop" x-show="cofreModal" @click.self="cofreModal=null" x-cloak>
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <div class="modal-title" x-text="cofreModal==='desbloquear'?'🔓 Desbloquear acessos':(cofreModal==='trocar'?'Trocar senha master':'Definir senha master')"></div>
+      <button class="btn btn-icon btn-ghost" @click="cofreModal=null">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="fs-12 text-2" x-show="cofreModal==='definir'" style="margin-bottom:12px">Crie a senha master do cofre. Ela é exigida pra ver qualquer senha guardada. Guarde-a bem — sem ela, as senhas não são reveladas.</p>
+      <div class="form-group" x-show="cofreModal==='trocar'" style="margin-bottom:12px"><label class="form-label">Senha master atual</label><input class="form-input" type="password" x-model="cofreAtual" autocomplete="off"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label" x-text="cofreModal==='desbloquear'?'Senha master':'Nova senha master'"></label><input class="form-input" type="password" x-model="cofreA" autocomplete="off" @keydown.enter="confirmarCofre()"></div>
+      <div class="form-group" x-show="cofreModal!=='desbloquear'"><label class="form-label">Confirme a senha</label><input class="form-input" type="password" x-model="cofreB" autocomplete="off" @keydown.enter="confirmarCofre()"></div>
+      <div class="fs-12" x-show="cofreMsg" style="color:#dc2626;margin-top:8px" x-text="cofreMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="cofreModal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="confirmarCofre()" x-text="cofreModal==='desbloquear'?'Desbloquear':'Salvar'"></button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js?v=12"></script>
 </body>
 </html>
