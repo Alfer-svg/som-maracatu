@@ -34,7 +34,7 @@ const STAGES = [
   { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente ativo.' },
   { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
-const SERVICOS = ['Redes Sociais', 'Campanhas ADS', 'Sites & Apps', 'Audiovisual', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
+const SERVICOS = ['Gestão de Redes Sociais', 'Criação de Conteúdo', 'ADS / Tráfego Pago', 'Audiovisual', 'Sites & Apps', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
 const ORIGENS = ['Instagram', 'Indicação', 'Google', 'WhatsApp', 'Prospecção ativa', 'Site', 'Evento', 'Outros'];
 const PROJ_STATUS = [
   { id: 'A Fazer',      color: '#8a8ba3' },
@@ -43,11 +43,20 @@ const PROJ_STATUS = [
   { id: 'Concluído',    color: '#16a34a' },
 ];
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
+// Redes que a Maracatu trabalha. score = nível de preenchimento/qualidade do perfil (0-100).
+const REDES = [
+  { id: 'instagram', label: 'Instagram', ico: '📸' },
+  { id: 'tiktok',    label: 'TikTok',    ico: '🎵' },
+  { id: 'youtube',   label: 'YouTube',   ico: '▶️' },
+  { id: 'linkedin',  label: 'LinkedIn',  ico: '💼' },
+  { id: 'facebook',  label: 'Facebook',  ico: '👤' },
+];
+const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0 }]));
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
-    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS,
+    STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, REDES,
     busca: '',
 
     // dados
@@ -108,11 +117,19 @@ document.addEventListener('alpine:init', () => {
         id: '', cnpj: '', razaoSocial: '', empresa: '', inscEstadual: '',
         cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
         contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
-        servico: '', mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
+        servicos: [], redes: redesVazias(), mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
-    editarCliente(c) { this.editing = { ...c }; this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client'; },
+    editarCliente(c) {
+      this.editing = { ...c, servicos: c.servicos || (c.servico ? [c.servico] : []), redes: { ...redesVazias(), ...(c.redes || {}) } };
+      this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
+    },
+    // sinalização de condição por % (0-100)
+    corScore(n) { n = +n || 0; return n >= 80 ? '#16a34a' : n >= 40 ? '#f59e0b' : '#dc2626'; },
+    clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
+    redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
+    mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
@@ -209,7 +226,7 @@ document.addEventListener('alpine:init', () => {
     ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, endereco: '', servico: l.servico, mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
+        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
         this.persist('clients', this.clients);
       }
       this.modal = null;

@@ -26,7 +26,8 @@
         {id:'crm',ico:'🎯',label:'CRM',desc:'Funil de vendas — gerencie os leads do primeiro contato ao fechamento.'},
         {id:'comercial',ico:'🤝',label:'Comercial',desc:'Cadastro de clientes (com CNPJ automático), serviços e mensalidades.'},
         {id:'financeiro',ico:'💰',label:'Financeiro',desc:'Receitas e despesas, contas a receber e a pagar, saldo do mês.'},
-        {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'}]" :key="item.id">
+        {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
+        {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
         <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
           <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
@@ -40,7 +41,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Comercial — Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Comercial — Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -132,7 +133,7 @@
                 <tr>
                   <td><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.contato||'')+(c.cidade?' · '+c.cidade:'')"></div></td>
                   <td class="fs-12 text-2" x-text="c.cnpj||'—'"></td>
-                  <td><span class="badge" style="background:#ede9fe;color:#6d28d9" x-show="c.servico" x-text="c.servico"></span></td>
+                  <td><template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template><span x-show="!clienteServicos(c).length" class="text-3">—</span></td>
                   <td class="fw-700" x-text="fmtCur(c.mensalidade)"></td>
                   <td><span class="badge" :style="c.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="c.status"></span></td>
                   <td><button class="btn btn-ghost btn-sm" @click="editarCliente(c)">Editar</button></td>
@@ -196,6 +197,39 @@
               <button class="kanban-add" @click="novoProjeto(s.id)">+ Adicionar</button>
             </div>
           </template>
+        </div>
+      </section>
+
+      <!-- ========== MONITORAMENTO ========== -->
+      <section x-show="page==='monitoramento'">
+        <template x-if="clientesFiltrados.length===0"><div class="card empty">Nenhum cliente pra monitorar ainda. Cadastre em <b>Comercial</b>.</div></template>
+        <div class="card" x-show="clientesFiltrados.length" style="overflow-x:auto">
+          <table class="table">
+            <thead><tr>
+              <th>Cliente</th>
+              <th>Serviços contratados</th>
+              <th>Redes sociais — preenchimento/qualidade</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="c in clientesFiltrados" :key="c.id">
+                <tr>
+                  <td style="min-width:160px"><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.cidade||'')+(c.uf?'/'+c.uf:'')"></div></td>
+                  <td style="min-width:180px">
+                    <template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template>
+                    <span x-show="!clienteServicos(c).length" class="text-3">—</span>
+                  </td>
+                  <td>
+                    <div class="flex" style="flex-wrap:wrap;gap:6px">
+                      <template x-for="r in redesDoCliente(c)" :key="r.id">
+                        <span class="badge" :style="'background:'+corScore(c.redes[r.id].score)+'22;color:'+corScore(c.redes[r.id].score)+';font-weight:800'" :title="r.label+': '+c.redes[r.id].score+'% de preenchimento/qualidade'" x-text="r.ico+' '+c.redes[r.id].score+'%'"></span>
+                      </template>
+                      <span x-show="!redesDoCliente(c).length" class="text-3">— sem redes cadastradas</span>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -273,10 +307,29 @@
 
       <!-- COMERCIAL -->
       <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">💼 Comercial</div>
-      <div class="form-group"><label class="form-label">Serviço contratado</label><select class="form-select" x-model="editing.servico"><option value="">Selecione…</option><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados</label>
+        <div class="flex" style="flex-wrap:wrap;gap:8px">
+          <template x-for="s in SERVICOS" :key="s">
+            <label class="badge" style="cursor:pointer;border:1px solid var(--border);padding:5px 11px" :style="editing.servicos.includes(s)?'background:var(--accent);color:#0A0A0A;border-color:var(--accent)':'background:var(--surface)'">
+              <input type="checkbox" :value="s" x-model="editing.servicos" style="display:none"><span x-text="s"></span>
+            </label>
+          </template>
+        </div>
+      </div>
       <div class="form-group"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="editing.mensalidade"></div>
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><option>Ativo</option><option>Inativo</option></select></div>
       <div class="form-group"><label class="form-label">Cliente desde</label><input class="form-input" type="date" x-model="editing.desde"></div>
+
+      <!-- REDES SOCIAIS -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📱 Redes sociais — % de preenchimento/qualidade</div>
+      <template x-for="r in REDES" :key="r.id">
+        <div class="flex items-center gap-2" style="grid-column:1/-1">
+          <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.redes[r.id].tem"> <span x-text="r.ico+' '+r.label"></span></label>
+          <input class="form-input" type="number" min="0" max="100" style="width:84px" x-model.number="editing.redes[r.id].score" :disabled="!editing.redes[r.id].tem" placeholder="%">
+          <div class="progress" style="flex:1" x-show="editing.redes[r.id].tem"><div :style="'width:'+Math.min(100,editing.redes[r.id].score||0)+'%;background:'+corScore(editing.redes[r.id].score)"></div></div>
+        </div>
+      </template>
+
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
