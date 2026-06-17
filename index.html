@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=20">
+  <link rel="stylesheet" href="css/styles.css?v=21">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -551,6 +551,21 @@
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 contatos' : '+ Adicionar contato'"></button></div>
 
       </div>
+      <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span>🌐 Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
+      <div class="grid grid-2 accB" x-show="secCli==='site'">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site <span class="text-3">— preenche redes, domínio e contato</span></label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading" x-text="enriqLoading?'🔎 lendo o site…':'✨ Puxar do site (redes, GMN, domínio, contato)'"></button>
+        <span class="fs-12" x-show="enriqMsg" :style="(enriqMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="enriqMsg"></span>
+      </div>
+      <div class="form-group"><label class="form-label">SEO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
+      <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
+      <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
+      <div class="form-group"><label class="form-label">Domínio — vencimento</label><input class="form-input" type="date" x-model="editing.dominio.vencimento"></div>
+      <div class="form-group"><label class="form-label">Hospedagem — provedor/local</label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
+      <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
+
+      </div>
       <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span>💼 Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='com'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados</label>
@@ -578,21 +593,6 @@
       </template>
 
       </div>
-      <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span>🌐 Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
-      <div class="grid grid-2 accB" x-show="secCli==='site'">
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site</label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
-      <div class="form-group" style="grid-column:1/-1">
-        <button type="button" class="btn btn-primary btn-sm" @click="puxarDoSite()" :disabled="enriqLoading" x-text="enriqLoading?'🔎 lendo o site…':'✨ Puxar do site (redes, GMN, domínio, contato)'"></button>
-        <span class="fs-12" x-show="enriqMsg" :style="(enriqMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="enriqMsg"></span>
-      </div>
-      <div class="form-group"><label class="form-label">SEO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
-      <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
-      <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
-      <div class="form-group"><label class="form-label">Domínio — vencimento</label><input class="form-input" type="date" x-model="editing.dominio.vencimento"></div>
-      <div class="form-group"><label class="form-label">Hospedagem — provedor/local</label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
-      <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
-
-      </div>
       <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span>📣 Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='trafego'">
       <template x-for="a in ADS" :key="a.id">
@@ -608,7 +608,8 @@
       <div class="grid grid-2 accB" x-show="secCli==='metricas'">
       <template x-for="(o,i) in editing.objetivos" :key="o.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
-          <input class="form-input" style="flex:1" x-model="o.nome" placeholder="Objetivo (ex.: Seguidores no Instagram)">
+          <input class="form-input" style="flex:1" x-model="o.nome" list="objetivos-sug" placeholder="Objetivo (escolha ou digite)">
+          <datalist id="objetivos-sug"><template x-for="op in OBJETIVOS" :key="op"><option :value="op"></option></template></datalist>
           <input class="form-input" type="number" style="width:90px" x-model.number="o.atual" placeholder="atual">
           <input class="form-input" type="number" style="width:90px" x-model.number="o.alvo" placeholder="meta">
           <input class="form-input" style="width:80px" x-model="o.unidade" placeholder="un.">
@@ -797,6 +798,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=20"></script>
+<script src="js/app.js?v=21"></script>
 </body>
 </html>
