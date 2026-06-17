@@ -88,6 +88,9 @@ const briefingMerge = (b) => { const v = briefingVazio(); b = b || {}; return {
   ativos: { ...v.ativos, ...(b.ativos || {}) },
   palavrasChave: b.palavrasChave || '',
 }; };
+// Responsável/contato do cliente (até 5 por cliente). Salvo em dados.responsaveis.
+const respVazio = () => ({ id: '', nome: '', cargo: '', whatsapp: '', email: '', nascimento: '', notas: '' });
+const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => ({ ...respVazio(), ...r, id: r.id || MD.uid() }));
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
@@ -207,7 +210,7 @@ document.addEventListener('alpine:init', () => {
         dominio: { provedor: '', vencimento: '' },
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
-        objetivos: [], briefing: briefingVazio(),
+        objetivos: [], briefing: briefingVazio(), responsaveis: [],
         mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
@@ -222,7 +225,7 @@ document.addEventListener('alpine:init', () => {
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
         objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
-        slogan: c.slogan || '', briefing: briefingMerge(c.briefing),
+        slogan: c.slogan || '', briefing: briefingMerge(c.briefing), responsaveis: respMerge(c.responsaveis),
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -254,6 +257,12 @@ document.addEventListener('alpine:init', () => {
     briefingAtivos(c) { const a = (c.briefing || {}).ativos || {}; return [
       { label: '🎨 Logo', url: a.logo }, { label: '📖 Manual de marca', url: a.manual }, { label: '🗂️ Drive de mídia', url: a.drive },
     ].filter(x => x.url && x.url.trim()); },
+    // ── Responsáveis / contatos ──
+    addResponsavel() { if (!Array.isArray(this.editing.responsaveis)) this.editing.responsaveis = []; if (this.editing.responsaveis.length >= 5) return alert('Máximo de 5 responsáveis por cliente.'); this.editing.responsaveis.push({ ...respVazio(), id: MD.uid() }); },
+    removeResponsavel(i) { this.editing.responsaveis.splice(i, 1); },
+    waLink(num) { const d = String(num || '').replace(/\D/g, ''); return d ? ('https://wa.me/' + (d.length <= 11 ? '55' + d : d)) : ''; },
+    diasAniver(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); h.setHours(0, 0, 0, 0); let p = new Date(h.getFullYear(), d.getMonth(), d.getDate()); if (p < h) p = new Date(h.getFullYear() + 1, d.getMonth(), d.getDate()); return Math.round((p - h) / 86400000); },
+    idadeDe(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); let a = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--; return a; },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
     async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); },
@@ -402,7 +411,7 @@ document.addEventListener('alpine:init', () => {
     async ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;

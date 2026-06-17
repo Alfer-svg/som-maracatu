@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=12">
+  <link rel="stylesheet" href="css/styles.css?v=13">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -251,6 +251,24 @@
                 <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
               </div>
 
+              <div class="ficha-sec-title">👥 Responsáveis / Contatos</div>
+              <template x-for="r in (monitorCliente.responsaveis||[])" :key="r.id">
+                <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                    <span class="fs-12 fw-700" x-text="r.nome||'—'"></span>
+                    <span class="text-3 fs-12" x-show="r.cargo" x-text="'· '+r.cargo"></span>
+                    <span class="badge" style="background:#fef3c7;color:#92400e" x-show="diasAniver(r.nascimento)!==null && diasAniver(r.nascimento)<=30" x-text="diasAniver(r.nascimento)===0 ? '🎂 aniversário hoje!' : ('🎂 em '+diasAniver(r.nascimento)+' dias')"></span>
+                  </div>
+                  <div class="flex items-center gap-3 fs-12" style="flex-wrap:wrap;margin-top:3px">
+                    <a x-show="r.whatsapp" :href="waLink(r.whatsapp)" target="_blank" style="color:#16a34a;font-weight:600" x-text="'📱 '+r.whatsapp"></a>
+                    <a x-show="r.email" :href="'mailto:'+r.email" style="color:var(--blue)" x-text="'✉️ '+r.email"></a>
+                    <span class="text-2" x-show="r.nascimento" x-text="'🎂 '+fmtDate(r.nascimento)+(idadeDe(r.nascimento)!=null?(' · '+idadeDe(r.nascimento)+' anos'):'')"></span>
+                  </div>
+                  <div class="fs-12 text-3" x-show="r.notas" style="white-space:pre-wrap;margin-top:2px" x-text="r.notas"></div>
+                </div>
+              </template>
+              <div x-show="!(monitorCliente.responsaveis||[]).length" class="text-3" style="padding:4px 0">Nenhum responsável cadastrado. Use "Editar ficha do cliente".</div>
+
               <div class="ficha-sec-title">💼 Serviços contratados</div>
               <div class="flex" style="flex-wrap:wrap;gap:8px">
                 <template x-for="sv in clienteServicos(monitorCliente)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;border:1px solid var(--border);padding:5px 11px" x-text="sv"></span></template>
@@ -435,6 +453,21 @@
       <div class="form-group"><label class="form-label">Telefone</label><input class="form-input" x-model="editing.telefone"></div>
       <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="editing.email"></div>
       <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" x-model="editing.instagram" placeholder="@"></div>
+
+      <!-- RESPONSÁVEIS / CONTATOS -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">👥 Responsáveis / Contatos <span class="text-3" style="font-weight:400;text-transform:none">(até 5 — pra estreitar o relacionamento)</span></div>
+      <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
+        <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="r.nome"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Cargo / papel</label><input class="form-input" x-model="r.cargo" placeholder="Sócio, Marketing, Financeiro…"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">WhatsApp</label><input class="form-input" x-model="r.whatsapp"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">E-mail</label><input class="form-input" x-model="r.email"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Data de nascimento</label><input class="form-input" type="date" x-model="r.nascimento"></div>
+          <div class="form-group" style="margin:0"><label class="form-label">Notas <span class="text-3" style="font-weight:400;text-transform:none">(time, hobby, preferências…)</span></label><input class="form-input" x-model="r.notas"></div>
+          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeResponsavel(i)">🗑 remover</button></div>
+        </div>
+      </template>
+      <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 responsáveis' : '+ Adicionar responsável'"></button></div>
 
       <!-- COMERCIAL -->
       <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">💼 Comercial</div>
@@ -639,6 +672,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=12"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
