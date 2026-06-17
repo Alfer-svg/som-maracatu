@@ -68,6 +68,26 @@ const adsVazio = () => ({ google: { ativo: false, qualidade: 0, saldo: 0 }, meta
 // Itens comuns pra guardar acesso (login/senha) no cofre.
 const ITENS_CRED = ['Instagram', 'Facebook', 'TikTok', 'YouTube', 'LinkedIn', 'Google Meu Negócio', 'Google Ads', 'Meta Business', 'Google Analytics', 'Search Console', 'Hospedagem', 'Domínio', 'Site / WordPress', 'E-mail', 'Outro'];
 const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0 }]));
+// Briefing/onboarding do cliente (espelha o onboarding da Maracatu Digital). Salvo em dados.briefing.
+const briefingVazio = () => ({
+  publico: { faixaEtaria: '', escolaridade: '', sexo: '', alvo: '' },
+  posicionamento: { descricao: '', concorrentes: '', percepcao: '', recorrencia: '', cicloVenda: '' },
+  historico: { gostou: '', melhorar: '' },
+  transmissao: { midiasTestadas: '', campanhas: '' },
+  criativo: { linguagem: '', evitar: '', hashtags: '', inspiracoes: '', datasComemorativas: '', datasSegmento: '' },
+  ativos: { logo: '', manual: '', drive: '' },
+  palavrasChave: '',
+});
+// Deep-merge do briefing salvo com o vazio (garante todas as subseções pra clientes antigos).
+const briefingMerge = (b) => { const v = briefingVazio(); b = b || {}; return {
+  publico: { ...v.publico, ...(b.publico || {}) },
+  posicionamento: { ...v.posicionamento, ...(b.posicionamento || {}) },
+  historico: { ...v.historico, ...(b.historico || {}) },
+  transmissao: { ...v.transmissao, ...(b.transmissao || {}) },
+  criativo: { ...v.criativo, ...(b.criativo || {}) },
+  ativos: { ...v.ativos, ...(b.ativos || {}) },
+  palavrasChave: b.palavrasChave || '',
+}; };
 
 document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
@@ -178,7 +198,7 @@ document.addEventListener('alpine:init', () => {
     get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
     novoCliente() {
       this.editing = {
-        id: '', cnpj: '', razaoSocial: '', empresa: '', inscEstadual: '',
+        id: '', cnpj: '', razaoSocial: '', empresa: '', slogan: '', inscEstadual: '',
         cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
         contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
         servicos: [], redes: redesVazias(),
@@ -186,7 +206,7 @@ document.addEventListener('alpine:init', () => {
         dominio: { provedor: '', vencimento: '' },
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
-        objetivos: [],
+        objetivos: [], briefing: briefingVazio(),
         mensalidade: 0, status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
@@ -201,6 +221,7 @@ document.addEventListener('alpine:init', () => {
         hospedagem: { provedor: '', vencimento: '', ...(c.hospedagem || {}) },
         ads: { google: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).google || {}) }, meta: { ativo: false, qualidade: 0, saldo: 0, ...((c.ads || {}).meta || {}) } },
         objetivos: (c.objetivos || []).map(o => ({ id: o.id || MD.uid(), nome: o.nome || '', alvo: +o.alvo || 0, atual: +o.atual || 0, unidade: o.unidade || '' })),
+        slogan: c.slogan || '', briefing: briefingMerge(c.briefing),
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -216,6 +237,22 @@ document.addEventListener('alpine:init', () => {
     removeObjetivo(i) { this.editing.objetivos.splice(i, 1); },
     clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
+    // Linhas preenchidas do briefing (só mostra o que tem conteúdo).
+    briefingItens(c) {
+      const b = c.briefing || {}; const out = []; const add = (label, v) => { if (v != null && String(v).trim()) out.push({ label, v: String(v) }); };
+      const P = b.publico || {}, PO = b.posicionamento || {}, H = b.historico || {}, T = b.transmissao || {}, CR = b.criativo || {};
+      add('Slogan', c.slogan);
+      add('Faixa etária', P.faixaEtaria); add('Escolaridade', P.escolaridade); add('Sexo do público', P.sexo); add('Público-alvo', P.alvo);
+      add('Descrição do negócio', PO.descricao); add('Concorrentes diretos', PO.concorrentes); add('Percepção na categoria', PO.percepcao); add('Recorrência de consumo', PO.recorrencia); add('Ciclo médio de venda', PO.cicloVenda);
+      add('Gostou (trabalhos anteriores)', H.gostou); add('A melhorar', H.melhorar);
+      add('Mídias já testadas', T.midiasTestadas); add('Campanhas/datas previstas', T.campanhas);
+      add('Linguagem', CR.linguagem); add('Termos a evitar', CR.evitar); add('Hashtags / slogan', CR.hashtags); add('Marcas/perfis inspiradores', CR.inspiracoes); add('Datas comemorativas', CR.datasComemorativas); add('Datas do segmento', CR.datasSegmento);
+      add('Palavras-chave', b.palavrasChave);
+      return out;
+    },
+    briefingAtivos(c) { const a = (c.briefing || {}).ativos || {}; return [
+      { label: '🎨 Logo', url: a.logo }, { label: '📖 Manual de marca', url: a.manual }, { label: '🗂️ Drive de mídia', url: a.drive },
+    ].filter(x => x.url && x.url.trim()); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
     async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); },
@@ -326,7 +363,7 @@ document.addEventListener('alpine:init', () => {
     async ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;

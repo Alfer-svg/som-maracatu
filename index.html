@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=10">
+  <link rel="stylesheet" href="css/styles.css?v=11">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -315,6 +315,20 @@
               </template>
               <div x-show="!(monitorCliente.objetivos||[]).length" class="text-3">Nenhum objetivo definido pra este cliente.</div>
 
+              <div class="ficha-sec-title">📋 Briefing / Onboarding</div>
+              <template x-for="bi in briefingItens(monitorCliente)" :key="bi.label">
+                <div style="padding:7px 0;border-bottom:1px solid var(--border)">
+                  <div class="fs-12 fw-700 text-2" x-text="bi.label"></div>
+                  <div class="fs-12" style="white-space:pre-wrap" x-text="bi.v"></div>
+                </div>
+              </template>
+              <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+                <template x-for="at in briefingAtivos(monitorCliente)" :key="at.label">
+                  <a :href="at.url" target="_blank" class="btn btn-ghost btn-sm" x-text="at.label"></a>
+                </template>
+              </div>
+              <div x-show="!briefingItens(monitorCliente).length && !briefingAtivos(monitorCliente).length" class="text-3" style="padding:6px 0">Briefing ainda não preenchido. Use "Editar ficha do cliente".</div>
+
               <div class="ficha-sec-title">🔐 Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno da agência · guardados cifrados)</span></div>
               <template x-for="cr in credenciais" :key="cr.id">
                 <div class="flex items-center gap-2" style="padding:9px 0;border-bottom:1px solid var(--border)">
@@ -388,6 +402,7 @@
       <div class="form-group"><label class="form-label">Razão Social</label><input class="form-input" x-model="editing.razaoSocial"></div>
       <div class="form-group"><label class="form-label">Inscrição Estadual</label><input class="form-input" x-model="editing.inscEstadual" placeholder="Isento / nº"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Slogan da empresa</label><input class="form-input" x-model="editing.slogan"></div>
 
       <!-- ENDEREÇO -->
       <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📍 Endereço</div>
@@ -468,6 +483,45 @@
         </div>
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addObjetivo()">+ Adicionar objetivo</button></div>
+
+      <!-- BRIEFING / ONBOARDING (espelha o onboarding da Maracatu Digital) -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:10px">📋 Briefing / Onboarding</div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Público</div>
+      <div class="form-group"><label class="form-label">Faixa etária</label><input class="form-input" x-model="editing.briefing.publico.faixaEtaria" placeholder="ex.: 25-45"></div>
+      <div class="form-group"><label class="form-label">Escolaridade</label><input class="form-input" x-model="editing.briefing.publico.escolaridade" placeholder="ex.: superior"></div>
+      <div class="form-group"><label class="form-label">Sexo do público</label><input class="form-input" x-model="editing.briefing.publico.sexo" placeholder="feminino / masculino / ambos"></div>
+      <div class="form-group"><label class="form-label">Público-alvo principal</label><input class="form-input" x-model="editing.briefing.publico.alvo"></div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Posicionamento</div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição do negócio</label><textarea class="form-textarea" x-model="editing.briefing.posicionamento.descricao"></textarea></div>
+      <div class="form-group"><label class="form-label">Concorrentes diretos</label><input class="form-input" x-model="editing.briefing.posicionamento.concorrentes" placeholder="2-3 nomes"></div>
+      <div class="form-group"><label class="form-label">Percepção na categoria</label><input class="form-input" x-model="editing.briefing.posicionamento.percepcao"></div>
+      <div class="form-group"><label class="form-label">Recorrência de consumo</label><input class="form-input" x-model="editing.briefing.posicionamento.recorrencia"></div>
+      <div class="form-group"><label class="form-label">Ciclo médio de venda</label><input class="form-input" x-model="editing.briefing.posicionamento.cicloVenda"></div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Histórico</div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que gostou (trabalhos anteriores)</label><textarea class="form-textarea" x-model="editing.briefing.historico.gostou"></textarea></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">O que espera melhorar</label><textarea class="form-textarea" x-model="editing.briefing.historico.melhorar"></textarea></div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Transmissão / mídia</div>
+      <div class="form-group"><label class="form-label">Mídias já testadas</label><input class="form-input" x-model="editing.briefing.transmissao.midiasTestadas"></div>
+      <div class="form-group"><label class="form-label">Campanhas/datas previstas</label><input class="form-input" x-model="editing.briefing.transmissao.campanhas"></div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Direcionamento criativo</div>
+      <div class="form-group"><label class="form-label">Tipo de linguagem</label><input class="form-input" x-model="editing.briefing.criativo.linguagem"></div>
+      <div class="form-group"><label class="form-label">Termos a evitar</label><input class="form-input" x-model="editing.briefing.criativo.evitar"></div>
+      <div class="form-group"><label class="form-label">Hashtags / slogan</label><input class="form-input" x-model="editing.briefing.criativo.hashtags"></div>
+      <div class="form-group"><label class="form-label">Marcas/perfis inspiradores</label><input class="form-input" x-model="editing.briefing.criativo.inspiracoes"></div>
+      <div class="form-group"><label class="form-label">Datas comemorativas</label><input class="form-input" x-model="editing.briefing.criativo.datasComemorativas"></div>
+      <div class="form-group"><label class="form-label">Datas do segmento</label><input class="form-input" x-model="editing.briefing.criativo.datasSegmento"></div>
+
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Palavras-chave <span class="text-3">(separadas por vírgula)</span></label><textarea class="form-textarea" x-model="editing.briefing.palavrasChave"></textarea></div>
+
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Materiais visuais (links — não subir arquivo)</div>
+      <div class="form-group"><label class="form-label">Logo (link)</label><input class="form-input" x-model="editing.briefing.ativos.logo" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Manual de marca (link)</label><input class="form-input" x-model="editing.briefing.ativos.manual" placeholder="https://"></div>
+      <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link)</label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
 
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
@@ -554,6 +608,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=10"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>
