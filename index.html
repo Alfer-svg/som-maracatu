@@ -5,11 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=6">
+  <link rel="stylesheet" href="css/styles.css?v=7">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
-<div class="app">
+
+<!-- ───────── LOGIN ───────── -->
+<div x-show="!autenticado" x-cloak style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a,#1f1f1f);padding:20px">
+  <div style="background:#fff;border-radius:16px;padding:30px;width:340px;box-shadow:0 24px 60px rgba(0,0,0,.45)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="assets/logo.png" style="width:36px;height:36px;background:#161616;border-radius:9px;padding:4px">
+      <div><div style="font-weight:800;font-size:16px">SOM</div><div style="font-size:11px;color:#908f86">por Maracatu Digital</div></div>
+    </div>
+    <div style="font-size:13px;color:#908f86;margin:14px 0 18px">Entre para acessar o sistema.</div>
+    <form @submit.prevent="fazerLogin()">
+      <label class="form-label">E-mail</label>
+      <input class="form-input" type="email" x-model="loginEmail" autocomplete="username" style="margin-bottom:12px">
+      <label class="form-label">Senha</label>
+      <input class="form-input" type="password" x-model="loginSenha" autocomplete="current-password" style="margin-bottom:16px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center" :disabled="logando" x-text="logando?'Entrando…':'Entrar'"></button>
+      <div x-show="loginErro" style="color:#dc2626;font-size:12px;margin-top:10px" x-text="loginErro"></div>
+    </form>
+  </div>
+</div>
+
+<div class="app" x-show="autenticado" x-cloak>
 
   <!-- ───────── SIDEBAR ───────── -->
   <aside class="sidebar">
@@ -34,7 +54,14 @@
         </div>
       </template>
     </nav>
-    <div class="sidebar-foot">Maracatu Digital Intelligence<br>MVP · dados locais</div>
+    <div class="sidebar-foot">
+      <div x-text="usuario && usuario.nome" style="color:#fff;font-weight:600;font-size:12px"></div>
+      <div x-text="usuario && usuario.email" style="margin-bottom:8px"></div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,.18);color:#c9c7d9" @click="senhaModal=true; pwMsg=''">Trocar senha</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,.18);color:#c9c7d9" @click="logout()">Sair</button>
+      </div>
+    </div>
   </aside>
 
   <!-- ───────── MAIN ───────── -->
@@ -477,6 +504,19 @@
   </div>
 </div>
 
-<script src="js/app.js?v=6"></script>
+<!-- TROCAR SENHA -->
+<div class="modal-backdrop" x-show="senhaModal" @click.self="senhaModal=false" x-cloak>
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><div class="modal-title">Trocar senha</div><button class="btn btn-icon btn-ghost" @click="senhaModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Senha atual</label><input class="form-input" type="password" x-model="pwAtual"></div>
+      <div class="form-group"><label class="form-label">Nova senha (mín. 6)</label><input class="form-input" type="password" x-model="pwNova"></div>
+      <div x-show="pwMsg" style="font-size:12px;margin-top:10px" :style="pwMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="pwMsg"></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" @click="senhaModal=false">Fechar</button><button class="btn btn-primary" @click="trocarSenha()">Salvar</button></div>
+  </div>
+</div>
+
+<script src="js/app.js?v=7"></script>
 </body>
 </html>

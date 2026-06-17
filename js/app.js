@@ -14,6 +14,9 @@ const MD = {
   mesAtual: () => new Date().toISOString().slice(0, 7),
 };
 
+// Backend (Railway). Clientes + credenciais vivem aqui; login via JWT.
+const API_BASE = 'https://som-backend-production-01d8.up.railway.app/api';
+
 /* Valida CNPJ pelos dígitos verificadores (evita consulta inútil). */
 function validCNPJ(v) {
   const c = (v || '').replace(/\D/g, '');
@@ -78,12 +81,58 @@ document.addEventListener('alpine:init', () => {
     cnpjLoading: false, cnpjMsg: '',
     cepLoading: false, cepMsg: '',
 
+    // ── auth ──
+    token: localStorage.getItem('som_token') || '',
+    usuario: JSON.parse(localStorage.getItem('som_usuario') || 'null'),
+    loginEmail: '', loginSenha: '', loginErro: '', logando: false,
+    senhaModal: false, pwAtual: '', pwNova: '', pwMsg: '',
+    carregando: false,
+
     init() {
-      this.clients   = MD.get('som_clients', []);
+      // CRM / financeiro / operacional ainda locais (migram numa próxima fase)
       this.leads     = MD.get('som_leads', []);
       this.proposals = MD.get('som_proposals', []);
       this.finance   = MD.get('som_finance', []);
       this.projects  = MD.get('som_projects', []);
+      if (this.token) this.carregarClientes();
+    },
+
+    get autenticado() { return !!this.token; },
+
+    // chamada autenticada à API; 401 → desloga
+    async api(method, path, body) {
+      const r = await fetch(API_BASE + path, {
+        method,
+        headers: { 'Content-Type': 'application/json', ...(this.token ? { Authorization: 'Bearer ' + this.token } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (r.status === 401) { this.logout(); throw new Error('Sessão expirada — entre de novo.'); }
+      if (!r.ok) { let m = 'Erro (' + r.status + ')'; try { m = (await r.json()).message || m; } catch {} throw new Error(m); }
+      const t = await r.text(); return t ? JSON.parse(t) : null;
+    },
+    async fazerLogin() {
+      this.loginErro = ''; this.logando = true;
+      try {
+        const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
+        this.token = d.token; this.usuario = d.usuario;
+        localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
+        this.loginSenha = ''; await this.carregarClientes();
+      } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
+      finally { this.logando = false; }
+    },
+    logout() { this.token = ''; this.usuario = null; localStorage.removeItem('som_token'); localStorage.removeItem('som_usuario'); this.clients = []; },
+    async trocarSenha() {
+      this.pwMsg = '';
+      try { await this.api('POST', '/auth/senha', { atual: this.pwAtual, nova: this.pwNova }); this.pwMsg = '✓ Senha alterada!'; this.pwAtual = ''; this.pwNova = ''; }
+      catch (e) { this.pwMsg = '⚠ ' + e.message; }
+    },
+    async carregarClientes() {
+      this.carregando = true;
+      try {
+        const rows = await this.api('GET', '/clientes');
+        this.clients = (rows || []).map(r => ({ id: r.id, ...(r.dados || {}), empresa: (r.dados && r.dados.empresa) || r.empresa }));
+      } catch (e) { console.warn('carregarClientes:', e.message); }
+      finally { this.carregando = false; }
     },
 
     // helpers de formatação expostos ao template
@@ -164,14 +213,20 @@ document.addEventListener('alpine:init', () => {
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
-    salvarCliente() {
+    async salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
-      if (e.id) { const i = this.clients.findIndex(x => x.id === e.id); if (i > -1) this.clients[i] = { ...e }; }
-      else { e.id = MD.uid(); this.clients.unshift({ ...e }); }
-      this.persist('clients', this.clients); this.modal = null;
+      const { id, ...dados } = e;
+      try {
+        await this.api('POST', '/clientes', { id: id || undefined, empresa: e.empresa, dados });
+        await this.carregarClientes(); this.modal = null;
+      } catch (err) { alert(err.message || 'Falha ao salvar o cliente.'); }
     },
-    excluirCliente(c) { if (!confirm('Excluir o cliente ' + c.empresa + '?')) return; this.clients = this.clients.filter(x => x.id !== c.id); this.persist('clients', this.clients); this.modal = null; },
+    async excluirCliente(c) {
+      if (!confirm('Excluir o cliente ' + c.empresa + '?')) return;
+      try { await this.api('DELETE', '/clientes/' + c.id); await this.carregarClientes(); this.modal = null; }
+      catch (err) { alert(err.message || 'Falha ao excluir.'); }
+    },
 
     // Auto-preenchimento por CNPJ (BrasilAPI) — usado em cliente e lead
     async buscarCnpj() {
@@ -257,11 +312,11 @@ document.addEventListener('alpine:init', () => {
     excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; this.projects = this.projects.filter(x => x.id !== p.id); this.persist('projects', this.projects); this.modal = null; },
 
     // converte lead Ganho → cliente
-    ganharLead(l) {
+    async ganharLead(l) {
       l.stage = 'Ganho'; this.persist('leads', this.leads);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        this.clients.unshift({ id: MD.uid(), cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas });
-        this.persist('clients', this.clients);
+        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
+        try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;
     },
