@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=4">
+  <link rel="stylesheet" href="css/styles.css?v=5">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -267,6 +267,17 @@
                 </div>
               </div>
 
+              <div class="ficha-sec-title">📣 Tráfego Pago — Google & Meta Ads</div>
+              <template x-for="a in adsAtivos(monitorCliente)" :key="a.id">
+                <div class="rede-row">
+                  <span class="rede-nome"><img :src="redeIcon(a)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="a.label"><span x-text="a.label"></span></span>
+                  <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,monitorCliente.ads[a.id].qualidade||0)+'%;background:'+corScore(monitorCliente.ads[a.id].qualidade)"></div></div>
+                  <span class="rede-pct" :style="'color:'+corScore(monitorCliente.ads[a.id].qualidade)" x-text="(monitorCliente.ads[a.id].qualidade||0)+'%'"></span>
+                  <span class="badge" style="margin-left:8px;font-weight:800" :style="'background:'+corSaldo(monitorCliente.ads[a.id].saldo)+'22;color:'+corSaldo(monitorCliente.ads[a.id].saldo)" x-text="'saldo '+fmtCur(monitorCliente.ads[a.id].saldo)"></span>
+                </div>
+              </template>
+              <div x-show="!adsAtivos(monitorCliente).length" class="text-3">Sem campanhas de tráfego pago.</div>
+
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)">✏️ Editar ficha do cliente</button></div>
             </div>
           </template>
@@ -380,6 +391,16 @@
       <div class="form-group"><label class="form-label">Hospedagem — provedor/local</label><input class="form-input" x-model="editing.hospedagem.provedor" placeholder="Vercel, Hostgator…"></div>
       <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
 
+      <!-- TRÁFEGO PAGO -->
+      <div style="grid-column:1/-1;font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--text-3);text-transform:uppercase;margin-top:4px">📣 Tráfego Pago (Google & Meta Ads)</div>
+      <template x-for="a in ADS" :key="a.id">
+        <div class="flex items-center gap-2" style="grid-column:1/-1">
+          <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.ads[a.id].ativo"> <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"> <span x-text="a.label"></span></label>
+          <input class="form-input" type="number" min="0" max="100" style="width:96px" x-model.number="editing.ads[a.id].qualidade" :disabled="!editing.ads[a.id].ativo" placeholder="qualidade %">
+          <input class="form-input" type="number" min="0" style="width:130px" x-model.number="editing.ads[a.id].saldo" :disabled="!editing.ads[a.id].ativo" placeholder="saldo R$">
+        </div>
+      </template>
+
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -433,6 +454,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=4"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>
