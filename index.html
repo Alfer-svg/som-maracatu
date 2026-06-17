@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=19">
+  <link rel="stylesheet" href="css/styles.css?v=20">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -531,19 +531,9 @@
       <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
 
       </div>
-      <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span>👤 Contato</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span>👥 Contatos / Responsáveis</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='contato'">
-      <div class="form-group"><label class="form-label">Nome do contato</label><input class="form-input" x-model="editing.contato"></div>
-      <div class="form-group"><label class="form-label">Cargo</label><input class="form-input" x-model="editing.cargo" placeholder="Sócio, Marketing…"></div>
-      <div class="form-group"><label class="form-label">WhatsApp</label><input class="form-input" x-model="editing.whatsapp"></div>
-      <div class="form-group"><label class="form-label">Telefone</label><input class="form-input" x-model="editing.telefone"></div>
-      <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" type="email" x-model="editing.email"></div>
-      <div class="form-group"><label class="form-label">Instagram</label><input class="form-input" x-model="editing.instagram" placeholder="@"></div>
-
-      </div>
-      <div @click="secCli=secCli==='resp'?'':'resp'" class="accH"><span>👥 Responsáveis / Contatos</span><span class="accX" x-text="secCli==='resp'?'▾':'▸'"></span></div>
-      <div class="grid grid-2 accB" x-show="secCli==='resp'">
-      <div style="grid-column:1/-1" class="text-3 fs-12">Até 5 — pra estreitar o relacionamento</div>
+      <div style="grid-column:1/-1" class="text-3 fs-12">Adicione até 5 contatos da empresa — o 1º vira o contato principal. Pra estreitar o relacionamento.</div>
       <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
         <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:10px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="r.nome"></div>
@@ -558,7 +548,7 @@
           <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeResponsavel(i)">🗑 remover</button></div>
         </div>
       </template>
-      <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 responsáveis' : '+ Adicionar responsável'"></button></div>
+      <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 contatos' : '+ Adicionar contato'"></button></div>
 
       </div>
       <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span>💼 Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
@@ -807,6 +797,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=19"></script>
+<script src="js/app.js?v=20"></script>
 </body>
 </html>

@@ -258,8 +258,12 @@ document.addEventListener('alpine:init', () => {
         const dom = r.dominio || {};
         if (dom.provedor && !this.editing.dominio.provedor) this.editing.dominio.provedor = dom.provedor;
         if (dom.vencimento && !this.editing.dominio.vencimento) this.editing.dominio.vencimento = dom.vencimento;
-        if (r.email && !this.editing.email) this.editing.email = r.email;
-        if (r.telefone && !this.editing.telefone) this.editing.telefone = r.telefone;
+        if (r.email || r.telefone) {
+          if (!Array.isArray(this.editing.responsaveis) || !this.editing.responsaveis.length) this.addResponsavel();
+          const c0 = this.editing.responsaveis[0];
+          if (r.email && !c0.email) c0.email = r.email;
+          if (r.telefone && !c0.whatsapp) c0.whatsapp = r.telefone;
+        }
         const extras = [dom.provedor && 'provedor', dom.vencimento && 'vencimento', r.email && 'e-mail', r.telefone && 'telefone'].filter(Boolean);
         this.enriqMsg = (n || extras.length)
           ? ('✓ ' + (n ? n + ' rede(s)' : 'nenhuma rede') + (extras.length ? ' + ' + extras.join('/') : '') + '. Revise e salve.')
@@ -428,6 +432,9 @@ document.addEventListener('alpine:init', () => {
     async salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
+      // 1º contato vira o contato principal (mantém busca/CRM/ficha funcionando).
+      const r0 = (e.responsaveis || [])[0];
+      if (r0) { e.contato = r0.nome || e.contato; e.cargo = r0.cargo || e.cargo; e.email = r0.email || e.email; e.whatsapp = r0.whatsapp || e.whatsapp; e.instagram = r0.instagram || e.instagram; }
       const { id, ...dados } = e;
       try {
         await this.api('POST', '/clientes', { id: id || undefined, empresa: e.empresa, dados });
