@@ -45,12 +45,14 @@ const PROJ_STATUS = [
 const FIN_CATEGORIAS = ['Mensalidade', 'Mídia/ADS', 'Projeto pontual', 'Salários', 'Ferramentas', 'Impostos', 'Infra', 'Outros'];
 // Redes que a Maracatu trabalha. score = nível de preenchimento/qualidade do perfil (0-100).
 const REDES = [
-  { id: 'instagram', label: 'Instagram', ico: '📸' },
-  { id: 'tiktok',    label: 'TikTok',    ico: '🎵' },
-  { id: 'youtube',   label: 'YouTube',   ico: '▶️' },
-  { id: 'linkedin',  label: 'LinkedIn',  ico: '💼' },
-  { id: 'facebook',  label: 'Facebook',  ico: '👤' },
+  { id: 'instagram', label: 'Instagram', slug: 'instagram', cor: 'E4405F' },
+  { id: 'tiktok',    label: 'TikTok',    slug: 'tiktok',    cor: '000000' },
+  { id: 'youtube',   label: 'YouTube',   slug: 'youtube',   cor: 'FF0000' },
+  { id: 'linkedin',  label: 'LinkedIn',  slug: 'linkedin',  cor: '0A66C2' },
+  { id: 'facebook',  label: 'Facebook',  slug: 'facebook',  cor: '1877F2' },
 ];
+// URL do logo oficial da rede (Simple Icons), colorido pela marca.
+const redeIcon = (r) => `https://cdn.simpleicons.org/${r.slug}/${r.cor}`;
 const redesVazias = () => Object.fromEntries(REDES.map(r => [r.id, { tem: false, score: 0 }]));
 
 document.addEventListener('alpine:init', () => {
@@ -78,7 +80,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     // helpers de formatação expostos ao template
-    fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff,
+    fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
     go(p) { this.page = p; this.busca = ''; },
     persist(key, arr) { MD.set('som_' + key, arr); },
 
