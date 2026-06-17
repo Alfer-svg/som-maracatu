@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=15">
+  <link rel="stylesheet" href="css/styles.css?v=16">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -47,10 +47,12 @@
         {id:'comercial',ico:'👥',label:'Clientes',desc:'Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.'},
         {id:'financeiro',ico:'💰',label:'Financeiro',desc:'Receitas e despesas, contas a receber e a pagar, saldo do mês.'},
         {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
-        {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
+        {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'},
+        {id:'onboarding',ico:'📥',label:'Onboardings',desc:'Formulários de onboarding recebidos do site, aguardando virar cliente.'}]" :key="item.id">
         <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
           <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
+          <span x-show="item.id==='onboarding' && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#04210f;min-width:20px;justify-content:center" x-text="onboardings.length"></span>
         </div>
       </template>
     </nav>
@@ -68,7 +70,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -419,6 +421,33 @@
         </div>
       </section>
 
+      <!-- ========== ONBOARDINGS RECEBIDOS ========== -->
+      <section x-show="page==='onboarding'">
+        <div class="card" style="margin-bottom:14px">
+          <div class="fs-12 text-2" style="font-weight:600">🔗 Link público do formulário (mande pro cliente):</div>
+          <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
+            <code style="background:var(--surface-2);padding:7px 11px;border-radius:8px;font-size:12px;word-break:break-all" x-text="onbLink"></code>
+            <button class="btn btn-ghost btn-sm" @click="navigator.clipboard.writeText(onbLink)">copiar</button>
+            <a :href="onbLink" target="_blank" class="btn btn-ghost btn-sm">abrir ↗</a>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title mb-3" x-text="'Aguardando revisão ('+onboardings.length+')'"></div>
+          <template x-if="!onboardings.length"><div class="empty">Nenhum onboarding pendente. 🎉</div></template>
+          <template x-for="o in onboardings" :key="o.id">
+            <div class="flex items-center gap-2" style="padding:11px 0;border-bottom:1px solid var(--border)">
+              <div style="flex:1;min-width:0">
+                <div class="fw-700" x-text="o.empresa"></div>
+                <div class="fs-12 text-3" x-text="((o.dados&&o.dados.responsavel&&o.dados.responsavel.nome)?(o.dados.responsavel.nome+' · '):'')+fmtDate(o.createdAt)"></div>
+              </div>
+              <button class="btn btn-ghost btn-sm" @click="verOnboarding(o)">ver</button>
+              <button class="btn btn-primary btn-sm" @click="converterOnboarding(o)">criar cliente</button>
+              <button class="btn btn-ghost btn-sm" @click="arquivarOnboarding(o)">arquivar</button>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
   </main>
 </div>
@@ -725,6 +754,23 @@
   </div>
 </div>
 
-<script src="js/app.js?v=15"></script>
+<!-- DETALHE DO ONBOARDING -->
+<div class="modal-backdrop" x-show="onbModal" @click.self="onbModal=false" x-cloak>
+  <div class="modal" style="max-width:540px">
+    <div class="modal-head"><div class="modal-title" x-text="'📥 '+(onbSel.empresa||'')"></div><button class="btn btn-icon btn-ghost" @click="onbModal=false">✕</button></div>
+    <div class="modal-body">
+      <template x-for="bi in onbLinhas(onbSel)" :key="bi.label">
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)"><div class="fs-12 fw-700 text-2" x-text="bi.label"></div><div class="fs-12" style="white-space:pre-wrap" x-text="bi.v"></div></div>
+      </template>
+      <div x-show="!onbLinhas(onbSel).length" class="text-3">Sem detalhes preenchidos.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="arquivarOnboarding(onbSel); onbModal=false">Arquivar</button>
+      <button class="btn btn-primary" @click="converterOnboarding(onbSel)">Criar cliente</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

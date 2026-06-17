@@ -104,6 +104,7 @@ document.addEventListener('alpine:init', () => {
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
+    onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],
@@ -127,7 +128,7 @@ document.addEventListener('alpine:init', () => {
       this.proposals = MD.get('som_proposals', []);
       this.finance   = MD.get('som_finance', []);
       this.projects  = MD.get('som_projects', []);
-      if (this.token) this.carregarClientes();
+      if (this.token) { this.carregarClientes(); this.carregarOnboardings(); }
     },
 
     get autenticado() { return !!this.token; },
@@ -149,7 +150,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; await this.carregarClientes();
+        this.loginSenha = ''; await this.carregarClientes(); this.carregarOnboardings();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -170,7 +171,42 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
-    go(p) { this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); },
+    go(p) { this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'onboarding') this.carregarOnboardings(); },
+    // ── Onboardings recebidos do site ──
+    async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } },
+    verOnboarding(o) { this.onbSel = o; this.onbModal = true; },
+    onbLinhas(o) {
+      const d = (o && o.dados) || {}; const out = []; const add = (l, v) => { if (v != null && String(v).trim()) out.push({ label: l, v: String(v) }); };
+      add('Site', d.site); add('Slogan', d.slogan); add('Google Meu Negócio', d.gmn && d.gmn.acesso);
+      const r = d.responsavel || {}; add('Quem preencheu', [r.nome, r.cargo].filter(Boolean).join(' · ')); add('WhatsApp', r.whatsapp); add('E-mail', r.email);
+      this.briefingItens({ briefing: d.briefing, slogan: '' }).forEach(x => out.push(x));
+      const a = (d.briefing && d.briefing.ativos) || {}; add('Logo', a.logo); add('Manual de marca', a.manual); add('Drive de mídia', a.drive);
+      return out;
+    },
+    async converterOnboarding(o) {
+      const d = o.dados || {}; const r = d.responsavel || {};
+      const dados = {
+        cnpj: '', razaoSocial: '', empresa: o.empresa, slogan: d.slogan || '',
+        cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
+        contato: r.nome || '', cargo: r.cargo || '', email: r.email || '', whatsapp: r.whatsapp || '', telefone: '', instagram: '',
+        servicos: [], redes: redesVazias(), site: { url: d.site || '', seo: 0, sgo: 0 },
+        dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
+        briefing: briefingMerge(d.briefing),
+        responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
+        documentos: [], mensalidade: 0, status: 'Ativo', desde: MD.today(),
+        notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
+      };
+      try {
+        await this.api('POST', '/clientes', { empresa: o.empresa, dados });
+        await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
+        this.onbModal = false; await this.carregarClientes(); await this.carregarOnboardings();
+        alert('Cliente "' + o.empresa + '" criado a partir do onboarding. ✅');
+      } catch (e) { alert(e.message || 'Falha ao converter.'); }
+    },
+    async arquivarOnboarding(o) {
+      if (!confirm('Arquivar o onboarding de "' + o.empresa + '"? (sai da fila, sem virar cliente)')) return;
+      try { await this.api('POST', '/onboarding/admin/' + o.id + '/arquivar', {}); await this.carregarOnboardings(); } catch (e) { alert(e.message); }
+    },
     persist(key, arr) { MD.set('som_' + key, arr); },
 
     // ───────────────── DASHBOARD ─────────────────

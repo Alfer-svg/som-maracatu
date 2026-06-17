@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding — Maracatu Digital</title>
+  <link rel="icon" href="assets/favicon.png">
+  <style>
+    :root{ --bg:#0b0b0c; --card:#16161a; --line:#2a2a31; --txt:#f4f4f5; --txt2:#a1a1aa; --accent:#22c55e; --accent2:#3b82f6; }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif; background:linear-gradient(160deg,#0b0b0c,#1a1a20); color:var(--txt); padding:24px 16px; }
+    .wrap{ max-width:680px; margin:0 auto; }
+    .head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+    .head img{ width:40px; height:40px; border-radius:9px; background:#000; padding:4px; }
+    h1{ font-size:22px; margin:14px 0 4px; }
+    .sub{ color:var(--txt2); font-size:14px; margin-bottom:22px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
+    .sec{ font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--txt2); margin:4px 0 12px; }
+    label{ display:block; font-size:13px; font-weight:600; margin:12px 0 5px; }
+    label .opt{ color:var(--txt2); font-weight:400; }
+    input,textarea,select{ width:100%; background:#0e0e11; border:1px solid var(--line); color:var(--txt); border-radius:9px; padding:10px 12px; font-size:14px; font-family:inherit; }
+    input:focus,textarea:focus,select:focus{ outline:none; border-color:var(--accent2); }
+    textarea{ min-height:64px; resize:vertical; }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:560px){ .row{ grid-template-columns:1fr } }
+    .hp{ position:absolute; left:-9999px; }
+    button{ width:100%; background:var(--accent); color:#04210f; border:0; border-radius:10px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; margin-top:8px; }
+    button:disabled{ opacity:.6; cursor:default; }
+    .ok{ text-align:center; padding:50px 20px; }
+    .ok .big{ font-size:46px; }
+    .err{ color:#f87171; font-size:13px; margin-top:10px; text-align:center; }
+    .foot{ text-align:center; color:var(--txt2); font-size:12px; margin-top:18px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <img src="assets/logo.png" alt="Maracatu Digital">
+      <div><div style="font-weight:800">Maracatu Digital</div><div style="font-size:12px;color:var(--txt2)">Onboarding de cliente</div></div>
+    </div>
+
+    <div id="form">
+      <h1>Vamos começar 🚀</h1>
+      <div class="sub">Conta pra gente sobre a sua empresa. Quanto mais detalhe, melhor a estratégia. Leva uns 5 minutos.</div>
+
+      <div class="card">
+        <div class="sec">Sua empresa</div>
+        <label>Nome da empresa *</label><input id="empresa" required>
+        <div class="row">
+          <div><label>Site</label><input id="site" placeholder="https://"></div>
+          <div><label>Slogan</label><input id="slogan"></div>
+        </div>
+        <label>Google Meu Negócio <span class="opt">— link ou "não tenho"</span></label><input id="gmn">
+      </div>
+
+      <div class="card">
+        <div class="sec">Quem está preenchendo</div>
+        <div class="row">
+          <div><label>Seu nome</label><input id="r_nome"></div>
+          <div><label>Cargo</label><input id="r_cargo"></div>
+        </div>
+        <div class="row">
+          <div><label>WhatsApp</label><input id="r_whatsapp"></div>
+          <div><label>E-mail</label><input id="r_email" type="email"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Seu público</div>
+        <div class="row">
+          <div><label>Faixa etária</label><input id="p_faixa" placeholder="ex.: 25-45"></div>
+          <div><label>Escolaridade</label><input id="p_escol"></div>
+        </div>
+        <div class="row">
+          <div><label>Sexo do público</label><input id="p_sexo" placeholder="feminino / masculino / ambos"></div>
+          <div><label>Público-alvo principal</label><input id="p_alvo"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Posicionamento</div>
+        <label>Descreva o negócio</label><textarea id="po_desc"></textarea>
+        <div class="row">
+          <div><label>Concorrentes diretos</label><input id="po_conc" placeholder="2-3 nomes"></div>
+          <div><label>Como percebem seu produto</label><input id="po_perc"></div>
+        </div>
+        <div class="row">
+          <div><label>Recorrência de consumo</label><input id="po_rec"></div>
+          <div><label>Tempo médio de fechamento</label><input id="po_ciclo"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Histórico</div>
+        <label>Trabalhos anteriores que você gostou</label><textarea id="h_gostou"></textarea>
+        <label>O que espera melhorar</label><textarea id="h_melhorar"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="sec">Transmissão / mídia</div>
+        <div class="row">
+          <div><label>Mídias já testadas com anúncios</label><input id="t_midias"></div>
+          <div><label>Campanhas/datas importantes previstas</label><input id="t_camp"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Direcionamento criativo</div>
+        <div class="row">
+          <div><label>Tipo de linguagem</label><input id="c_ling"></div>
+          <div><label>Termos a evitar</label><input id="c_evitar"></div>
+        </div>
+        <div class="row">
+          <div><label>Hashtags / slogan</label><input id="c_hash"></div>
+          <div><label>Marcas/perfis que inspiram</label><input id="c_insp"></div>
+        </div>
+        <div class="row">
+          <div><label>Datas comemorativas relevantes</label><input id="c_datas"></div>
+          <div><label>Datas do seu segmento</label><input id="c_datasseg"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sec">Palavras-chave</div>
+        <label>Palavras-chave dos seus serviços/produtos <span class="opt">(separadas por vírgula)</span></label><textarea id="palavras"></textarea>
+      </div>
+
+      <div class="card">
+        <div class="sec">Materiais visuais (links)</div>
+        <label>Logo em alta <span class="opt">(link do Drive/arquivo)</span></label><input id="a_logo" placeholder="https://">
+        <label>Manual de marca <span class="opt">(link)</span></label><input id="a_manual" placeholder="https://">
+        <label>Drive com fotos e vídeos <span class="opt">(link)</span></label><input id="a_drive" placeholder="https://">
+      </div>
+
+      <input class="hp" id="_gotcha" tabindex="-1" autocomplete="off" placeholder="não preencha">
+      <button id="enviar" onclick="enviar()">Enviar onboarding</button>
+      <div class="err" id="erro"></div>
+      <div class="foot">Maracatu Digital Intelligence · seus dados são usados só para a sua estratégia.</div>
+    </div>
+
+    <div id="sucesso" class="ok" style="display:none">
+      <div class="big">✅</div>
+      <h1>Recebido! Obrigado.</h1>
+      <div class="sub">Nossa equipe já vai analisar e em breve entra em contato. 🎉</div>
+    </div>
+  </div>
+
+  <script>
+    var API = 'https://som-backend-production-01d8.up.railway.app/api/onboarding';
+    function v(id){ var e = document.getElementById(id); return e ? e.value.trim() : ''; }
+    function enviar(){
+      var empresa = v('empresa');
+      if(!empresa){ document.getElementById('erro').textContent = 'Por favor, informe o nome da empresa.'; return; }
+      var btn = document.getElementById('enviar'); btn.disabled = true; btn.textContent = 'Enviando…';
+      document.getElementById('erro').textContent = '';
+      var payload = {
+        empresa: empresa, site: v('site'), slogan: v('slogan'), gmn: { acesso: v('gmn') },
+        responsavel: { nome: v('r_nome'), cargo: v('r_cargo'), whatsapp: v('r_whatsapp'), email: v('r_email') },
+        briefing: {
+          publico: { faixaEtaria: v('p_faixa'), escolaridade: v('p_escol'), sexo: v('p_sexo'), alvo: v('p_alvo') },
+          posicionamento: { descricao: v('po_desc'), concorrentes: v('po_conc'), percepcao: v('po_perc'), recorrencia: v('po_rec'), cicloVenda: v('po_ciclo') },
+          historico: { gostou: v('h_gostou'), melhorar: v('h_melhorar') },
+          transmissao: { midiasTestadas: v('t_midias'), campanhas: v('t_camp') },
+          criativo: { linguagem: v('c_ling'), evitar: v('c_evitar'), hashtags: v('c_hash'), inspiracoes: v('c_insp'), datasComemorativas: v('c_datas'), datasSegmento: v('c_datasseg') },
+          palavrasChave: v('palavras'),
+          ativos: { logo: v('a_logo'), manual: v('a_manual'), drive: v('a_drive') }
+        },
+        _gotcha: v('_gotcha')
+      };
+      fetch(API, { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) })
+        .then(function(r){ if(!r.ok) throw new Error('falha'); return r.json(); })
+        .then(function(){ document.getElementById('form').style.display='none'; document.getElementById('sucesso').style.display='block'; window.scrollTo(0,0); })
+        .catch(function(){ btn.disabled=false; btn.textContent='Enviar onboarding'; document.getElementById('erro').textContent='Não consegui enviar agora. Tente de novo em instantes.'; });
+    }
+  </script>
+</body>
+</html>
