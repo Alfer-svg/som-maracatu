@@ -271,6 +271,8 @@ document.addEventListener('alpine:init', () => {
           provedor: this.editing.dominio.provedor || dom.provedor || '',
           vencimento: this.editing.dominio.vencimento || dom.vencimento || '',
         };
+        const hosp = r.hospedagem || {};
+        this.editing.hospedagem = { ...this.editing.hospedagem, provedor: this.editing.hospedagem.provedor || hosp.provedor || '' };
         if (r.email || r.telefone) {
           const resp = Array.isArray(this.editing.responsaveis) ? [...this.editing.responsaveis] : [];
           if (!resp.length) resp.push({ ...respVazio(), id: MD.uid() });
@@ -281,6 +283,7 @@ document.addEventListener('alpine:init', () => {
         addR('Instagram', redes.instagram); addR('Facebook', redes.facebook); addR('LinkedIn', redes.linkedin);
         addR('TikTok', redes.tiktok); addR('YouTube', redes.youtube); addR('Google Meu Negócio', redes.gmn);
         addR('Domínio (provedor)', dom.provedor); addR('Vencimento do domínio', dom.vencimento);
+        addR('Hospedagem', hosp.provedor);
         addR('E-mail', r.email); addR('Telefone', r.telefone);
         this.enriqResult = res;
         this.enriqMsg = res.length ? '' : 'Não achei dados no site (confira a URL ou preencha à mão).';
