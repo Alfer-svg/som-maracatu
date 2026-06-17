@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/styles.css?v=2">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -202,34 +202,47 @@
 
       <!-- ========== MONITORAMENTO ========== -->
       <section x-show="page==='monitoramento'">
-        <template x-if="clientesFiltrados.length===0"><div class="card empty">Nenhum cliente pra monitorar ainda. Cadastre em <b>Comercial</b>.</div></template>
-        <div class="card" x-show="clientesFiltrados.length" style="overflow-x:auto">
-          <table class="table">
-            <thead><tr>
-              <th>Cliente</th>
-              <th>Serviços contratados</th>
-              <th>Redes sociais — preenchimento/qualidade</th>
-            </tr></thead>
-            <tbody>
-              <template x-for="c in clientesFiltrados" :key="c.id">
-                <tr>
-                  <td style="min-width:160px"><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.cidade||'')+(c.uf?'/'+c.uf:'')"></div></td>
-                  <td style="min-width:180px">
-                    <template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template>
-                    <span x-show="!clienteServicos(c).length" class="text-3">—</span>
-                  </td>
-                  <td>
-                    <div class="flex" style="flex-wrap:wrap;gap:6px">
-                      <template x-for="r in redesDoCliente(c)" :key="r.id">
-                        <span class="badge" :style="'background:'+corScore(c.redes[r.id].score)+'22;color:'+corScore(c.redes[r.id].score)+';font-weight:800'" :title="r.label+': '+c.redes[r.id].score+'% de preenchimento/qualidade'" x-text="r.ico+' '+c.redes[r.id].score+'%'"></span>
-                      </template>
-                      <span x-show="!redesDoCliente(c).length" class="text-3">— sem redes cadastradas</span>
-                    </div>
-                  </td>
-                </tr>
+        <template x-if="clientesFiltrados.length===0"><div class="card empty">Nenhum cliente pra monitorar ainda. Cadastre em <b>Clientes</b>.</div></template>
+        <div x-show="clientesFiltrados.length">
+          <!-- ABAS (fichário) — uma por cliente, com sinal de saúde -->
+          <div class="fichario">
+            <template x-for="c in clientesFiltrados" :key="c.id">
+              <div class="fichario-tab" :class="(monitorCliente && monitorCliente.id===c.id)?'active':''" @click="monitorSel=c.id">
+                <span class="dot" :style="'background:'+corScore(mediaRedes(c))" :title="'Saúde média das redes: '+mediaRedes(c)+'%'"></span>
+                <span x-text="c.empresa"></span>
+              </div>
+            </template>
+          </div>
+          <!-- FICHA do cliente selecionado -->
+          <template x-if="monitorCliente">
+            <div class="ficha">
+              <div class="flex items-center justify-between mb-3">
+                <div>
+                  <div class="fs-18 fw-800" x-text="monitorCliente.empresa"></div>
+                  <div class="text-3 fs-12" x-text="([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')) || '—'"></div>
+                </div>
+                <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
+              </div>
+
+              <div class="ficha-sec-title">💼 Serviços contratados</div>
+              <div class="flex" style="flex-wrap:wrap;gap:8px">
+                <template x-for="sv in clienteServicos(monitorCliente)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;border:1px solid var(--border);padding:5px 11px" x-text="sv"></span></template>
+                <span x-show="!clienteServicos(monitorCliente).length" class="text-3">Nenhum serviço cadastrado.</span>
+              </div>
+
+              <div class="ficha-sec-title">📱 Redes sociais — preenchimento/qualidade</div>
+              <template x-for="r in redesDoCliente(monitorCliente)" :key="r.id">
+                <div class="rede-row">
+                  <span class="rede-nome" x-text="r.ico+' '+r.label"></span>
+                  <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,monitorCliente.redes[r.id].score||0)+'%;background:'+corScore(monitorCliente.redes[r.id].score)"></div></div>
+                  <span class="rede-pct" :style="'color:'+corScore(monitorCliente.redes[r.id].score)" x-text="(monitorCliente.redes[r.id].score||0)+'%'"></span>
+                </div>
               </template>
-            </tbody>
-          </table>
+              <div x-show="!redesDoCliente(monitorCliente).length" class="text-3">Nenhuma rede cadastrada pra este cliente.</div>
+
+              <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)">✏️ Editar ficha do cliente</button></div>
+            </div>
+          </template>
         </div>
       </section>
 
@@ -383,6 +396,6 @@
   </div>
 </div>
 
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2"></script>
 </body>
 </html>

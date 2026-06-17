@@ -58,6 +58,7 @@ document.addEventListener('alpine:init', () => {
     page: 'dashboard',
     STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, REDES,
     busca: '',
+    monitorSel: '', // id do cliente aberto no fichário de monitoramento
 
     // dados
     clients: [], leads: [], proposals: [], finance: [], projects: [],
@@ -130,6 +131,7 @@ document.addEventListener('alpine:init', () => {
     clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     mediaRedes(c) { const rs = this.redesDoCliente(c); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; },
+    get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
     salvarCliente() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe o nome/empresa do cliente.');
