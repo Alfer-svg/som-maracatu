@@ -117,6 +117,7 @@ document.addEventListener('alpine:init', () => {
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
     perfilAberto: true, // perfil do cliente (recolhível)
     enriqLoading: false, enriqMsg: '', enriqResult: null, // enriquecimento a partir do site
+    psiLoading: false, psiMsg: '', // Google PageSpeed (Lighthouse)
     secCli: 'empresa', // seção aberta no acordeão do modal de cliente
 
     // dados
@@ -298,6 +299,24 @@ document.addEventListener('alpine:init', () => {
         this.enriqMsg = res.length ? '' : 'Não achei dados no site (confira a URL ou preencha à mão).';
       } catch (e) { this.enriqMsg = e.message || 'Falha ao ler o site.'; this.enriqResult = null; }
       finally { this.enriqLoading = false; }
+    },
+    async avaliarPagespeed() {
+      const url = (this.editing.site && this.editing.site.url) || '';
+      if (!url) { this.psiMsg = 'Informe a URL do site primeiro.'; return; }
+      this.psiLoading = true; this.psiMsg = 'Rodando o Google PageSpeed… (pode levar até 30s)';
+      try {
+        const r = await this.api('POST', '/enriquecer/pagespeed', { url }) || {};
+        if (r.erro) { this.psiMsg = r.erro; return; }
+        this.editing.site = {
+          ...this.editing.site,
+          seo: (r.seo != null ? r.seo : this.editing.site.seo),
+          lh: { seo: r.seo, performance: r.performance, acessibilidade: r.acessibilidade, boasPraticas: r.boasPraticas, cwv: r.cwv || {}, em: MD.today() },
+        };
+        const cwv = r.cwv || {};
+        const cwvTxt = [cwv.lcp && ('LCP ' + cwv.lcp), cwv.inp && ('INP ' + cwv.inp), cwv.cls && ('CLS ' + cwv.cls)].filter(Boolean).join(' · ');
+        this.psiMsg = '✓ SEO ' + r.seo + '% · Performance ' + r.performance + '% · Acessib. ' + r.acessibilidade + '% · Boas práticas ' + r.boasPraticas + '%' + (cwvTxt ? (' · ' + cwvTxt) : '');
+      } catch (e) { this.psiMsg = e.message || 'Falha no PageSpeed.'; }
+      finally { this.psiLoading = false; }
     },
     novoCliente() {
       this.editing = {

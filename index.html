@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=25">
+  <link rel="stylesheet" href="css/styles.css?v=26">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -344,6 +344,15 @@
                 <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,(monitorCliente.site&&monitorCliente.site.sgo)||0)+'%;background:'+corScore((monitorCliente.site&&monitorCliente.site.sgo)||0)"></div></div>
                 <span class="rede-pct" :style="'color:'+corScore((monitorCliente.site&&monitorCliente.site.sgo)||0)" x-text="((monitorCliente.site&&monitorCliente.site.sgo)||0)+'%'"></span>
               </div>
+              <template x-if="monitorCliente.site && monitorCliente.site.lh">
+                <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+                  <span class="badge" style="background:#eef2ff;color:#3730a3" x-text="'⚡ Performance '+(monitorCliente.site.lh.performance!=null?monitorCliente.site.lh.performance+'%':'—')"></span>
+                  <span class="badge" style="background:#eef2ff;color:#3730a3" x-text="'♿ Acessib. '+(monitorCliente.site.lh.acessibilidade!=null?monitorCliente.site.lh.acessibilidade+'%':'—')"></span>
+                  <span class="badge" style="background:#eef2ff;color:#3730a3" x-text="'✅ Boas práticas '+(monitorCliente.site.lh.boasPraticas!=null?monitorCliente.site.lh.boasPraticas+'%':'—')"></span>
+                  <span class="badge" x-show="monitorCliente.site.lh.cwv && (monitorCliente.site.lh.cwv.lcp||monitorCliente.site.lh.cwv.inp||monitorCliente.site.lh.cwv.cls)" style="background:#f5f5f1;color:#57564e" x-text="'CWV: '+[monitorCliente.site.lh.cwv.lcp&&('LCP '+monitorCliente.site.lh.cwv.lcp),monitorCliente.site.lh.cwv.inp&&('INP '+monitorCliente.site.lh.cwv.inp),monitorCliente.site.lh.cwv.cls&&('CLS '+monitorCliente.site.lh.cwv.cls)].filter(Boolean).join(' · ')"></span>
+                  <span class="text-3 fs-12" x-show="monitorCliente.site.lh.em" x-text="'· Google PageSpeed em '+fmtDate(monitorCliente.site.lh.em)"></span>
+                </div>
+              </template>
 
               <div class="ficha-sec-title">🔗 Domínio / Hospedagem</div>
               <div class="grid grid-2" style="gap:12px">
@@ -563,7 +572,11 @@
           <div class="text-3" style="margin-top:6px">Confira em 📱 Redes, no domínio (acima) e em 👥 Contatos · revise e <b>salve</b>.</div>
         </div>
       </div>
-      <div class="form-group"><label class="form-label">SEO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <button type="button" class="btn btn-ghost btn-sm" @click="avaliarPagespeed()" :disabled="psiLoading" x-text="psiLoading?'⏳ rodando o Google…':'🔍 Avaliar SEO com Google (PageSpeed)'"></button>
+        <span class="fs-12" x-show="psiMsg" :style="(psiMsg.startsWith('✓')?'color:#16a34a;':'color:var(--text-3);')+'margin-left:10px'" x-text="psiMsg"></span>
+      </div>
+      <div class="form-group"><label class="form-label">SEO (%) <span class="text-3" x-show="editing.site&&editing.site.lh">— oficial Google</span></label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.seo"></div>
       <div class="form-group"><label class="form-label">SGO (%)</label><input class="form-input" type="number" min="0" max="100" x-model.number="editing.site.sgo"></div>
       <div class="form-group"><label class="form-label">Domínio — provedor/local</label><input class="form-input" x-model="editing.dominio.provedor" placeholder="Registro.br, GoDaddy…"></div>
       <div class="form-group"><label class="form-label">Domínio — vencimento</label><input class="form-input" type="date" x-model="editing.dominio.vencimento"></div>
@@ -803,6 +816,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=25"></script>
+<script src="js/app.js?v=26"></script>
 </body>
 </html>
