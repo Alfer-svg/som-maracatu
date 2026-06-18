@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=28">
+  <link rel="stylesheet" href="css/styles.css?v=29">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -814,6 +814,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('orcamento', editing)" title="Gerar PDF / imprimir">🖨️ PDF</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato já preenchido a partir deste orçamento">→ Gerar contrato</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarOrcamento()">Salvar</button>
@@ -838,6 +839,8 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirContrato(editing)">Excluir</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('contrato', editing)" title="Gerar PDF / imprimir">🖨️ PDF</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="lancarContratoFinanceiro(editing)" title="Lançar o valor no Financeiro como receita">💰 Lançar no Financeiro</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarContrato()">Salvar</button>
     </div>
@@ -936,6 +939,6 @@
   </div>
 </div>
 
-<script src="js/app.js?v=28"></script>
+<script src="js/app.js?v=29"></script>
 </body>
 </html>

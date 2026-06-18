@@ -602,9 +602,12 @@ document.addEventListener('alpine:init', () => {
     editarOrcamento(o) { this.editing = { ...o }; this.modal = 'orcamento'; },
     salvarOrcamento() {
       const e = this.editing; if (!e.cliente && !e.descricao) return alert('Informe ao menos o cliente ou a descrição.');
-      if (e.id) { const i = this.proposals.findIndex(x => x.id === e.id); if (i > -1) this.proposals[i] = { ...e }; }
-      else { e.id = MD.uid(); this.proposals.unshift({ ...e }); }
+      let saved;
+      if (e.id) { const i = this.proposals.findIndex(x => x.id === e.id); if (i > -1) { this.proposals[i] = { ...e }; saved = this.proposals[i]; } }
+      else { e.id = MD.uid(); saved = { ...e }; this.proposals.unshift(saved); }
       this.persist('proposals', this.proposals); this.modal = null;
+      // Ao APROVAR, oferece lançar no Financeiro (uma vez só — guarda financeId pra não duplicar).
+      if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
     },
     excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
     // Cria um contrato já preenchido a partir de um orçamento.
@@ -624,6 +627,72 @@ document.addEventListener('alpine:init', () => {
       this.persist('contracts', this.contracts); this.modal = null;
     },
     excluirContrato(c) { if (!confirm('Excluir o contrato ' + (c.numero || '') + '?')) return; this.contracts = this.contracts.filter(x => x.id !== c.id); this.persist('contracts', this.contracts); this.modal = null; },
+
+    // ── Lançar no Financeiro (orçamento aprovado / mensalidade de contrato) ──
+    lancarOrcamentoFinanceiro(o, silent) {
+      if (o.financeId && this.finance.some(f => f.id === o.financeId)) { if (!silent) alert('Esse orçamento já foi lançado no Financeiro.'); return; }
+      if (!silent && !confirm('Lançar ' + MD.fmtCur(o.valor) + ' no Financeiro como receita a receber?')) return;
+      const f = { id: MD.uid(), tipo: 'receita', descricao: 'Orçamento ' + (o.numero || '') + (o.cliente ? (' — ' + o.cliente) : ''), valor: +o.valor || 0, categoria: 'Projeto pontual', cliente: o.cliente || '', status: 'pendente', vencimento: o.validade || MD.today(), data: MD.today() };
+      this.finance.unshift(f); this.persist('finance', this.finance);
+      o.financeId = f.id; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) { this.proposals[i] = { ...o }; this.persist('proposals', this.proposals); }
+      if (!silent) alert('Lançado no Financeiro ✅');
+    },
+    lancarContratoFinanceiro(c) {
+      if (!confirm('Lançar ' + MD.fmtCur(c.valor) + (c.periodicidade === 'Mensal' ? ' (mensalidade)' : '') + ' no Financeiro como receita a receber?')) return;
+      const f = { id: MD.uid(), tipo: 'receita', descricao: 'Contrato ' + (c.numero || '') + (c.cliente ? (' — ' + c.cliente) : ''), valor: +c.valor || 0, categoria: c.periodicidade === 'Mensal' ? 'Mensalidade' : 'Projeto pontual', cliente: c.cliente || '', status: 'pendente', vencimento: c.inicio || MD.today(), data: MD.today() };
+      this.finance.unshift(f); this.persist('finance', this.finance);
+      alert('Lançado no Financeiro ✅');
+    },
+
+    // ── PDF / impressão (orçamento e contrato) — abre janela pronta pra "Salvar como PDF" ──
+    imprimirDoc(tipo, o) {
+      const w = window.open('', '_blank');
+      if (!w) { alert('Permita pop-ups neste site pra gerar o PDF.'); return; }
+      w.document.write(this._docHTML(tipo, o)); w.document.close(); w.focus();
+      setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+    },
+    _docHTML(tipo, o) {
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+      const isOrc = tipo === 'orcamento';
+      const titulo = isOrc ? 'ORÇAMENTO' : 'CONTRATO';
+      const rows = [];
+      if (isOrc) {
+        rows.push(['Data', MD.fmtDate(o.data)]);
+        if (o.validade) rows.push(['Validade', MD.fmtDate(o.validade)]);
+        rows.push(['Status', o.status || '—']);
+      } else {
+        rows.push(['Início', MD.fmtDate(o.inicio)]);
+        if (+o.meses) rows.push(['Vigência', o.meses + ' meses · até ' + MD.fmtDate(this.contrFim(o))]);
+        rows.push(['Periodicidade', o.periodicidade || '—']);
+        rows.push(['Status', o.status || '—']);
+      }
+      const rowsHTML = rows.map(r => `<div><span>${esc(r[0])}</span><span>${esc(r[1])}</span></div>`).join('');
+      const valorLabel = (!isOrc && o.periodicidade === 'Mensal') ? (MD.fmtCur(o.valor) + ' / mês') : MD.fmtCur(o.valor);
+      const corpo = esc(isOrc ? o.descricao : o.objeto) || '—';
+      const obs = o.observacoes ? `<h2>Observações</h2><div class="corpo">${esc(o.observacoes)}</div>` : '';
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(titulo + ' ' + (o.numero || ''))}</title>
+<style>
+*{box-sizing:border-box}body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a1a1a;margin:0;padding:40px;font-size:14px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #111;padding-bottom:16px}
+.brand{font-size:22px;font-weight:800;letter-spacing:.5px;line-height:1.1}.brand small{display:block;font-size:11px;font-weight:500;color:#666;letter-spacing:0;margin-top:3px}
+.doc-meta{text-align:right}.doc-type{font-size:12px;font-weight:700;color:#888;letter-spacing:2px}.doc-num{font-size:20px;font-weight:800}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#888;margin:26px 0 6px}
+.cliente{font-size:18px;font-weight:700}
+.rows{margin:14px 0}.rows div{display:flex;padding:7px 0;border-bottom:1px solid #eee}.rows div span:first-child{width:160px;color:#666}
+.corpo{white-space:pre-wrap;line-height:1.55}
+.valor{margin-top:24px;background:#faf7e6;border:1px solid #f0e6a8;border-radius:10px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}.valor b{font-size:24px}
+.foot{margin-top:48px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:14px;text-align:center}
+@media print{body{padding:24px}}
+</style></head><body>
+<div class="head"><div class="brand">Maracatu Digital<small>Intelligence · Marketing Digital</small></div><div class="doc-meta"><div class="doc-type">${esc(titulo)}</div><div class="doc-num">${esc(o.numero || '')}</div></div></div>
+<h2>Cliente</h2><div class="cliente">${esc(o.cliente || '—')}</div>
+<div class="rows">${rowsHTML}</div>
+<h2>${isOrc ? 'Descrição / escopo' : 'Objeto do contrato'}</h2><div class="corpo">${corpo}</div>
+${obs}
+<div class="valor"><span>Valor${isOrc ? ' total' : ''}</span><b>${esc(valorLabel)}</b></div>
+<div class="foot">Maracatu Digital Intelligence · www.maracatumktdigital.com · +55 11 96624-9876 · Cabo de Santo Agostinho/PE &amp; Sorocaba/SP</div>
+</body></html>`;
+    },
 
     // converte lead Ganho → cliente
     async ganharLead(l) {
