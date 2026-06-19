@@ -97,7 +97,7 @@ const redeIcon = (r) => `https://cdn.simpleicons.org/${r.slug}/${r.cor}`;
 const CATALOGO_SEED = [
   { nome: 'Gestão de Redes Sociais', categoria: 'Social Media', valor: 0, redes: ['instagram', 'facebook', 'tiktok'],
     escopo: 'Planejamento de conteúdo mensal\n12 a 16 criativos por mês (feed + stories)\nCopywriting e legendas\nAgendamento e publicação\nInteração e gestão de comentários e direct\nRelatório mensal de performance' },
-  { nome: 'Gestão de Tráfego Pago (Ads)', categoria: 'Tráfego Pago', valor: 0, ads: ['meta', 'google'], verbaSugerida: 0,
+  { nome: 'Gestão de Tráfego Pago (Ads)', categoria: 'Tráfego Pago', valor: 0, ads: ['meta', 'google'], verbaAds: {},
     escopo: 'Estruturação de campanhas\nDefinição de público e segmentação\nCriação e otimização de anúncios\nAcompanhamento e otimização contínua\nGestão da verba de impulsionamento (à parte)\nRelatório mensal de resultados (CPL, ROAS)' },
   { nome: 'Captação Audiovisual', categoria: 'Produção', valor: 0,
     escopo: 'Diária de gravação com equipe\nCaptação de fotos e vídeos\nEdição e tratamento do material\nEntrega de Reels e cortes para as redes\nDeslocamento e diárias extras à parte' },
@@ -680,14 +680,17 @@ document.addEventListener('alpine:init', () => {
 
     // ───────────────── COMERCIAL: catálogo de serviços ─────────────────
     get catalogoFiltrado() { const q = this.busca.toLowerCase(); return [...this.catalogo].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).filter(s => !q || ((s.nome || '') + ' ' + (s.categoria || '') + ' ' + (s.escopo || '')).toLowerCase().includes(q)); },
-    novoServico() { this.editing = { id: '', nome: '', categoria: '', valor: 0, escopo: '', redes: [], ads: [], verbaSugerida: 0 }; this.modal = 'servico'; },
-    editarServico(s) { this.editing = { categoria: '', escopo: '', redes: [], ads: [], verbaSugerida: 0, ...s }; if (!Array.isArray(this.editing.redes)) this.editing.redes = []; if (!Array.isArray(this.editing.ads)) this.editing.ads = []; this.modal = 'servico'; },
+    novoServico() { this.editing = { id: '', nome: '', categoria: '', valor: 0, escopo: '', redes: [], ads: [], verbaAds: {} }; this.modal = 'servico'; },
+    editarServico(s) { this.editing = { categoria: '', escopo: '', redes: [], ads: [], verbaAds: {}, ...s }; if (!Array.isArray(this.editing.redes)) this.editing.redes = []; if (!Array.isArray(this.editing.ads)) this.editing.ads = []; if (!this.editing.verbaAds || typeof this.editing.verbaAds !== 'object') this.editing.verbaAds = {}; this.modal = 'servico'; },
     // Marca/desmarca uma rede social no objeto (item do catálogo ou linha do orçamento).
     toggleRede(obj, id) { if (!Array.isArray(obj.redes)) obj.redes = []; const i = obj.redes.indexOf(id); if (i > -1) obj.redes.splice(i, 1); else obj.redes.push(id); },
     redesLabel(ids) { return (ids || []).map(id => { const r = REDES.find(x => x.id === id); return r ? r.label : id; }).join(', '); },
     // Marca/desmarca uma plataforma de tráfego.
-    toggleAds(obj, id) { if (!Array.isArray(obj.ads)) obj.ads = []; const i = obj.ads.indexOf(id); if (i > -1) obj.ads.splice(i, 1); else obj.ads.push(id); },
+    toggleAds(obj, id) { if (!Array.isArray(obj.ads)) obj.ads = []; const i = obj.ads.indexOf(id); if (i > -1) { obj.ads.splice(i, 1); if (obj.verbaAds) delete obj.verbaAds[id]; } else obj.ads.push(id); },
     adsLabel(ids) { return (ids || []).map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); return a ? a.label : id; }).join(', '); },
+    // Verba de mídia sugerida POR plataforma (não soma no orçamento).
+    setVerbaAds(obj, id, val) { if (!obj.verbaAds || typeof obj.verbaAds !== 'object') obj.verbaAds = {}; const n = +val || 0; if (n) obj.verbaAds[id] = n; else delete obj.verbaAds[id]; },
+    verbaAdsTotal(obj) { const v = (obj && obj.verbaAds) || {}; return (obj && obj.ads || []).reduce((a, id) => a + (+v[id] || 0), 0); },
     salvarServico() {
       const e = this.editing; if (!e.nome || !e.nome.trim()) return alert('Informe o nome do serviço.');
       e.valor = +e.valor || 0;
@@ -697,7 +700,7 @@ document.addEventListener('alpine:init', () => {
     },
     excluirServico(s) { if (!confirm('Excluir o serviço "' + (s.nome || '') + '" do catálogo?')) return; this.catalogo = this.catalogo.filter(x => x.id !== s.id); this.persist('catalogo', this.catalogo); this.modal = null; },
     // No orçamento: aplica um item do catálogo na linha de serviço (preenche nome, valor e escopo).
-    aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; if (Array.isArray(it.redes) && it.redes.length) s.redes = [...it.redes]; if (Array.isArray(it.ads) && it.ads.length) { s.ads = [...it.ads]; s.verbaSugerida = +it.verbaSugerida || 0; } },
+    aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; if (Array.isArray(it.redes) && it.redes.length) s.redes = [...it.redes]; if (Array.isArray(it.ads) && it.ads.length) { s.ads = [...it.ads]; s.verbaAds = { ...(it.verbaAds || {}) }; } },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
     get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
@@ -794,9 +797,12 @@ table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}th,td{te
       const servHTML = (o.servicos || []).filter(s => s.nome || s.valor).map((s, i) => {
         const bullets = String(s.escopo || '').split('\n').map(x => x.replace(/^[-•\s]+/, '').trim()).filter(Boolean);
         const redes = (Array.isArray(s.redes) && s.redes.length) ? `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Redes:</b> ${e(this.redesLabel(s.redes))}</div>` : '';
-        const ads = (Array.isArray(s.ads) && s.ads.length) ? `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Plataformas:</b> ${e(this.adsLabel(s.ads))}</div>` : '';
-        const verba = (+s.verbaSugerida) ? `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Sugestão de verba de mídia:</b> ${e(MD.fmtCur(+s.verbaSugerida))}/mês <i>(à parte — não incluída no fee)</i></div>` : '';
-        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${redes}${ads}${verba}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
+        const ads = (Array.isArray(s.ads) && s.ads.length) ? (() => {
+          const itens = s.ads.map(id => { const a = ADS_PLATAFORMAS.find(x => x.id === id); const v = (s.verbaAds || {})[id]; return (a ? a.label : id) + (v ? ` (${MD.fmtCur(+v)}/mês)` : ''); });
+          const tot = this.verbaAdsTotal(s);
+          return `<div style="font-size:13px;color:#555;margin:2px 0 6px"><b>Plataformas de tráfego:</b> ${e(itens.join(' · '))}${tot ? ` <i>— verba de mídia sugerida: ${e(MD.fmtCur(tot))}/mês, à parte (não incluída no fee)</i>` : ''}</div>`;
+        })() : '';
+        return `<div class="serv"><div class="serv-head"><span>${i + 1}. ${e(s.nome)}</span><span class="serv-val">${e(MD.fmtCur(s.valor))}/mês</span></div>${redes}${ads}${bullets.length ? `<ul>${bullets.map(b => `<li>${e(b)}</li>`).join('')}</ul>` : ''}</div>`;
       }).join('');
       const cron = this.cronograma(o).map(p => `<tr><td>${p.n}º mês — ${e(MD.fmtDate(p.venc))}</td><td>${e(MD.fmtCur(p.valor))}</td><td>${e(o.formaPagamento || 'Boleto')}</td></tr>`).join('');
       const metaCli = [o.contato && `<span><b>Contato:</b> ${e(o.contato)}</span>`, o.email && `<span><b>E-mail:</b> ${e(o.email)}</span>`].filter(Boolean).join('');
