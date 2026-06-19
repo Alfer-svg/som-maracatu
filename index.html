@@ -862,6 +862,18 @@
               </template>
             </div>
           </div>
+          <div class="form-group" x-show="Array.isArray(s.ads)" style="margin-top:8px">
+            <label class="form-label">Plataformas de tráfego</label>
+            <div class="flex" style="flex-wrap:wrap;gap:8px">
+              <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 9px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(s.ads||[]).includes(a.id)?'border-color:#111;background:#1110':''">
+                  <input type="checkbox" :checked="(s.ads||[]).includes(a.id)" @change="toggleAds(s, a.id)">
+                  <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"><span x-text="a.label"></span>
+                </label>
+              </template>
+            </div>
+            <div class="form-group" style="margin-top:8px;max-width:260px"><label class="form-label">Sugestão de verba (R$/mês)</label><input class="form-input" type="number" min="0" x-model="s.verbaSugerida"><div class="fs-12 text-2" style="margin-top:3px">Não entra no total do orçamento.</div></div>
+          </div>
           <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
         </div>
       </template>
@@ -903,6 +915,18 @@
           </template>
         </div>
       </div>
+      <div class="form-group" style="margin-top:10px">
+        <label class="form-label">Plataformas de tráfego (opcional)</label>
+        <div class="flex" style="flex-wrap:wrap;gap:8px">
+          <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:6px 10px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(editing.ads||[]).includes(a.id)?'border-color:#111;background:#1110':''">
+              <input type="checkbox" :checked="(editing.ads||[]).includes(a.id)" @change="toggleAds(editing, a.id)">
+              <img :src="redeIcon(a)" width="16" height="16" :alt="a.label"><span x-text="a.label"></span>
+            </label>
+          </template>
+        </div>
+      </div>
+      <div class="form-group" x-show="(editing.ads||[]).length" style="margin-top:8px;max-width:300px"><label class="form-label">Sugestão de verba de mídia (R$/mês)</label><input class="form-input" type="number" min="0" x-model="editing.verbaSugerida" placeholder="Ex.: 1500"><div class="fs-12 text-2" style="margin-top:4px">Não soma no total do orçamento — é só uma sugestão de investimento em mídia.</div></div>
       <div class="form-group" style="margin-top:10px"><label class="form-label">Escopo padrão (1 item por linha)</label><textarea class="form-textarea" rows="5" x-model="editing.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
     </div>
     <div class="modal-foot">
