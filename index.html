@@ -47,7 +47,7 @@
       </div>
 
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
-      <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
+      <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
         <span class="nav-icon">💼</span>
         <span>Comercial</span>
         <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
@@ -58,6 +58,9 @@
         </div>
         <div class="nav-item nav-subitem" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
           <span class="nav-icon">📄</span><span>Orçamentos</span>
+        </div>
+        <div class="nav-item nav-subitem" :class="page==='servicos'?'active':''" @click="go('servicos')" title="Catálogo de serviços reutilizáveis nos orçamentos.">
+          <span class="nav-icon">🧩</span><span>Serviços</span>
         </div>
         <div class="nav-item nav-subitem" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
           <span class="nav-icon">📝</span><span>Contratos</span>
@@ -96,7 +99,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -106,6 +109,7 @@
       <button class="btn btn-primary" x-show="page==='crm'" @click="novoLead()">+ Lead</button>
       <button class="btn btn-primary" x-show="page==='comercial'" @click="novoCliente()">+ Cliente</button>
       <button class="btn btn-primary" x-show="page==='orcamentos'" @click="novoOrcamento()">+ Orçamento</button>
+      <button class="btn btn-primary" x-show="page==='servicos'" @click="novoServico()">+ Serviço</button>
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
@@ -218,6 +222,27 @@
                   <td class="fw-700 text-green" x-text="fmtCur(orcTotal(o))+'/mês'"></td>
                   <td><span class="badge" :style="'background:'+orcStatusInfo(o.status).color+'22;color:'+orcStatusInfo(o.status).color" x-text="o.status"></span></td>
                   <td><button class="btn btn-ghost btn-sm" @click="editarOrcamento(o)">Editar</button></td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== SERVIÇOS (CATÁLOGO) ========== -->
+      <section x-show="page==='servicos'">
+        <template x-if="catalogo.length===0"><div class="card empty">Nenhum serviço no catálogo. Clique em “+ Serviço” pra cadastrar um item reutilizável nos orçamentos (nome, valor padrão e escopo).</div></template>
+        <div class="card" x-show="catalogo.length">
+          <table class="table">
+            <thead><tr><th>Serviço</th><th>Categoria</th><th>Valor padrão</th><th>Escopo</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="s in catalogoFiltrado" :key="s.id">
+                <tr>
+                  <td class="fw-700" x-text="s.nome||'—'"></td>
+                  <td class="fs-12 text-2" x-text="s.categoria||'—'"></td>
+                  <td class="fw-700 text-green" x-text="s.valor?fmtCur(s.valor)+'/mês':'—'"></td>
+                  <td class="fs-12 text-2" x-text="((s.escopo||'').split('\n').filter(Boolean).length||0)+' item(ns)'"></td>
+                  <td><button class="btn btn-ghost btn-sm" @click="editarServico(s)">Editar</button></td>
                 </tr>
               </template>
             </tbody>
@@ -820,6 +845,7 @@
       <label class="form-label" style="margin-top:16px;display:block">Serviços incluídos</label>
       <template x-for="(s,i) in editing.servicos" :key="s.id">
         <div class="card" style="padding:12px;margin-bottom:10px">
+          <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo</label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
           <div class="flex gap-2" style="align-items:flex-end">
             <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
             <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
@@ -841,6 +867,26 @@
       <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato a partir desta proposta">→ Gerar contrato</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarOrcamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVIÇO (catálogo) -->
+<div class="modal-backdrop" x-show="modal==='servico'" @click.self="modal=null" x-cloak>
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
+    <div class="modal-body">
+      <div class="grid grid-2" style="gap:14px">
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do serviço</label><input class="form-input" x-model="editing.nome" placeholder="Ex.: Gestão de Redes Sociais"></div>
+        <div class="form-group"><label class="form-label">Categoria</label><input class="form-input" x-model="editing.categoria" placeholder="Ex.: Social Media" list="cat-list"><datalist id="cat-list"><template x-for="c in [...new Set(catalogo.map(x=>x.categoria).filter(Boolean))]"><option :value="c"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Valor padrão (R$/mês)</label><input class="form-input" type="number" min="0" x-model="editing.valor"></div>
+      </div>
+      <div class="form-group" style="margin-top:10px"><label class="form-label">Escopo padrão (1 item por linha)</label><textarea class="form-textarea" rows="5" x-model="editing.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" x-show="editing.id" @click="excluirServico(editing)">Excluir</button>
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarServico()">Salvar</button>
     </div>
   </div>
 </div>

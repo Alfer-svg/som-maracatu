@@ -148,7 +148,7 @@ document.addEventListener('alpine:init', () => {
     secCli: 'empresa', // seção aberta no acordeão do modal de cliente
 
     // dados
-    clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [],
+    clients: [], leads: [], proposals: [], contracts: [], finance: [], projects: [], catalogo: [],
 
     // modais
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
@@ -170,6 +170,7 @@ document.addEventListener('alpine:init', () => {
       this.contracts = MD.get('som_contracts', []);
       this.finance   = MD.get('som_finance', []);
       this.projects  = MD.get('som_projects', []);
+      this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento
       if (this.token) { this.carregarClientes(); this.carregarOnboardings(); }
     },
 
@@ -643,6 +644,21 @@ document.addEventListener('alpine:init', () => {
       this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || '', documento: '', endereco: '', representante: o.contato || '', projeto: o.projeto || '', objeto: serv || o.descricao || '', servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: '' };
       this.modal = 'contrato';
     },
+
+    // ───────────────── COMERCIAL: catálogo de serviços ─────────────────
+    get catalogoFiltrado() { const q = this.busca.toLowerCase(); return [...this.catalogo].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')).filter(s => !q || ((s.nome || '') + ' ' + (s.categoria || '') + ' ' + (s.escopo || '')).toLowerCase().includes(q)); },
+    novoServico() { this.editing = { id: '', nome: '', categoria: '', valor: 0, escopo: '' }; this.modal = 'servico'; },
+    editarServico(s) { this.editing = { categoria: '', escopo: '', ...s }; this.modal = 'servico'; },
+    salvarServico() {
+      const e = this.editing; if (!e.nome || !e.nome.trim()) return alert('Informe o nome do serviço.');
+      e.valor = +e.valor || 0;
+      if (e.id) { const i = this.catalogo.findIndex(x => x.id === e.id); if (i > -1) this.catalogo[i] = { ...e }; }
+      else { e.id = MD.uid(); this.catalogo.push({ ...e }); }
+      this.persist('catalogo', this.catalogo); this.modal = null;
+    },
+    excluirServico(s) { if (!confirm('Excluir o serviço "' + (s.nome || '') + '" do catálogo?')) return; this.catalogo = this.catalogo.filter(x => x.id !== s.id); this.persist('catalogo', this.catalogo); this.modal = null; },
+    // No orçamento: aplica um item do catálogo na linha de serviço (preenche nome, valor e escopo).
+    aplicarCatalogo(s, id) { const it = this.catalogo.find(x => x.id === id); if (!it) return; s.nome = it.nome; s.valor = +it.valor || 0; if (it.escopo) s.escopo = it.escopo; },
 
     // ───────────────── COMERCIAL: contratos ─────────────────
     get contratosFiltrados() { const q = this.busca.toLowerCase(); return [...this.contracts].sort((a, b) => (b.inicio || '').localeCompare(a.inicio || '')).filter(c => !q || ((c.numero || '') + ' ' + (c.cliente || '') + ' ' + (c.objeto || '')).toLowerCase().includes(q)); },
