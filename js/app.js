@@ -167,6 +167,7 @@ document.addEventListener('alpine:init', () => {
     STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
+    radarAberto: true, // painel Radar do Monitoramento expandido
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -470,6 +471,50 @@ document.addEventListener('alpine:init', () => {
       if (!(c.documentos || []).length) a.push('Sem documentos');
       return a;
     },
+    // ── Radar: pendências acionáveis cruzando TODOS os clientes ──
+    diasAte(d) { if (!d) return null; const t = new Date(String(d).slice(0, 10) + 'T00:00:00'); if (isNaN(t.getTime())) return null; const h = new Date(); h.setHours(0, 0, 0, 0); return Math.round((t - h) / 86400000); },
+    msgAniversario(r) { const nome = String(r.nome || '').trim().split(/\s+/)[0]; return (nome ? 'Oi ' + nome + '! ' : 'Olá! ') + '🎉 Passando pra te desejar um feliz aniversário, com muita saúde e conquistas. Um grande abraço da equipe Maracatu Digital!'; },
+    pendenciasCliente(c) {
+      const out = []; const add = (nivel, ord, icon, txt, acao) => out.push({ nivel, ord, icon, txt, acaoLabel: '', acaoHref: '', acaoFicha: false, ...(acao || {}) });
+      // 🎂 Aniversários de responsáveis ≤30d → parabenizar no WhatsApp
+      (c.responsaveis || []).forEach(r => {
+        const d = this.diasAniver(r.nascimento);
+        if (d != null && d <= 30) {
+          const quando = d === 0 ? 'hoje 🥳' : (d === 1 ? 'amanhã' : 'em ' + d + 'd');
+          const wa = r.whatsapp ? (this.waLink(r.whatsapp) + '?text=' + encodeURIComponent(this.msgAniversario(r))) : '';
+          add(d <= 3 ? 'alta' : 'media', d, '🎂', 'Aniversário de ' + (r.nome || 'responsável') + ' ' + quando, wa ? { acaoLabel: 'Parabenizar', acaoHref: wa } : { acaoFicha: true });
+        }
+      });
+      // 🌐 Domínio / 🖥️ Hospedagem vencendo ≤60d
+      const venc = (obj, icon, rotulo) => {
+        const d = this.diasAte(obj && obj.vencimento);
+        if (d != null && d <= 60) add(d <= 15 ? 'alta' : 'media', d, icon, rotulo + (d < 0 ? ' venceu há ' + (-d) + 'd ⚠️' : ' vence ' + (d === 0 ? 'hoje ⚠️' : 'em ' + d + 'd')) + (obj.provedor ? ' · ' + obj.provedor : ''), { acaoFicha: true });
+      };
+      venc(c.dominio, '🌐', 'Domínio'); venc(c.hospedagem, '🖥️', 'Hospedagem');
+      // 🔴 Saúde crítica
+      const s = this.saudeCliente(c);
+      if (s.score != null && s.score < 40) add('alta', 4, '🔴', 'Saúde crítica (' + s.score + '%) — revisar redes/site/objetivos', { acaoFicha: true });
+      // 📲 Responsáveis com rede pra seguir
+      this.respComRede(c).filter(r => !r.seguindo).forEach(r => {
+        const href = this.igLink(r.instagram) || this.liLink(r.linkedin);
+        add('media', 40, '📲', 'Seguir ' + (r.nome || 'contato') + (r.instagram ? ' (@' + String(r.instagram).replace(/^@/, '') + ')' : ''), href ? { acaoLabel: 'Abrir perfil', acaoHref: href } : { acaoFicha: true });
+      });
+      // 🎯 Metas batidas → renovar
+      (c.objetivos || []).forEach(o => { if (o.nome && +o.alvo > 0 && this.progressoObj(o) >= 100) add('baixa', 70, '🎯', 'Meta "' + o.nome + '" batida — renovar objetivo', { acaoFicha: true }); });
+      // Lacunas de cadastro
+      if (!(c.responsaveis || []).length) add('media', 50, '👥', 'Sem responsáveis cadastrados', { acaoFicha: true });
+      if (!this.briefingItens(c).length) add('baixa', 80, '📋', 'Briefing vazio', { acaoFicha: true });
+      if (!(c.documentos || []).length) add('baixa', 85, '📎', 'Sem documentos anexados', { acaoFicha: true });
+      return out;
+    },
+    get radar() {
+      const N = { alta: 0, media: 1, baixa: 2 }; const items = [];
+      (this.clients || []).filter(c => (c.status || 'Ativo') !== 'Inativo').forEach(c => this.pendenciasCliente(c).forEach(p => items.push({ ...p, cliId: c.id, cliNome: c.empresa })));
+      items.sort((a, b) => (N[a.nivel] - N[b.nivel]) || (a.ord - b.ord) || a.cliNome.localeCompare(b.cliNome));
+      return items;
+    },
+    get radarUrgentes() { return this.radar.filter(p => p.nivel === 'alta').length; },
+    radarIr(p) { this.busca = ''; this.abrirMonitor(p.cliId); this.$nextTick(() => { const el = document.querySelector('.ficha'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }); },
     // ── Perfil do cliente (uso interno — baliza os contatos) ──
     perfilCliente(c) {
       const b = c.briefing || {}, P = b.publico || {}, PO = b.posicionamento || {}, CR = b.criativo || {};

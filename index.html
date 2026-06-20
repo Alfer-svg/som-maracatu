@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=32">
+  <link rel="stylesheet" href="css/styles.css?v=33">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -82,6 +82,7 @@
           <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
           <span x-show="item.id==='onboarding' && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#04210f;min-width:20px;justify-content:center" x-text="onboardings.length"></span>
+          <span x-show="item.id==='monitoramento' && radarUrgentes" class="badge" style="margin-left:auto;background:#dc2626;color:#fff;min-width:20px;justify-content:center" x-text="radarUrgentes" title="Pendências urgentes no Radar"></span>
         </div>
       </template>
     </nav>
@@ -332,6 +333,33 @@
 
       <!-- ========== MONITORAMENTO ========== -->
       <section x-show="page==='monitoramento'">
+        <!-- 📡 RADAR — pendências acionáveis de todos os clientes -->
+        <div class="card" x-show="clients.length" style="margin-bottom:14px;padding:0;overflow:hidden">
+          <div class="flex items-center justify-between" style="padding:12px 14px;border-bottom:1px solid var(--border)">
+            <div class="flex items-center gap-2">
+              <span style="font-size:20px">📡</span>
+              <div>
+                <div class="fw-800 fs-14">Radar do operacional</div>
+                <div class="text-3 fs-12" x-text="radar.length ? (radar.length+' pendência(s)'+(radarUrgentes?' · '+radarUrgentes+' urgente(s)':'')) : 'Tudo em dia ✅'"></div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" @click="radarAberto=!radarAberto" x-show="radar.length" x-text="radarAberto?'Recolher':'Ver tudo'"></button>
+          </div>
+          <div x-show="radar.length && radarAberto" style="max-height:340px;overflow:auto">
+            <template x-for="(p,i) in radar" :key="p.cliId+'-'+i">
+              <div class="flex items-center gap-2" style="padding:9px 14px;border-bottom:1px solid var(--border)">
+                <span style="font-size:16px;width:22px;text-align:center" x-text="p.icon"></span>
+                <span class="badge" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
+                <div style="flex:1;min-width:0">
+                  <div class="fs-13 fw-600 truncate" x-text="p.txt"></div>
+                  <div class="text-3 fs-12 truncate" x-text="p.cliNome"></div>
+                </div>
+                <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" class="btn btn-sm" style="background:var(--accent);color:#04210f;border:none" x-text="p.acaoLabel"></a>
+                <button class="btn btn-ghost btn-sm" @click="radarIr(p)" title="Abrir ficha do cliente">Abrir ficha</button>
+              </div>
+            </template>
+          </div>
+        </div>
         <template x-if="clientesFiltrados.length===0"><div class="card empty">Nenhum cliente pra monitorar ainda. Cadastre em <b>Clientes</b>.</div></template>
         <div x-show="clientesFiltrados.length">
           <!-- ABAS (fichário) — uma por cliente, com sinal de saúde -->
@@ -1101,6 +1129,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=34"></script>
+<script src="js/app.js?v=35"></script>
 </body>
 </html>
