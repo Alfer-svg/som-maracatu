@@ -17,6 +17,28 @@ const MD = {
 // Backend (Railway). Clientes + credenciais vivem aqui; login via JWT.
 const API_BASE = 'https://som-backend-production-01d8.up.railway.app/api';
 
+/* ---------- Ícones: emoji (usado como chave nos dados) → classe Phosphor ---------- */
+const PH_ICON = {
+  // navegação / estrutura
+  '📊': 'ph ph-chart-bar', '💼': 'ph ph-briefcase', '🎯': 'ph ph-target', '📄': 'ph ph-file-text',
+  '🧩': 'ph ph-puzzle-piece', '📝': 'ph ph-scroll', '👥': 'ph ph-users', '💰': 'ph ph-wallet',
+  '🚀': 'ph ph-kanban', '🩺': 'ph ph-heartbeat', '📥': 'ph ph-tray', '🧑‍💼': 'ph ph-identification-badge',
+  '📡': 'ph ph-broadcast',
+  // CRM / comercial
+  '📞': 'ph ph-phone', '⭐': 'ph-fill ph-star', '🤝': 'ph ph-handshake', '💬': 'ph ph-chat-circle',
+  '🏆': 'ph ph-trophy', '✕': 'ph ph-x', '✉️': 'ph ph-envelope', '📍': 'ph ph-map-pin',
+  // áreas de projeto
+  '📱': 'ph ph-device-mobile', '🌐': 'ph ph-globe', '🎬': 'ph ph-video-camera', '🎨': 'ph ph-palette', '🗳️': 'ph ph-megaphone',
+  // radar / monitoramento
+  '🎂': 'ph ph-cake', '🖥️': 'ph ph-hard-drives', '📲': 'ph ph-user-plus', '📋': 'ph ph-clipboard-text', '📎': 'ph ph-paperclip',
+  // sinais de saúde (cor aplicada à parte) e diversos
+  '🟢': 'ph-fill ph-circle', '🟡': 'ph-fill ph-circle', '🔴': 'ph-fill ph-circle', '⚪': 'ph ph-circle', '✕': 'ph ph-x', '✓': 'ph ph-check',
+  '⚠️': 'ph-fill ph-warning', '✨': 'ph ph-sparkle', '🔐': 'ph ph-lock-key', '🔗': 'ph ph-link', '🔒': 'ph ph-lock-key', '🔓': 'ph ph-lock-key-open',
+  '✅': 'ph ph-check-circle', '🩹': 'ph ph-bandaids', '🏢': 'ph ph-buildings', '🗣️': 'ph ph-megaphone', '💡': 'ph ph-lightbulb',
+  '📈': 'ph ph-trend-up', '📅': 'ph ph-calendar', '🔎': 'ph ph-magnifying-glass', '🥳': 'ph ph-confetti', '🎉': 'ph ph-confetti', '📒': 'ph ph-notebook',
+};
+const SINAL_COR = { '🟢': '#16a34a', '🟡': '#d97706', '🔴': '#dc2626', '⚪': '#9ca3af' };
+
 /* Valida CNPJ pelos dígitos verificadores (evita consulta inútil). */
 function validCNPJ(v) {
   const c = (v || '').replace(/\D/g, '');
@@ -316,6 +338,9 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
+    // ícones: classe Phosphor a partir do emoji-chave + cor (p/ sinais de saúde)
+    phClass(e) { return PH_ICON[e] || 'ph ph-circle'; },
+    phCor(e) { return SINAL_COR[e] || ''; },
     go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
@@ -556,9 +581,9 @@ document.addEventListener('alpine:init', () => {
       if (!(c.responsaveis || []).length) a.push('Sem responsáveis');
       if (!this.briefingItens(c).length) a.push('Briefing vazio');
       const aniv = (c.responsaveis || []).filter(r => { const d = this.diasAniver(r.nascimento); return d != null && d <= 30; }).length;
-      if (aniv) a.push('🎂 ' + aniv + ' aniversário(s) ≤30d');
+      if (aniv) a.push(aniv + ' aniversário(s) ≤30d');
       const naoSeg = this.respComRede(c).filter(r => !r.seguindo).length;
-      if (naoSeg) a.push('📲 ' + naoSeg + ' pra seguir');
+      if (naoSeg) a.push(naoSeg + ' pra seguir');
       if (!(c.documentos || []).length) a.push('Sem documentos');
       return a;
     },
@@ -572,7 +597,7 @@ document.addEventListener('alpine:init', () => {
       (c.responsaveis || []).forEach(r => {
         const d = this.diasAniver(r.nascimento);
         if (d != null && d <= 30) {
-          const quando = d === 0 ? 'hoje 🥳' : (d === 1 ? 'amanhã' : 'em ' + d + 'd');
+          const quando = d === 0 ? 'hoje' : (d === 1 ? 'amanhã' : 'em ' + d + 'd');
           const wa = r.whatsapp ? (this.waLink(r.whatsapp) + '?text=' + encodeURIComponent(this.msgAniversario(r))) : '';
           add(d <= 3 ? 'alta' : 'media', d, '🎂', 'Aniversário de ' + (r.nome || 'responsável') + ' ' + quando, 'aniver', r.id, wa ? { acaoLabel: 'Parabenizar', acaoHref: wa } : { acaoFicha: true });
         }
@@ -580,7 +605,7 @@ document.addEventListener('alpine:init', () => {
       // 🌐 Domínio / 🖥️ Hospedagem vencendo ≤60d
       const venc = (obj, icon, rotulo, kind) => {
         const d = this.diasAte(obj && obj.vencimento);
-        if (d != null && d <= 60) add(d <= 15 ? 'alta' : 'media', d, icon, rotulo + (d < 0 ? ' venceu há ' + (-d) + 'd ⚠️' : ' vence ' + (d === 0 ? 'hoje ⚠️' : 'em ' + d + 'd')) + (obj.provedor ? ' · ' + obj.provedor : ''), kind, '', { acaoFicha: true });
+        if (d != null && d <= 60) add(d <= 15 ? 'alta' : 'media', d, icon, rotulo + (d < 0 ? ' venceu há ' + (-d) + 'd' : ' vence ' + (d === 0 ? 'hoje' : 'em ' + d + 'd')) + (obj.provedor ? ' · ' + obj.provedor : ''), kind, '', { acaoFicha: true });
       };
       venc(c.dominio, '🌐', 'Domínio', 'dom'); venc(c.hospedagem, '🖥️', 'Hospedagem', 'hosp');
       // 🔴 Saúde crítica

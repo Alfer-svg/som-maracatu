@@ -150,6 +150,10 @@ a { color: inherit; text-decoration: none; }
 .fs-12{font-size:12px}.fs-13{font-size:13px}.fs-14{font-size:14px}.fs-18{font-size:18px}.fs-22{font-size:22px}
 .fw-600{font-weight:600}
 .truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Ícones Phosphor — alinhamento padrão ao lado de texto */
+i.ph, i[class*=" ph-"], i[class^="ph-"]{vertical-align:-0.14em;line-height:1;font-style:normal}
+.ic{font-size:1.05em}
+.ic-lg{font-size:1.25em}
 .empty { text-align: center; padding: 50px 20px; color: var(--text-3); }
 .search { position: relative; flex: 1; max-width: 360px; }
 .search input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: var(--surface); outline: none; }
