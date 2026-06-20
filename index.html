@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <link rel="icon" href="assets/favicon.png?v=2">
+  <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=39">
+  <link rel="stylesheet" href="css/styles.css?v=40">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -16,7 +16,7 @@
 <div x-show="!autenticado" x-cloak style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0a,#1f1f1f);padding:20px">
   <div style="background:#fff;border-radius:16px;padding:30px;width:340px;box-shadow:0 24px 60px rgba(0,0,0,.45)">
     <div style="display:flex;align-items:center;gap:10px">
-      <img src="assets/logo.png?v=2" style="width:36px;height:36px;background:#161616;border-radius:9px;padding:4px">
+      <img src="assets/logo.png?v=3" style="width:36px;height:36px;background:#161616;border-radius:9px;padding:4px">
       <div><div style="font-weight:800;font-size:16px">SOM</div><div style="font-size:11px;color:#908f86">por Maracatu Digital</div></div>
     </div>
     <div style="font-size:13px;color:#908f86;margin:14px 0 18px">Entre para acessar o sistema.</div>
@@ -36,7 +36,7 @@
   <!-- ───────── SIDEBAR ───────── -->
   <aside class="sidebar">
     <div class="brand">
-      <img class="brand-logo" src="assets/logo.png?v=2" alt="Maracatu Digital">
+      <img class="brand-logo" src="assets/logo.png?v=3" alt="Maracatu Digital">
       <div>
         <div class="brand-name">SOM</div>
         <div class="brand-sub">por Maracatu Digital</div>
@@ -45,29 +45,29 @@
     <nav class="nav">
       <!-- Dashboard -->
       <div class="nav-item" x-show="podeVer('dashboard')" :class="page==='dashboard'?'active':''" @click="go('dashboard')" title="Visão geral: KPIs de clientes, receita, funil de vendas e projetos.">
-        <span class="nav-icon"><img class="ic-img" src="assets/icons/chart-bar.png?v=2"></span><span>Dashboard</span>
+        <span class="nav-icon"><img class="ic-img" src="assets/icons/chart-bar.png?v=3"></span><span>Dashboard</span>
       </div>
 
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
       <template x-if="podeVer('crm')||podeVer('orcamentos')||podeVer('servicos')||podeVer('contratos')">
         <div>
           <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
-            <span class="nav-icon"><img class="ic-img" src="assets/icons/briefcase.png?v=2"></span>
+            <span class="nav-icon"><img class="ic-img" src="assets/icons/briefcase.png?v=3"></span>
             <span>Comercial</span>
             <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
           </div>
           <div class="nav-sub" x-show="comOpen">
             <div class="nav-item nav-subitem" x-show="podeVer('crm')" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
-              <span class="nav-icon"><img class="ic-img" src="assets/icons/target.png?v=2"></span><span>CRM</span>
+              <span class="nav-icon"><img class="ic-img" src="assets/icons/target.png?v=3"></span><span>CRM</span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('orcamentos')" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
-              <span class="nav-icon"><img class="ic-img" src="assets/icons/file-text.png?v=2"></span><span>Orçamentos</span>
+              <span class="nav-icon"><img class="ic-img" src="assets/icons/file-text.png?v=3"></span><span>Orçamentos</span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('servicos')" :class="page==='servicos'?'active':''" @click="go('servicos')" title="Catálogo de serviços reutilizáveis nos orçamentos.">
-              <span class="nav-icon"><img class="ic-img" src="assets/icons/puzzle-piece.png?v=2"></span><span>Serviços</span>
+              <span class="nav-icon"><img class="ic-img" src="assets/icons/puzzle-piece.png?v=3"></span><span>Serviços</span>
             </div>
             <div class="nav-item nav-subitem" x-show="podeVer('contratos')" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
-              <span class="nav-icon"><img class="ic-img" src="assets/icons/scroll.png?v=2"></span><span>Contratos</span>
+              <span class="nav-icon"><img class="ic-img" src="assets/icons/scroll.png?v=3"></span><span>Contratos</span>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@
 
       <!-- Clientes (top-level) — inclui a aba de Onboardings -->
       <div class="nav-item" x-show="podeVer('comercial')" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Clientes (CNPJ + CEP automáticos) e onboardings recebidos do site.">
-        <span class="nav-icon"><img class="ic-img" src="assets/icons/users.png?v=2"></span><span>Clientes</span>
+        <span class="nav-icon"><img class="ic-img" src="assets/icons/users.png?v=3"></span><span>Clientes</span>
         <span x-show="podeVer('onboarding') && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#04210f;min-width:20px;justify-content:center" x-text="onboardings.length" title="Onboardings aguardando revisão"></span>
       </div>
 
@@ -94,12 +94,12 @@
 
       <!-- Relatórios (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='relatorios'?'active':''" @click="go('relatorios')" title="Ponto e produção da equipe.">
-        <span class="nav-icon"><img class="ic-img" src="assets/icons/chart-line-up.png?v=2"></span><span>Relatórios</span>
+        <span class="nav-icon"><img class="ic-img" src="assets/icons/chart-line-up.png?v=3"></span><span>Relatórios</span>
       </div>
 
       <!-- Pessoal (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Equipe e perfis de acesso ao sistema.">
-        <span class="nav-icon"><img class="ic-img" src="assets/icons/identification-badge.png?v=2"></span><span>Pessoal</span>
+        <span class="nav-icon"><img class="ic-img" src="assets/icons/identification-badge.png?v=3"></span><span>Pessoal</span>
       </div>
     </nav>
     <div class="sidebar-foot">
@@ -121,7 +121,7 @@
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
-        <span class="ico"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=2"></span>
+        <span class="ico"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=3"></span>
         <input type="text" placeholder="Buscar…" x-model="busca">
       </div>
       <button class="btn btn-primary" x-show="page==='crm'" @click="novoLead()">+ Lead</button>
@@ -138,10 +138,10 @@
       <!-- ========== DASHBOARD ========== -->
       <section x-show="page==='dashboard'">
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#ede9fe"><img class="ic-img" src="assets/icons/handshake.png?v=2"></span> Clientes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dcfce7"><img class="ic-img" src="assets/icons/wallet.png?v=2"></span> Receita do mês</div><div class="kpi-value text-green" x-text="fmtCur(receitaMes)"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dbeafe"><img class="ic-img" src="assets/icons/target.png?v=2"></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#fef3c7"><img class="ic-img" src="assets/icons/kanban.png?v=2"></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#ede9fe"><img class="ic-img" src="assets/icons/handshake.png?v=3"></span> Clientes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dcfce7"><img class="ic-img" src="assets/icons/wallet.png?v=3"></span> Receita do mês</div><div class="kpi-value text-green" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#dbeafe"><img class="ic-img" src="assets/icons/target.png?v=3"></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:#fef3c7"><img class="ic-img" src="assets/icons/kanban.png?v=3"></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
         </div>
         <div class="grid grid-4 mb-4">
           <div class="card kpi"><div class="kpi-label">MRR (recorrente)</div><div class="kpi-value fs-22" x-text="fmtCur(mrr)"></div></div>
@@ -153,13 +153,13 @@
         <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden">
           <div class="flex items-center justify-between" style="padding:12px 14px;border-bottom:1px solid var(--border)">
             <div class="flex items-center gap-2">
-              <span style="font-size:18px"><img class="ic-img" src="assets/icons/broadcast.png?v=2"></span>
+              <span style="font-size:18px"><img class="ic-img" src="assets/icons/broadcast.png?v=3"></span>
               <span class="fw-800 fs-14">Radar — precisa de ação</span>
               <span x-show="radarUrgentes" class="badge" style="background:#fee2e2;color:#dc2626" x-text="radarUrgentes+' urgente(s)'"></span>
             </div>
             <button class="btn btn-ghost btn-sm" @click="go('monitoramento')" x-show="radar.length">Ver no Monitoramento →</button>
           </div>
-          <template x-if="radar.length===0"><div class="empty" style="padding:24px">Tudo em dia <img class="ic-img" src="assets/icons/check-circle.png?v=2"> Nenhuma pendência nos clientes ativos.</div></template>
+          <template x-if="radar.length===0"><div class="empty" style="padding:24px">Tudo em dia <img class="ic-img" src="assets/icons/check-circle.png?v=3"> Nenhuma pendência nos clientes ativos.</div></template>
           <template x-for="(p,i) in radar.slice(0,5)" :key="'dash-'+p.key">
             <div class="flex items-center gap-2" style="padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer" @click="radarIr(p)">
               <img class="ic-img" style="width:20px" :src="icoSrc(p.icon)">
@@ -184,7 +184,7 @@
           </div>
           <div class="card">
             <div class="card-title mb-3">Próximos vencimentos</div>
-            <template x-if="finance.filter(f=>f.status!=='pago').length===0"><div class="empty">Nada pendente <img class="ic-img" src="assets/icons/confetti.png?v=2"></div></template>
+            <template x-if="finance.filter(f=>f.status!=='pago').length===0"><div class="empty">Nada pendente <img class="ic-img" src="assets/icons/confetti.png?v=3"></div></template>
             <template x-for="f in finance.filter(f=>f.status!=='pago').slice(0,8)" :key="f.id">
               <div class="flex items-center justify-between mb-2">
                 <div><div class="fw-700 fs-12" x-text="f.descricao"></div><div class="text-3 fs-12" x-text="(f.tipo==='receita'?'Receber · ':'Pagar · ')+fmtDate(f.vencimento)"></div></div>
@@ -226,8 +226,8 @@
       <section x-show="page==='comercial'">
         <!-- abas: Clientes | Onboardings -->
         <div class="fichario" x-show="podeVer('onboarding')" style="margin-bottom:14px">
-          <div class="fichario-tab" :class="comTab==='lista'?'active':''" @click="comTab='lista'"><img class="ic-img" src="assets/icons/users.png?v=2"> Clientes</div>
-          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()"><img class="ic-img" src="assets/icons/tray.png?v=2"> Onboardings <span x-show="onboardings.length" class="badge" style="background:var(--accent);color:#04210f;margin-left:6px;min-width:18px;justify-content:center" x-text="onboardings.length"></span></div>
+          <div class="fichario-tab" :class="comTab==='lista'?'active':''" @click="comTab='lista'"><img class="ic-img" src="assets/icons/users.png?v=3"> Clientes</div>
+          <div class="fichario-tab" :class="comTab==='onboarding'?'active':''" @click="comTab='onboarding'; carregarOnboardings()"><img class="ic-img" src="assets/icons/tray.png?v=3"> Onboardings <span x-show="onboardings.length" class="badge" style="background:var(--accent);color:#04210f;margin-left:6px;min-width:18px;justify-content:center" x-text="onboardings.length"></span></div>
         </div>
 
         <!-- ABA: lista de clientes -->
@@ -255,7 +255,7 @@
         <!-- ABA: onboardings recebidos do site -->
         <div x-show="comTab==='onboarding' && podeVer('onboarding')">
           <div class="card" style="margin-bottom:14px">
-            <div class="fs-12 text-2" style="font-weight:600"><img class="ic-img" src="assets/icons/link.png?v=2"> Link público do formulário (mande pro cliente):</div>
+            <div class="fs-12 text-2" style="font-weight:600"><img class="ic-img" src="assets/icons/link.png?v=3"> Link público do formulário (mande pro cliente):</div>
             <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-top:8px">
               <code style="background:var(--surface-2);padding:7px 11px;border-radius:8px;font-size:12px;word-break:break-all" x-text="onbLink"></code>
               <button class="btn btn-ghost btn-sm" @click="navigator.clipboard.writeText(onbLink)">copiar</button>
@@ -264,7 +264,7 @@
           </div>
           <div class="card">
             <div class="card-title mb-3" x-text="'Aguardando revisão ('+onboardings.length+')'"></div>
-            <template x-if="!onboardings.length"><div class="empty">Nenhum onboarding pendente. <img class="ic-img" src="assets/icons/confetti.png?v=2"></div></template>
+            <template x-if="!onboardings.length"><div class="empty">Nenhum onboarding pendente. <img class="ic-img" src="assets/icons/confetti.png?v=3"></div></template>
             <template x-for="o in onboardings" :key="o.id">
               <div class="flex items-center gap-2" style="padding:11px 0;border-bottom:1px solid var(--border)">
                 <div style="flex:1;min-width:0">
@@ -433,7 +433,7 @@
         <div class="card" x-show="clients.length" style="margin-bottom:14px;padding:0;overflow:hidden">
           <div class="flex items-center justify-between" style="padding:12px 14px;border-bottom:1px solid var(--border)">
             <div class="flex items-center gap-2">
-              <span style="font-size:20px"><img class="ic-img" src="assets/icons/broadcast.png?v=2"></span>
+              <span style="font-size:20px"><img class="ic-img" src="assets/icons/broadcast.png?v=3"></span>
               <div>
                 <div class="fw-800 fs-14">Radar do operacional</div>
                 <div class="text-3 fs-12" x-text="radar.length ? (radar.length+' pendência(s)'+(radarUrgentes?' · '+radarUrgentes+' urgente(s)':'')) : 'Tudo em dia ✅'"></div>
@@ -459,7 +459,7 @@
                 <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" @click="registrarAcaoRadar(p)" class="btn btn-sm" style="background:var(--accent);color:#04210f;border:none" x-text="p.acaoLabel"></a>
                 <button class="btn btn-ghost btn-sm" @click="radarIr(p)" title="Abrir ficha do cliente">Abrir ficha</button>
                 <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,30)" title="Marcar como resolvido (some por 30 dias)">✓ feito</button>
-                <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,7)" title="Adiar — some por 7 dias" style="padding:6px 9px"><img class="ic-img" src="assets/icons/moon.png?v=2"></button>
+                <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,7)" title="Adiar — some por 7 dias" style="padding:6px 9px"><img class="ic-img" src="assets/icons/moon.png?v=3"></button>
               </div>
             </template>
           </div>
@@ -489,7 +489,7 @@
               <!-- PERFIL DO CLIENTE (uso interno) -->
               <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:0;margin-bottom:10px;overflow:hidden">
                 <div class="flex items-center gap-2" style="padding:11px 14px;cursor:pointer;background:var(--surface-2)" @click="perfilAberto=!perfilAberto">
-                  <span class="fw-800 fs-12" style="text-transform:uppercase;letter-spacing:.5px"><img class="ic-img" src="assets/icons/brain.png?v=2"> Perfil do cliente <span class="text-3" style="font-weight:400;text-transform:none">· uso interno, pra balizar os contatos</span></span>
+                  <span class="fw-800 fs-12" style="text-transform:uppercase;letter-spacing:.5px"><img class="ic-img" src="assets/icons/brain.png?v=3"> Perfil do cliente <span class="text-3" style="font-weight:400;text-transform:none">· uso interno, pra balizar os contatos</span></span>
                   <span style="margin-left:auto;font-size:14px" x-text="perfilAberto?'▾':'▸'"></span>
                 </div>
                 <div x-show="perfilAberto" style="padding:10px 14px 12px">
@@ -511,50 +511,50 @@
                     <div class="fw-800 fs-18" x-text="saudeCliente(monitorCliente).score!=null ? (saudeCliente(monitorCliente).score+'%') : 'sem dados'"></div>
                   </div>
                   <div class="flex gap-2" style="flex-wrap:wrap;margin-left:auto">
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length"><img class="ic-img" src="assets/icons/device-mobile.png?v=2"> <span x-text="mediaRedes(monitorCliente)+'%'"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url"><img class="ic-img" src="assets/icons/globe.png?v=2"> <span x-text="Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><img class="ic-img" src="assets/icons/users.png?v=2"> <span x-text="((monitorCliente.responsaveis||[]).length)"></span></span>
-                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><img class="ic-img" src="assets/icons/paperclip.png?v=2"> <span x-text="((monitorCliente.documentos||[]).length)"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length"><img class="ic-img" src="assets/icons/device-mobile.png?v=3"> <span x-text="mediaRedes(monitorCliente)+'%'"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url"><img class="ic-img" src="assets/icons/globe.png?v=3"> <span x-text="Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><img class="ic-img" src="assets/icons/users.png?v=3"> <span x-text="((monitorCliente.responsaveis||[]).length)"></span></span>
+                    <span class="badge" style="background:var(--surface);border:1px solid var(--border)"><img class="ic-img" src="assets/icons/paperclip.png?v=3"> <span x-text="((monitorCliente.documentos||[]).length)"></span></span>
                   </div>
                 </div>
                 <div class="flex gap-2" style="flex-wrap:wrap;margin-top:8px" x-show="saudeAlertas(monitorCliente).length">
-                  <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fef3c7;color:#92400e"><img class="ic-img" src="assets/icons/warning.png?v=2"> <span x-text="al"></span></span></template>
+                  <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fef3c7;color:#92400e"><img class="ic-img" src="assets/icons/warning.png?v=3"> <span x-text="al"></span></span></template>
                 </div>
               </div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/users.png?v=2"> Responsáveis / Contatos</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/users.png?v=3"> Responsáveis / Contatos</div>
               <template x-for="r in (monitorCliente.responsaveis||[])" :key="r.id">
                 <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                   <div class="flex items-center gap-2" style="flex-wrap:wrap">
                     <span class="fs-12 fw-700" x-text="r.nome||'—'"></span>
                     <span class="text-3 fs-12" x-show="r.cargo" x-text="'· '+r.cargo"></span>
-                    <span class="badge" style="background:#fef3c7;color:#92400e" x-show="diasAniver(r.nascimento)!==null && diasAniver(r.nascimento)<=30"><img class="ic-img" src="assets/icons/cake.png?v=2"> <span x-text="diasAniver(r.nascimento)===0 ? 'aniversário hoje!' : ('em '+diasAniver(r.nascimento)+' dias')"></span></span>
+                    <span class="badge" style="background:#fef3c7;color:#92400e" x-show="diasAniver(r.nascimento)!==null && diasAniver(r.nascimento)<=30"><img class="ic-img" src="assets/icons/cake.png?v=3"> <span x-text="diasAniver(r.nascimento)===0 ? 'aniversário hoje!' : ('em '+diasAniver(r.nascimento)+' dias')"></span></span>
                   </div>
                   <div class="flex items-center gap-3 fs-12" style="flex-wrap:wrap;margin-top:3px">
-                    <a x-show="r.whatsapp" :href="waLink(r.whatsapp)" target="_blank" style="color:#16a34a;font-weight:600"><img class="ic-img" src="assets/icons/device-mobile.png?v=2"> <span x-text="r.whatsapp"></span></a>
+                    <a x-show="r.whatsapp" :href="waLink(r.whatsapp)" target="_blank" style="color:#16a34a;font-weight:600"><img class="ic-img" src="assets/icons/device-mobile.png?v=3"> <span x-text="r.whatsapp"></span></a>
                     <a x-show="r.email" :href="'mailto:'+r.email" style="color:var(--blue)" x-text="'✉️ '+r.email"></a>
-                    <span class="text-2" x-show="r.nascimento"><img class="ic-img" src="assets/icons/cake.png?v=2"> <span x-text="fmtDate(r.nascimento)+(idadeDe(r.nascimento)!=null?(' · '+idadeDe(r.nascimento)+' anos'):'')"></span></span>
+                    <span class="text-2" x-show="r.nascimento"><img class="ic-img" src="assets/icons/cake.png?v=3"> <span x-text="fmtDate(r.nascimento)+(idadeDe(r.nascimento)!=null?(' · '+idadeDe(r.nascimento)+' anos'):'')"></span></span>
                   </div>
                   <div class="flex items-center gap-3 fs-12" style="flex-wrap:wrap;margin-top:3px">
-                    <span class="badge" x-show="r.seguindo" style="background:#dcfce7;color:#16a34a"><img class="ic-img" src="assets/icons/check-circle.png?v=2"> seguindo</span>
-                    <span class="badge" x-show="!r.seguindo && (igLink(r.instagram)||liLink(r.linkedin))" style="background:#fef3c7;color:#92400e"><img class="ic-img" src="assets/icons/plus.png?v=2"> seguir</span>
-                    <a x-show="igLink(r.instagram)" :href="igLink(r.instagram)" target="_blank" style="color:#E4405F;font-weight:600"><img class="ic-img" src="assets/icons/camera.png?v=2"> Instagram</a>
-                    <a x-show="liLink(r.linkedin)" :href="liLink(r.linkedin)" target="_blank" style="color:#0A66C2;font-weight:600"><img class="ic-img" src="assets/icons/briefcase.png?v=2"> LinkedIn</a>
-                    <a :href="buscaPessoa(r, monitorCliente.empresa)" target="_blank" class="text-3"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=2"> buscar perfil</a>
+                    <span class="badge" x-show="r.seguindo" style="background:#dcfce7;color:#16a34a"><img class="ic-img" src="assets/icons/check-circle.png?v=3"> seguindo</span>
+                    <span class="badge" x-show="!r.seguindo && (igLink(r.instagram)||liLink(r.linkedin))" style="background:#fef3c7;color:#92400e"><img class="ic-img" src="assets/icons/plus.png?v=3"> seguir</span>
+                    <a x-show="igLink(r.instagram)" :href="igLink(r.instagram)" target="_blank" style="color:#E4405F;font-weight:600"><img class="ic-img" src="assets/icons/camera.png?v=3"> Instagram</a>
+                    <a x-show="liLink(r.linkedin)" :href="liLink(r.linkedin)" target="_blank" style="color:#0A66C2;font-weight:600"><img class="ic-img" src="assets/icons/briefcase.png?v=3"> LinkedIn</a>
+                    <a :href="buscaPessoa(r, monitorCliente.empresa)" target="_blank" class="text-3"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=3"> buscar perfil</a>
                   </div>
                   <div class="fs-12 text-3" x-show="r.notas" style="white-space:pre-wrap;margin-top:2px" x-text="r.notas"></div>
                 </div>
               </template>
               <div x-show="!(monitorCliente.responsaveis||[]).length" class="text-3" style="padding:4px 0">Nenhum responsável cadastrado. Use "Editar ficha do cliente".</div>
-              <div class="mt-2" x-show="respComRede(monitorCliente).length"><span class="badge" style="background:#ede9fe;color:#6d28d9"><img class="ic-img" src="assets/icons/user-plus.png?v=2"> <span x-text="respComRede(monitorCliente).length+' responsável(is) com redes pra seguir · '+respComRede(monitorCliente).filter(r=>r.seguindo).length+' já seguidos'"></span></span></div>
+              <div class="mt-2" x-show="respComRede(monitorCliente).length"><span class="badge" style="background:#ede9fe;color:#6d28d9"><img class="ic-img" src="assets/icons/user-plus.png?v=3"> <span x-text="respComRede(monitorCliente).length+' responsável(is) com redes pra seguir · '+respComRede(monitorCliente).filter(r=>r.seguindo).length+' já seguidos'"></span></span></div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/briefcase.png?v=2"> Serviços contratados</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/briefcase.png?v=3"> Serviços contratados</div>
               <div class="flex" style="flex-wrap:wrap;gap:8px">
                 <template x-for="sv in clienteServicos(monitorCliente)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;border:1px solid var(--border);padding:5px 11px" x-text="sv"></span></template>
                 <span x-show="!clienteServicos(monitorCliente).length" class="text-3">Nenhum serviço cadastrado.</span>
               </div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/device-mobile.png?v=2"> Redes sociais — preenchimento/qualidade</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/device-mobile.png?v=3"> Redes sociais — preenchimento/qualidade</div>
               <template x-for="r in redesDoCliente(monitorCliente)" :key="r.id">
                 <div class="rede-row">
                   <span class="rede-nome"><img :src="redeIcon(r)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="r.label"><span x-text="r.label"></span></span>
@@ -565,15 +565,15 @@
               </template>
               <div x-show="!redesDoCliente(monitorCliente).length" class="text-3">Nenhuma rede cadastrada pra este cliente.</div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/globe.png?v=2"> Site — SEO / SGO</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/globe.png?v=3"> Site — SEO / SGO</div>
               <div class="fs-12 mb-2" x-show="monitorCliente.site && monitorCliente.site.url"><a :href="monitorCliente.site && monitorCliente.site.url" target="_blank" style="color:var(--blue);font-weight:600" x-text="monitorCliente.site && monitorCliente.site.url"></a></div>
               <div class="rede-row">
-                <span class="rede-nome"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=2"> SEO</span>
+                <span class="rede-nome"><img class="ic-img" src="assets/icons/magnifying-glass.png?v=3"> SEO</span>
                 <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,(monitorCliente.site&&monitorCliente.site.seo)||0)+'%;background:'+corScore((monitorCliente.site&&monitorCliente.site.seo)||0)"></div></div>
                 <span class="rede-pct" :style="'color:'+corScore((monitorCliente.site&&monitorCliente.site.seo)||0)" x-text="((monitorCliente.site&&monitorCliente.site.seo)||0)+'%'"></span>
               </div>
               <div class="rede-row">
-                <span class="rede-nome"><img class="ic-img" src="assets/icons/robot.png?v=2"> SGO</span>
+                <span class="rede-nome"><img class="ic-img" src="assets/icons/robot.png?v=3"> SGO</span>
                 <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,(monitorCliente.site&&monitorCliente.site.sgo)||0)+'%;background:'+corScore((monitorCliente.site&&monitorCliente.site.sgo)||0)"></div></div>
                 <span class="rede-pct" :style="'color:'+corScore((monitorCliente.site&&monitorCliente.site.sgo)||0)" x-text="((monitorCliente.site&&monitorCliente.site.sgo)||0)+'%'"></span>
               </div>
@@ -587,21 +587,21 @@
                 </div>
               </template>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/link.png?v=2"> Domínio / Hospedagem</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/link.png?v=3"> Domínio / Hospedagem</div>
               <div class="grid grid-2" style="gap:12px">
                 <div class="card" style="box-shadow:none;background:var(--surface-2)">
-                  <div class="fw-700 fs-12 mb-2"><img class="ic-img" src="assets/icons/globe-hemisphere-west.png?v=2"> Domínio</div>
+                  <div class="fw-700 fs-12 mb-2"><img class="ic-img" src="assets/icons/globe-hemisphere-west.png?v=3"> Domínio</div>
                   <div class="fs-12 text-2" x-text="(monitorCliente.dominio&&monitorCliente.dominio.provedor)||'— sem provedor'"></div>
                   <div class="mt-2"><span class="badge" :style="'background:'+corVenc(monitorCliente.dominio&&monitorCliente.dominio.vencimento)+'22;color:'+corVenc(monitorCliente.dominio&&monitorCliente.dominio.vencimento)+';font-weight:800'" x-text="(monitorCliente.dominio&&monitorCliente.dominio.vencimento?fmtDate(monitorCliente.dominio.vencimento)+' · ':'')+txtVenc(monitorCliente.dominio&&monitorCliente.dominio.vencimento)"></span></div>
                 </div>
                 <div class="card" style="box-shadow:none;background:var(--surface-2)">
-                  <div class="fw-700 fs-12 mb-2"><img class="ic-img" src="assets/icons/hard-drives.png?v=2"> Hospedagem</div>
+                  <div class="fw-700 fs-12 mb-2"><img class="ic-img" src="assets/icons/hard-drives.png?v=3"> Hospedagem</div>
                   <div class="fs-12 text-2" x-text="(monitorCliente.hospedagem&&monitorCliente.hospedagem.provedor)||'— sem provedor'"></div>
                   <div class="mt-2"><span class="badge" :style="'background:'+corVenc(monitorCliente.hospedagem&&monitorCliente.hospedagem.vencimento)+'22;color:'+corVenc(monitorCliente.hospedagem&&monitorCliente.hospedagem.vencimento)+';font-weight:800'" x-text="(monitorCliente.hospedagem&&monitorCliente.hospedagem.vencimento?fmtDate(monitorCliente.hospedagem.vencimento)+' · ':'')+txtVenc(monitorCliente.hospedagem&&monitorCliente.hospedagem.vencimento)"></span></div>
                 </div>
               </div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/megaphone.png?v=2"> Tráfego Pago — Google & Meta Ads</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/megaphone.png?v=3"> Tráfego Pago — Google & Meta Ads</div>
               <template x-for="a in adsAtivos(monitorCliente)" :key="a.id">
                 <div class="rede-row">
                   <span class="rede-nome"><img :src="redeIcon(a)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="a.label"><span x-text="a.label"></span></span>
@@ -612,7 +612,7 @@
               </template>
               <div x-show="!adsAtivos(monitorCliente).length" class="text-3">Sem campanhas de tráfego pago.</div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/target.png?v=2"> Métricas / Objetivos do cliente</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/target.png?v=3"> Métricas / Objetivos do cliente</div>
               <template x-for="o in (monitorCliente.objetivos||[])" :key="o.id">
                 <div class="rede-row">
                   <span class="rede-nome" style="width:175px" x-text="o.nome||'—'"></span>
@@ -622,7 +622,7 @@
               </template>
               <div x-show="!(monitorCliente.objetivos||[]).length" class="text-3">Nenhum objetivo definido pra este cliente.</div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/clipboard-text.png?v=2"> Briefing / Onboarding</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/clipboard-text.png?v=3"> Briefing / Onboarding</div>
               <template x-for="bi in briefingItens(monitorCliente)" :key="bi.label">
                 <div style="padding:7px 0;border-bottom:1px solid var(--border)">
                   <div class="fs-12 fw-700 text-2" x-text="bi.label"></div>
@@ -636,7 +636,7 @@
               </div>
               <div x-show="!briefingItens(monitorCliente).length && !briefingAtivos(monitorCliente).length" class="text-3" style="padding:6px 0">Briefing ainda não preenchido. Use "Editar ficha do cliente".</div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/paperclip.png?v=2"> Documentos</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/paperclip.png?v=3"> Documentos</div>
               <template x-for="d in (monitorCliente.documentos||[])" :key="d.id">
                 <div class="flex items-center gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
                   <span class="badge" style="background:#e0e7ff;color:#3730a3;min-width:96px;justify-content:center" x-text="d.tipo"></span>
@@ -646,12 +646,12 @@
               </template>
               <div x-show="!(monitorCliente.documentos||[]).length" class="text-3" style="padding:4px 0">Nenhum documento anexado.</div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/lock-key.png?v=2"> Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno · cifrados · liberados por senha master)</span></div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/lock-key.png?v=3"> Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno · cifrados · liberados por senha master)</span></div>
               <div class="flex items-center gap-2 mb-2">
-                <button class="btn btn-primary btn-sm" x-show="!cofreDesbloqueado" @click="abrirCofre()"><img class="ic-img" src="assets/icons/lock-key.png?v=2"> Desbloquear acessos</button>
+                <button class="btn btn-primary btn-sm" x-show="!cofreDesbloqueado" @click="abrirCofre()"><img class="ic-img" src="assets/icons/lock-key.png?v=3"> Desbloquear acessos</button>
                 <template x-if="cofreDesbloqueado">
                   <span class="flex items-center gap-2">
-                    <span class="badge" style="background:#dcfce7;color:#16a34a"><img class="ic-img" src="assets/icons/lock-key-open.png?v=2"> desbloqueado</span>
+                    <span class="badge" style="background:#dcfce7;color:#16a34a"><img class="ic-img" src="assets/icons/lock-key-open.png?v=3"> desbloqueado</span>
                     <button class="btn btn-ghost btn-sm" @click="bloquearCofre()">bloquear</button>
                     <button class="btn btn-ghost btn-sm" @click="abrirTrocaMaster()">trocar senha master</button>
                   </span>
@@ -667,14 +667,14 @@
                   <a x-show="cr.url" :href="cr.url" target="_blank" class="btn btn-ghost btn-sm">abrir</a>
                   <button class="btn btn-ghost btn-sm" x-show="cofreDesbloqueado" @click="revelar[cr.id]=!revelar[cr.id]" x-text="revelar[cr.id]?'ocultar':'ver'"></button>
                   <button class="btn btn-ghost btn-sm" x-show="cofreDesbloqueado" @click="navigator.clipboard.writeText(senhaCred(cr)||'')" title="Copiar senha">copiar</button>
-                  <button class="btn btn-ghost btn-sm" @click="editarCredencial(cr)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=2"></button>
-                  <button class="btn btn-ghost btn-sm" @click="excluirCredencial(cr)"><img class="ic-img" src="assets/icons/trash.png?v=2"></button>
+                  <button class="btn btn-ghost btn-sm" @click="editarCredencial(cr)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=3"></button>
+                  <button class="btn btn-ghost btn-sm" @click="excluirCredencial(cr)"><img class="ic-img" src="assets/icons/trash.png?v=3"></button>
                 </div>
               </template>
               <div x-show="!credenciais.length" class="text-3" style="padding:6px 0">Nenhum acesso guardado ainda.</div>
               <div class="mt-2"><button class="btn btn-ghost btn-sm" @click="novaCredencial()">+ Acesso</button></div>
 
-              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/notebook.png?v=2"> Relacionamento — histórico de contatos</div>
+              <div class="ficha-sec-title"><img class="ic-img" src="assets/icons/notebook.png?v=3"> Relacionamento — histórico de contatos</div>
               <!-- registrar nova interação -->
               <div class="flex gap-2 items-start mb-2" style="flex-wrap:wrap">
                 <select class="form-select" x-model="novaInter.tipo" style="width:140px">
@@ -690,12 +690,12 @@
                     <div class="fs-13" x-text="ev.texto"></div>
                     <div class="text-3 fs-12" x-text="ev.tipo+' · '+fmtDataHora(ev.em)+(ev.por?(' · '+ev.por):'')"></div>
                   </div>
-                  <button class="btn btn-ghost btn-sm" @click="removerInteracao(monitorCliente, ev.id)" title="Remover"><img class="ic-img" src="assets/icons/trash.png?v=2"></button>
+                  <button class="btn btn-ghost btn-sm" @click="removerInteracao(monitorCliente, ev.id)" title="Remover"><img class="ic-img" src="assets/icons/trash.png?v=3"></button>
                 </div>
               </template>
               <div x-show="!(monitorCliente.timeline||[]).length" class="text-3" style="padding:4px 0">Sem registros ainda. Toda ligação, zap ou reunião pode entrar aqui pra criar a memória do cliente.</div>
 
-              <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=2"> Editar ficha do cliente</button></div>
+              <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=3"> Editar ficha do cliente</button></div>
             </div>
           </template>
         </div>
@@ -786,8 +786,8 @@
                 <div class="text-3 fs-12 truncate" x-text="u.email"></div>
               </div>
               <span class="badge" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="papelInfo(u.papel).nome"></span>
-              <button class="btn btn-ghost btn-sm" @click="editarColaborador(u)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=2"></button>
-              <button class="btn btn-ghost btn-sm" @click="removerColaborador(u)" :disabled="u.id===(usuario&&usuario.id)" :title="u.id===(usuario&&usuario.id)?'Você não pode remover a si mesmo':'Remover'"><img class="ic-img" src="assets/icons/trash.png?v=2"></button>
+              <button class="btn btn-ghost btn-sm" @click="editarColaborador(u)"><img class="ic-img" src="assets/icons/pencil-simple.png?v=3"></button>
+              <button class="btn btn-ghost btn-sm" @click="removerColaborador(u)" :disabled="u.id===(usuario&&usuario.id)" :title="u.id===(usuario&&usuario.id)?'Você não pode remover a si mesmo':'Remover'"><img class="ic-img" src="assets/icons/trash.png?v=3"></button>
             </div>
           </template>
         </div>
@@ -821,7 +821,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirLead(editing)">Excluir</button>
-      <button class="btn btn-ghost" x-show="editing.id && editing.stage!=='Ganho'" @click="ganharLead(editing)"><img class="ic-img" src="assets/icons/trophy.png?v=2"> Ganhar → cliente</button>
+      <button class="btn btn-ghost" x-show="editing.id && editing.stage!=='Ganho'" @click="ganharLead(editing)"><img class="ic-img" src="assets/icons/trophy.png?v=3"> Ganhar → cliente</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarLead()">Salvar</button>
     </div>
@@ -833,7 +833,7 @@
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body" style="display:block">
-      <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><img class="ic-img" src="assets/icons/buildings.png?v=2"> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><img class="ic-img" src="assets/icons/buildings.png?v=3"> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='empresa'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">CNPJ <span class="text-3">— preenche Receita + endereço</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cnpj" placeholder="00.000.000/0000-00" @keydown.enter.prevent="buscarCnpj()"><button class="btn btn-primary" @click="buscarCnpj()" :disabled="cnpjLoading" ><i :class="cnpjLoading?'ph ph-circle-notch':'ph ph-magnifying-glass'"></i> <span x-text="cnpjLoading?'':'Buscar'"></span></button></div>
@@ -844,7 +844,7 @@
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome Fantasia / Empresa *</label><input class="form-input" x-model="editing.empresa"></div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Slogan da empresa</label><input class="form-input" x-model="editing.slogan"></div>
 
-      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2);margin-top:6px"><img class="ic-img" src="assets/icons/map-pin.png?v=2"> Endereço</div>
+      <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2);margin-top:6px"><img class="ic-img" src="assets/icons/map-pin.png?v=3"> Endereço</div>
       <div class="form-group"><label class="form-label">CEP <span class="text-3">— preenche endereço</span></label>
         <div class="flex gap-2"><input class="form-input" x-model="editing.cep" placeholder="00000-000" @keydown.enter.prevent="buscarCep()"><button class="btn btn-primary" @click="buscarCep()" :disabled="cepLoading" ><i :class="cepLoading?'ph ph-circle-notch':'ph ph-magnifying-glass'"></i></button></div>
         <div class="fs-12" x-show="cepMsg" :style="cepMsg.startsWith('✓')?'color:#16a34a':'color:#dc2626'" x-text="cepMsg"></div>
@@ -857,7 +857,7 @@
       <div class="form-group"><label class="form-label">UF</label><input class="form-input" x-model="editing.uf" maxlength="2" placeholder="SP"></div>
 
       </div>
-      <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span><img class="ic-img" src="assets/icons/users.png?v=2"> Contatos / Responsáveis</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='contato'?'':'contato'" class="accH"><span><img class="ic-img" src="assets/icons/users.png?v=3"> Contatos / Responsáveis</span><span class="accX" x-text="secCli==='contato'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='contato'">
       <div style="grid-column:1/-1" class="text-3 fs-12">Adicione até 5 contatos da empresa — o 1º vira o contato principal. Pra estreitar o relacionamento.</div>
       <template x-for="(r,i) in (editing.responsaveis||[])" :key="r.id">
@@ -870,14 +870,14 @@
           <div class="form-group" style="margin:0"><label class="form-label">Instagram</label><input class="form-input" x-model="r.instagram" placeholder="@usuario ou link"></div>
           <div class="form-group" style="margin:0"><label class="form-label">LinkedIn</label><input class="form-input" x-model="r.linkedin" placeholder="link do perfil ou nome"></div>
           <div class="form-group" style="margin:0"><label class="form-label">Notas <span class="text-3" style="font-weight:400;text-transform:none">(time, hobby, preferências…)</span></label><input class="form-input" x-model="r.notas"></div>
-          <label class="flex items-center gap-2" style="grid-column:1/-1;font-size:13px;cursor:pointer"><input type="checkbox" x-model="r.seguindo"> <img class="ic-img" src="assets/icons/check-circle.png?v=2"> A Maracatu já segue essa pessoa nas redes</label>
-          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeResponsavel(i)"><img class="ic-img" src="assets/icons/trash.png?v=2"> remover</button></div>
+          <label class="flex items-center gap-2" style="grid-column:1/-1;font-size:13px;cursor:pointer"><input type="checkbox" x-model="r.seguindo"> <img class="ic-img" src="assets/icons/check-circle.png?v=3"> A Maracatu já segue essa pessoa nas redes</label>
+          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeResponsavel(i)"><img class="ic-img" src="assets/icons/trash.png?v=3"> remover</button></div>
         </div>
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addResponsavel()" :disabled="(editing.responsaveis||[]).length>=5" x-text="(editing.responsaveis||[]).length>=5 ? 'Máximo de 5 contatos' : '+ Adicionar contato'"></button></div>
 
       </div>
-      <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span><img class="ic-img" src="assets/icons/globe.png?v=2"> Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='site'?'':'site'" class="accH"><span><img class="ic-img" src="assets/icons/globe.png?v=3"> Site, domínio e hospedagem</span><span class="accX" x-text="secCli==='site'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='site'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">URL do site <span class="text-3">— preenche redes, domínio e contato</span></label><input class="form-input" x-model="editing.site.url" placeholder="https://"></div>
       <div class="form-group" style="grid-column:1/-1">
@@ -888,7 +888,7 @@
         <div class="fs-12" style="background:#dcfce7;border:1px solid #86efac;border-radius:9px;padding:10px 12px">
           <div class="fw-700" style="color:#16a34a;margin-bottom:5px">✓ Capturado do site (já preenchido nos tópicos):</div>
           <template x-for="it in (enriqResult||[])" :key="it.l"><div x-text="'• '+it.l+': '+it.v"></div></template>
-          <div class="text-3" style="margin-top:6px">Confira em <img class="ic-img" src="assets/icons/device-mobile.png?v=2"> Redes, no domínio (acima) e em <img class="ic-img" src="assets/icons/users.png?v=2"> Contatos · revise e <b>salve</b>.</div>
+          <div class="text-3" style="margin-top:6px">Confira em <img class="ic-img" src="assets/icons/device-mobile.png?v=3"> Redes, no domínio (acima) e em <img class="ic-img" src="assets/icons/users.png?v=3"> Contatos · revise e <b>salve</b>.</div>
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1">
@@ -903,7 +903,7 @@
       <div class="form-group"><label class="form-label">Hospedagem — vencimento</label><input class="form-input" type="date" x-model="editing.hospedagem.vencimento"></div>
 
       </div>
-      <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span><img class="ic-img" src="assets/icons/briefcase.png?v=2"> Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='com'?'':'com'" class="accH"><span><img class="ic-img" src="assets/icons/briefcase.png?v=3"> Comercial</span><span class="accX" x-text="secCli==='com'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='com'">
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Serviços contratados</label>
         <div class="flex" style="flex-wrap:wrap;gap:8px">
@@ -919,7 +919,7 @@
       <div class="form-group"><label class="form-label">Cliente desde</label><input class="form-input" type="date" x-model="editing.desde"></div>
 
       </div>
-      <div @click="secCli=secCli==='redes'?'':'redes'" class="accH"><span><img class="ic-img" src="assets/icons/device-mobile.png?v=2"> Redes sociais</span><span class="accX" x-text="secCli==='redes'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='redes'?'':'redes'" class="accH"><span><img class="ic-img" src="assets/icons/device-mobile.png?v=3"> Redes sociais</span><span class="accX" x-text="secCli==='redes'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='redes'">
       <template x-for="r in REDES" :key="r.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
@@ -930,7 +930,7 @@
       </template>
 
       </div>
-      <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span><img class="ic-img" src="assets/icons/megaphone.png?v=2"> Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span><img class="ic-img" src="assets/icons/megaphone.png?v=3"> Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='trafego'">
       <template x-for="a in ADS" :key="a.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
@@ -941,7 +941,7 @@
       </template>
 
       </div>
-      <div @click="secCli=secCli==='metricas'?'':'metricas'" class="accH"><span><img class="ic-img" src="assets/icons/target.png?v=2"> Métricas / Objetivos</span><span class="accX" x-text="secCli==='metricas'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='metricas'?'':'metricas'" class="accH"><span><img class="ic-img" src="assets/icons/target.png?v=3"> Métricas / Objetivos</span><span class="accX" x-text="secCli==='metricas'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='metricas'">
       <template x-for="(o,i) in editing.objetivos" :key="o.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
@@ -950,13 +950,13 @@
           <input class="form-input" type="number" style="width:90px" x-model.number="o.atual" placeholder="atual">
           <input class="form-input" type="number" style="width:90px" x-model.number="o.alvo" placeholder="meta">
           <input class="form-input" style="width:80px" x-model="o.unidade" placeholder="un.">
-          <button type="button" class="btn btn-ghost btn-icon" @click="removeObjetivo(i)"><img class="ic-img" src="assets/icons/trash.png?v=2"></button>
+          <button type="button" class="btn btn-ghost btn-icon" @click="removeObjetivo(i)"><img class="ic-img" src="assets/icons/trash.png?v=3"></button>
         </div>
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addObjetivo()">+ Adicionar objetivo</button></div>
 
       </div>
-      <div @click="secCli=secCli==='brief'?'':'brief'" class="accH"><span><img class="ic-img" src="assets/icons/clipboard-text.png?v=2"> Briefing / Onboarding</span><span class="accX" x-text="secCli==='brief'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='brief'?'':'brief'" class="accH"><span><img class="ic-img" src="assets/icons/clipboard-text.png?v=3"> Briefing / Onboarding</span><span class="accX" x-text="secCli==='brief'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='brief'">
 
       <div style="grid-column:1/-1;font-size:11px;font-weight:700;color:var(--text-2)">Público</div>
@@ -996,7 +996,7 @@
       <div class="form-group"><label class="form-label">Drive de fotos/vídeos (link)</label><input class="form-input" x-model="editing.briefing.ativos.drive" placeholder="https://"></div>
 
       </div>
-      <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span><img class="ic-img" src="assets/icons/paperclip.png?v=2"> Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='docs'?'':'docs'" class="accH"><span><img class="ic-img" src="assets/icons/paperclip.png?v=3"> Documentos</span><span class="accX" x-text="secCli==='docs'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='docs'">
       <div style="grid-column:1/-1" class="text-3 fs-12">Links — contrato, proposta, apresentação…</div>
       <template x-for="(d,i) in (editing.documentos||[])" :key="d.id">
@@ -1004,12 +1004,12 @@
           <div class="form-group" style="margin:0"><label class="form-label">Tipo</label><select class="form-select" x-model="d.tipo"><template x-for="t in TIPOS_DOC" :key="t"><option :value="t" x-text="t"></option></template></select></div>
           <div class="form-group" style="margin:0"><label class="form-label">Nome</label><input class="form-input" x-model="d.nome" placeholder="Ex.: Contrato 2026"></div>
           <div class="form-group" style="grid-column:1/-1;margin:0"><label class="form-label">Link</label><input class="form-input" x-model="d.url" placeholder="https://"></div>
-          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeDocumento(i)"><img class="ic-img" src="assets/icons/trash.png?v=2"> remover</button></div>
+          <div style="grid-column:1/-1;text-align:right"><button type="button" class="btn btn-ghost btn-sm" @click="removeDocumento(i)"><img class="ic-img" src="assets/icons/trash.png?v=3"> remover</button></div>
         </div>
       </template>
       <div style="grid-column:1/-1"><button type="button" class="btn btn-ghost btn-sm" @click="addDocumento()">+ Adicionar documento</button></div>
       </div>
-      <div @click="secCli=secCli==='notas'?'':'notas'" class="accH"><span><img class="ic-img" src="assets/icons/scroll.png?v=2"> Notas internas</span><span class="accX" x-text="secCli==='notas'?'▾':'▸'"></span></div>
+      <div @click="secCli=secCli==='notas'?'':'notas'" class="accH"><span><img class="ic-img" src="assets/icons/scroll.png?v=3"> Notas internas</span><span class="accX" x-text="secCli==='notas'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='notas'">
         <div class="form-group" style="grid-column:1/-1"><textarea class="form-textarea" x-model="editing.notas" placeholder="Anotações internas sobre o cliente…"></textarea></div>
       </div>
@@ -1068,7 +1068,7 @@
           <div class="flex gap-2" style="align-items:flex-end">
             <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
             <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
-            <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><img class="ic-img" src="assets/icons/trash.png?v=2"></button>
+            <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><img class="ic-img" src="assets/icons/trash.png?v=3"></button>
           </div>
           <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
             <label class="form-label">Redes incluídas</label>
@@ -1109,8 +1109,8 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirOrcamento(editing)">Excluir</button>
-      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('orcamento', editing)" title="Gerar PDF / imprimir"><img class="ic-img" src="assets/icons/printer.png?v=2"> PDF</button>
-      <button class="btn btn-ghost" x-show="editing.id" @click="enviarPropostaDigital(editing)" title="Cria o link público da proposta digital pra enviar ao cliente"><img class="ic-img" src="assets/icons/export.png?v=2"> Enviar digital</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('orcamento', editing)" title="Gerar PDF / imprimir"><img class="ic-img" src="assets/icons/printer.png?v=3"> PDF</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="enviarPropostaDigital(editing)" title="Cria o link público da proposta digital pra enviar ao cliente"><img class="ic-img" src="assets/icons/export.png?v=3"> Enviar digital</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="gerarContrato(editing)" title="Criar um contrato a partir desta proposta">→ Gerar contrato</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarOrcamento()">Salvar</button>
@@ -1218,7 +1218,7 @@
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" x-show="editing.id" @click="excluirContrato(editing)">Excluir</button>
-      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('contrato', editing)" title="Gerar PDF / imprimir"><img class="ic-img" src="assets/icons/printer.png?v=2"> PDF</button>
+      <button class="btn btn-ghost" x-show="editing.id" @click="imprimirDoc('contrato', editing)" title="Gerar PDF / imprimir"><img class="ic-img" src="assets/icons/printer.png?v=3"> PDF</button>
       <button class="btn btn-ghost" x-show="editing.id" @click="lancarContratoFinanceiro(editing)" title="Gera todas as mensalidades do contrato no Financeiro (a receber)">→ Gerar Financeiro</button>
       <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
       <button class="btn btn-primary" @click="salvarContrato()">Salvar</button>
@@ -1249,7 +1249,7 @@
               </template>
             </template>
           </select>
-          <button type="button" class="btn btn-ghost btn-sm" @click="favModeloSel()" :disabled="!modeloSel" :title="(modeloSel && modelosFav.includes(modeloSel)) ? 'Remover dos favoritos' : 'Marcar como favorito (sobe no topo da lista)'" style="font-size:16px;padding:6px 12px"><img class="ic-img" src="assets/icons/star.png?v=2" :style="(modeloSel && modelosFav.includes(modeloSel)) ? '' : 'opacity:.35;filter:grayscale(1)'"></button>
+          <button type="button" class="btn btn-ghost btn-sm" @click="favModeloSel()" :disabled="!modeloSel" :title="(modeloSel && modelosFav.includes(modeloSel)) ? 'Remover dos favoritos' : 'Marcar como favorito (sobe no topo da lista)'" style="font-size:16px;padding:6px 12px"><img class="ic-img" src="assets/icons/star.png?v=3" :style="(modeloSel && modelosFav.includes(modeloSel)) ? '' : 'opacity:.35;filter:grayscale(1)'"></button>
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do projeto *</label><input class="form-input" x-model="editing.nome"></div>
@@ -1365,6 +1365,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=48"></script>
+<script src="js/app.js?v=49"></script>
 </body>
 </html>

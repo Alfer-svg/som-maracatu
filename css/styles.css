@@ -17,8 +17,8 @@
   --bg:        #F5F5F1;
   --surface:   #FFFFFF;
   --surface-2: #ECECE6;
-  --sidebar:   rgba(20,18,16,.06);   /* preto translúcido leve (cinza suave sobre o creme) */
-  --sidebar-2: rgba(20,18,16,.03);
+  --sidebar:   rgba(20,18,16,.20);   /* preto translúcido (~20%) sobre o creme */
+  --sidebar-2: rgba(20,18,16,.13);
 
   --text:   #141210;
   --text-2: #57564E;

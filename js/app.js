@@ -371,10 +371,10 @@ document.addEventListener('alpine:init', () => {
     // ícone colorido (Fluent 3D PNG) a partir do emoji-chave
     icoSrc(e) {
       const sinal = { '🟢': 'circle-green', '🟡': 'circle-yellow', '🔴': 'circle-red', '⚪': 'circle-white' };
-      if (sinal[e]) return 'assets/icons/' + sinal[e] + '.png?v=2';
+      if (sinal[e]) return 'assets/icons/' + sinal[e] + '.png?v=3';
       const cls = PH_ICON[e] || 'ph ph-circle';
       const nome = cls.split('ph-').pop();
-      return 'assets/icons/' + nome + '.png?v=2';
+      return 'assets/icons/' + nome + '.png?v=3';
     },
     go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
