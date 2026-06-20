@@ -265,7 +265,7 @@ document.addEventListener('alpine:init', () => {
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
-    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, novoItemCheck: '', // card-detalhe Trello
+    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido

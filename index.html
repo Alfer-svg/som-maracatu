@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=47">
+  <link rel="stylesheet" href="css/styles.css?v=48">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1468,25 +1468,34 @@
     <div class="modal-body">
       <div class="text-3 fs-12 mb-3" x-show="cardRef&&cardRef.cliente">em <b x-text="cardRef&&cardRef.cliente"></b><span x-show="cardRef&&cardRef.isPost"> · <span x-text="cardRef.tipoPost"></span></span></div>
 
-      <!-- Etiquetas -->
+      <!-- Etiquetas (dropdown estilo Trello) -->
       <div class="tl-section">
         <div class="tl-section-label">Etiquetas</div>
-        <div class="flex gap-2 items-center" style="flex-wrap:wrap">
-          <template x-for="l in TRELLO_LABELS" :key="l.key">
-            <div class="lbl-pick" :class="(cardRef.labels||[]).includes(l.key)?'on':''" @click="toggleLabelCard(l.key)" :style="'background:'+l.cor+';color:'+labelTextCor(l.key)">
-              <span x-text="labelNome(l.key)||'sem nome'"></span>
-              <span x-show="(cardRef.labels||[]).includes(l.key)" style="font-weight:900">✓</span>
+        <div style="position:relative" @click.outside="labelDrop=false">
+          <div class="flex gap-2 items-center" style="flex-wrap:wrap">
+            <template x-for="lb in (cardRef.labels||[])" :key="lb">
+              <span class="tl-label" :style="'background:'+labelCor(lb)+';color:'+labelTextCor(lb)" x-text="labelNome(lb)||'sem nome'"></span>
+            </template>
+            <button class="btn btn-ghost btn-sm" @click="labelDrop=!labelDrop">＋ Etiquetas ▾</button>
+          </div>
+          <div x-show="labelDrop" x-cloak class="lbl-drop">
+            <div class="text-3 fs-12 fw-700" style="margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Etiquetas</div>
+            <template x-for="l in TRELLO_LABELS" :key="l.key">
+              <div class="lbl-row" @click="toggleLabelCard(l.key)" :style="'background:'+l.cor+';color:'+labelTextCor(l.key)">
+                <span x-text="labelNome(l.key)||'(sem nome)'"></span>
+                <span x-show="(cardRef.labels||[]).includes(l.key)" style="font-weight:900">✓</span>
+              </div>
+            </template>
+            <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" @click.stop="labelEdit=!labelEdit" x-text="labelEdit?'fechar nomes':'editar nomes'"></button>
+            <div x-show="labelEdit" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+              <template x-for="l in TRELLO_LABELS" :key="'e'+l.key">
+                <div class="flex items-center gap-2">
+                  <span style="width:22px;height:16px;border-radius:4px;flex-shrink:0" :style="'background:'+l.cor"></span>
+                  <input class="form-input" style="flex:1;padding:5px 9px" :value="labelNames[l.key]||''" @click.stop @change="labelNames[l.key]=$event.target.value; salvarLabels()" placeholder="Nome (ex: Urgente)">
+                </div>
+              </template>
             </div>
-          </template>
-          <button class="btn btn-ghost btn-sm" @click="labelEdit=!labelEdit" x-text="labelEdit?'pronto':'nomear'"></button>
-        </div>
-        <div x-show="labelEdit" style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
-          <template x-for="l in TRELLO_LABELS" :key="'e'+l.key">
-            <div class="flex items-center gap-2">
-              <span style="width:24px;height:18px;border-radius:4px;flex-shrink:0" :style="'background:'+l.cor"></span>
-              <input class="form-input" style="flex:1;padding:5px 9px" :value="labelNames[l.key]||''" @change="labelNames[l.key]=$event.target.value; salvarLabels()" placeholder="Nome da etiqueta (ex: Urgente)">
-            </div>
-          </template>
+          </div>
         </div>
       </div>
 
@@ -1753,6 +1762,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=60"></script>
+<script src="js/app.js?v=61"></script>
 </body>
 </html>
