@@ -180,6 +180,7 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 // Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
+const TIPOS_POST = ['Feed', 'Carrossel', 'Story', 'Reels', 'Vídeo'];
 
 /* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
 const PAPEIS_INFO = [
@@ -257,9 +258,10 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação)
-    progModal: false, // modal de criar programação (vários projetos de uma vez)
-    progForm: { cliente: '', responsavel: '', prazo: '' },
-    progSelModelos: [], progExtras: [], progExtraInput: '',
+    progModal: false, // modal de criar programação (calendário de posts da semana)
+    progForm: { cliente: '', responsavel: '' },
+    progPosts: [], // posts sendo montados no modal
+    postModal: false, postForm: { id: '', data: '', tipo: 'Feed', tema: '', legenda: '', criativo: '' }, postRef: null,
     _hbStarted: false, // guarda do heartbeat
     relatorio: { linhas: [], porDia: [], de: '', ate: '' }, // relatório de equipe (ponto + produção)
     relPeriodo: 'mes', relDe: '', relAte: '',
@@ -938,32 +940,44 @@ document.addEventListener('alpine:init', () => {
     progFeitos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
     prazoNaSemana(p) { const s = this.semanaAtual; return p.prazo && p.prazo >= s.ini && p.prazo <= s.fim; },
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
-    // ── Programação: criar vários projetos do mesmo cliente p/ um colaborador ──
+    // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
+    TIPOS_POST,
+    postVazio() { return { data: this.semanaAtual.ini, tipo: 'Feed', tema: '', legenda: '', criativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
-      this.progForm = { cliente: '', responsavel: '', prazo: this.semanaAtual.fim };
-      this.progSelModelos = []; this.progExtras = []; this.progExtraInput = '';
+      this.progForm = { cliente: '', responsavel: '' };
+      this.progPosts = [this.postVazio(), this.postVazio(), this.postVazio()];
       this.progModal = true;
     },
-    toggleModeloProg(nome) { const i = this.progSelModelos.indexOf(nome); if (i >= 0) this.progSelModelos.splice(i, 1); else this.progSelModelos.push(nome); },
-    addExtraProg() { const t = (this.progExtraInput || '').trim(); if (!t) return; this.progExtras.push(t); this.progExtraInput = ''; },
-    removeExtraProg(i) { this.progExtras.splice(i, 1); },
-    get progTotal() { return this.progSelModelos.length + this.progExtras.length; },
+    addPostProg() { this.progPosts.push(this.postVazio()); },
+    removePostProg(i) { this.progPosts.splice(i, 1); },
+    get progTotal() { return this.progPosts.filter(p => (p.tema || p.legenda || '').trim()).length; },
     async salvarProgramacao() {
       const f = this.progForm;
       if (!f.cliente) return alert('Escolha o cliente.');
       if (!f.responsavel) return alert('Escolha o colaborador responsável.');
-      if (!this.progTotal) return alert('Selecione ao menos um projeto da programação.');
-      const itens = [];
-      this.progSelModelos.forEach(nome => { const m = this.MODELOS_PROJETO.find(x => x.nome === nome); itens.push({ nome, servico: m ? m.servico : 'Consultoria' }); });
-      this.progExtras.forEach(nome => itens.push({ nome, servico: 'Consultoria' }));
+      const posts = this.progPosts.filter(p => (p.tema || p.legenda || '').trim());
+      if (!posts.length) return alert('Adicione ao menos um post (com tema ou legenda).');
       try {
-        for (const it of itens) {
-          await this.salvarProjetoApi({ id: '', nome: it.nome, cliente: f.cliente, servico: it.servico, responsavel: f.responsavel, status: 'A Fazer', prazo: f.prazo || '', progresso: 0, notas: '' });
+        for (const po of posts) {
+          await this.salvarProjetoApi({
+            id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
+            responsavel: f.responsavel, status: 'A Fazer', prazo: po.data || '', progresso: 0, notas: '',
+            isPost: true, tipoPost: po.tipo, tema: po.tema, legenda: po.legenda, criativo: po.criativo,
+          });
         }
         await this.carregarProjetos();
         this.progModal = false; this.opTab = 'semana';
       } catch (e) { alert(e.message || 'Falha ao criar a programação.'); }
+    },
+    // ── Post individual (ver/editar) ──
+    diaSemanaLabel(dataStr) { if (!dataStr) return ''; const d = new Date(dataStr + 'T00:00:00'); if (isNaN(d.getTime())) return ''; const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; return dias[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); },
+    editarPost(p) { this.postRef = p; this.postForm = { id: p.id, data: p.prazo || '', tipo: p.tipoPost || 'Feed', tema: p.tema || p.nome || '', legenda: p.legenda || '', criativo: p.criativo || '' }; this.postModal = true; },
+    async salvarPost() {
+      const f = this.postForm, p = this.postRef; if (!p) return;
+      p.tipoPost = f.tipo; p.tema = f.tema; p.nome = f.tema || p.nome; p.legenda = f.legenda; p.criativo = f.criativo; p.prazo = f.data;
+      try { await this.salvarProjetoApi(p); await this.carregarProjetos(); this.postModal = false; }
+      catch (e) { alert(e.message || 'Falha ao salvar o post.'); }
     },
     novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
