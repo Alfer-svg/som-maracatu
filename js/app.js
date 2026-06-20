@@ -185,6 +185,7 @@ const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '�
 const PAPEIS_INFO = [
   { id: 'admin', nome: 'Admin', desc: 'Acesso total + gerencia a equipe', cor: '#7c3aed', bg: '#ede9fe' },
   { id: 'gestor', nome: 'Gestor', desc: 'Tudo, menos gerenciar a equipe', cor: '#2563eb', bg: '#dbeafe' },
+  { id: 'comercial', nome: 'Comercial', desc: 'Vendas: CRM, clientes, orçamentos e contratos (sem Financeiro nem Operacional)', cor: '#0d9488', bg: '#ccfbf1' },
   { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional, CRM e Monitoramento (sem Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
   { id: 'financeiro', nome: 'Financeiro', desc: 'Financeiro + Dashboard', cor: '#d97706', bg: '#fef3c7' },
 ];
@@ -192,6 +193,7 @@ const PAPEIS_INFO = [
 const PERMISSOES = {
   admin: '*',
   gestor: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding'],
+  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding'],
   colaborador: ['dashboard', 'crm', 'comercial', 'operacional', 'monitoramento', 'onboarding'],
   financeiro: ['dashboard', 'comercial', 'orcamentos', 'contratos', 'financeiro'],
 };
