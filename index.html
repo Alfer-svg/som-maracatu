@@ -406,7 +406,47 @@
           </div>
           <div x-show="ehAdmin && !presenca.some(p=>p.online)" class="text-3 fs-12" style="margin-top:6px">Ninguém online no momento.</div>
         </div>
-        <div class="kanban">
+
+        <!-- toggle de vista: Quadro | Programação semanal -->
+        <div class="fichario" style="margin-bottom:14px">
+          <div class="fichario-tab" :class="opTab==='quadro'?'active':''" @click="opTab='quadro'">Quadro</div>
+          <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'">Programação semanal</div>
+        </div>
+
+        <!-- ===== PROGRAMAÇÃO SEMANAL (checklist por colaborador) ===== -->
+        <div x-show="opTab==='semana'">
+          <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+            <div class="text-3 fs-12">Semana de <b x-text="semanaAtual.label"></b> · cada colaborador toca e marca os projetos</div>
+            <button class="btn btn-primary btn-sm" @click="novoProjeto()">+ Projeto</button>
+          </div>
+          <template x-if="!progColaboradores().length"><div class="card empty">Nenhum projeto atribuído ainda. Crie um projeto e escolha o responsável.</div></template>
+          <div class="grid grid-2" style="align-items:start">
+            <template x-for="g in progColaboradores()" :key="g.nome">
+              <div class="card" style="padding:0;overflow:hidden">
+                <div class="flex items-center justify-between" style="padding:11px 14px;border-bottom:1px solid var(--border)">
+                  <div class="fw-800 fs-14" x-text="g.nome"></div>
+                  <span class="badge" :style="progFeitos(g.projetos)===g.projetos.length?'background:#dcfce7;color:#16a34a':'background:var(--surface-2);color:var(--text-2)'" x-text="progFeitos(g.projetos)+'/'+g.projetos.length+' feitos'"></span>
+                </div>
+                <template x-for="p in progOrdena(g.projetos)" :key="p.id">
+                  <div class="flex items-center gap-2" style="padding:10px 14px;border-bottom:1px solid var(--border)">
+                    <input type="checkbox" :checked="p.status==='Concluído'" @change="toggleConcluido(p)" style="width:18px;height:18px;cursor:pointer;flex-shrink:0">
+                    <div style="flex:1;min-width:0;cursor:pointer" @click="editarProjeto(p)">
+                      <div class="fs-13 fw-700 truncate" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.nome"></div>
+                      <div class="text-3 fs-12 truncate">
+                        <span x-show="p.cliente" x-text="p.cliente"></span>
+                        <span x-show="p.cliente && p.prazo"> · </span>
+                        <span x-show="p.prazo" :style="prazoNaSemana(p)&&p.status!=='Concluído'?'color:#d97706;font-weight:700':''" x-text="(prazoNaSemana(p)?'esta semana · ':'')+'prazo '+fmtDate(p.prazo)"></span>
+                      </div>
+                    </div>
+                    <span class="badge" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status"></span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div class="kanban" x-show="opTab==='quadro'">
           <template x-for="s in PROJ_STATUS" :key="s.id">
             <div class="kanban-col">
               <div class="kanban-head"><span class="dot" :style="'background:'+s.color"></span><span class="fw-700 fs-12" x-text="s.id"></span><span class="count" x-text="projetosDoStatus(s.id).length"></span></div>
@@ -1368,6 +1408,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=50"></script>
+<script src="js/app.js?v=51"></script>
 </body>
 </html>

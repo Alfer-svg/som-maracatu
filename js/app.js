@@ -256,6 +256,7 @@ document.addEventListener('alpine:init', () => {
     pessoaModal: false, pessoaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
+    opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação)
     _hbStarted: false, // guarda do heartbeat
     relatorio: { linhas: [], porDia: [], de: '', ate: '' }, // relatório de equipe (ponto + produção)
     relPeriodo: 'mes', relDe: '', relAte: '',
@@ -907,6 +908,33 @@ document.addEventListener('alpine:init', () => {
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
+    // ── Programação semanal (checklist por colaborador) ──
+    get semanaAtual() {
+      const hoje = new Date(Date.now() - 3 * 3600 * 1000); const dow = (hoje.getDay() + 6) % 7; // 0=segunda
+      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      const iso = d => d.toISOString().slice(0, 10);
+      return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
+    },
+    progColaboradores() {
+      const q = this.busca.toLowerCase();
+      const nomes = this.equipe.map(m => m.nome);
+      const temSem = this.projects.some(p => !(p.responsavel || '').trim());
+      const lista = [...nomes]; if (temSem) lista.push('');
+      return lista
+        .map(n => ({ nome: n || 'Sem responsável', ref: n, projetos: this.projects.filter(p => (p.responsavel || '') === n && (!q || (p.nome + ' ' + (p.cliente || '')).toLowerCase().includes(q))) }))
+        .filter(g => g.projetos.length);
+    },
+    // projetos ordenados: abertos primeiro (por prazo), concluídos no fim
+    progOrdena(arr) {
+      const aberto = arr.filter(p => p.status !== 'Concluído').sort((a, b) => (a.prazo || '9999') < (b.prazo || '9999') ? -1 : 1);
+      const feito = arr.filter(p => p.status === 'Concluído');
+      return [...aberto, ...feito];
+    },
+    progFeitos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
+    prazoNaSemana(p) { const s = this.semanaAtual; return p.prazo && p.prazo >= s.ini && p.prazo <= s.fim; },
+    toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
     novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
     async salvarProjeto() {
