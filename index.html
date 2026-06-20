@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=42">
+  <link rel="stylesheet" href="css/styles.css?v=43">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -475,20 +475,30 @@
 
         <div class="kanban" x-show="opTab==='quadro'">
           <template x-for="s in PROJ_STATUS" :key="s.id">
-            <div class="kanban-col">
+            <div class="kanban-col" :class="dropCol===s.id?'drop-on':''"
+                 @dragover.prevent="dropCol=s.id" @dragleave="if(dropCol===s.id)dropCol=null" @drop.prevent="onDropProjeto(s.id)">
               <div class="kanban-head"><span class="dot" :style="'background:'+s.color"></span><span class="fw-700 fs-12" x-text="s.id"></span><span class="count" x-text="projetosDoStatus(s.id).length"></span></div>
-              <template x-for="p in projetosDoStatus(s.id)" :key="p.id">
-                <div class="kanban-card" @click="editarProjeto(p)">
-                  <div class="fw-700" x-text="p.nome"></div>
-                  <div class="text-3 fs-12" x-text="p.cliente||'—'"></div>
-                  <div class="flex items-center justify-between mt-2">
-                    <span class="badge" style="background:#ede9fe;color:#6d28d9" x-show="p.servico" x-text="p.servico"></span>
-                    <span class="fs-12 text-3" x-show="p.prazo" x-text="'⏰ '+fmtDate(p.prazo)"></span>
+              <div class="kanban-body">
+                <template x-for="p in projetosDoStatus(s.id)" :key="p.id">
+                  <div class="kanban-card" :class="dragId===p.id?'dragging':''" draggable="true"
+                       @dragstart="dragId=p.id" @dragend="dragId=null; dropCol=null"
+                       @click="p.isPost ? editarPost(p) : editarProjeto(p)">
+                    <!-- etiquetas -->
+                    <div class="tl-labels" x-show="(p.labels||[]).length">
+                      <template x-for="lb in (p.labels||[])" :key="lb"><span class="tl-label" :style="'background:'+labelCor(lb)"></span></template>
+                    </div>
+                    <div class="fs-13 fw-700" style="line-height:1.3" x-text="p.tema||p.nome"></div>
+                    <div class="text-3 fs-12" style="margin-top:2px" x-show="p.cliente" x-text="p.cliente"></div>
+                    <div class="tl-foot">
+                      <span x-show="p.isPost" class="tl-chip" style="background:#ede9fe;color:#6d28d9" x-text="p.tipoPost||'Feed'"></span>
+                      <span x-show="p.prazo" class="tl-chip" :style="prazoCor(p)?('background:'+prazoCor(p)+';color:#fff'):'background:#f1f2f4;color:#5e6c84'"><img class="ic-img" src="assets/icons/calendar.png?v=3" style="height:1em;width:1em"> <span x-text="fmtDate(p.prazo)"></span></span>
+                      <span x-show="p.isPost && p.criativo" class="tl-chip" style="background:#f1f2f4;color:#5e6c84"><img class="ic-img" src="assets/icons/palette.png?v=3" style="height:1em;width:1em"></span>
+                      <span x-show="p.responsavel" class="tl-avatar" :style="'background:'+avatarBg(p.responsavel)+';color:'+avatarFg(p.responsavel)" :title="p.responsavel" x-text="iniciais(p.responsavel)"></span>
+                    </div>
                   </div>
-                  <div class="progress mt-2"><div :style="'width:'+(p.progresso||0)+'%'"></div></div>
-                </div>
-              </template>
-              <button class="kanban-add" @click="novoProjeto(s.id)">+ Adicionar</button>
+                </template>
+              </div>
+              <button class="kanban-add" @click="novoProjeto(s.id)">+ Adicionar um cartão</button>
             </div>
           </template>
         </div>
@@ -1452,6 +1462,13 @@
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in PROJ_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
       <div class="form-group"><label class="form-label">Prazo</label><input class="form-input" type="date" x-model="editing.prazo"></div>
       <div class="form-group"><label class="form-label">Progresso (%)</label><input class="form-input" type="number" min="0" max="100" x-model="editing.progresso"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Etiquetas</label>
+        <div class="flex gap-2" style="flex-wrap:wrap">
+          <template x-for="l in TRELLO_LABELS" :key="l.key">
+            <div class="tl-swatch" :class="(editing.labels||[]).includes(l.key)?'on':''" :style="'background:'+l.cor+';width:46px'" @click="toggleLabel(l.key)" :title="l.key"></div>
+          </template>
+        </div>
+      </div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Notas</label><textarea class="form-textarea" x-model="editing.notas"></textarea></div>
     </div>
     <div class="modal-foot">
@@ -1555,6 +1572,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=54"></script>
+<script src="js/app.js?v=55"></script>
 </body>
 </html>
