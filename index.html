@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=49">
+  <link rel="stylesheet" href="css/styles.css?v=50">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1589,24 +1589,26 @@
         </div>
       </div>
 
-      <!-- Comentários -->
+      <!-- Conversa da equipe (chat interno estilo WhatsApp) -->
       <div class="tl-section">
-        <div class="tl-section-label">Comentários</div>
-        <div class="flex gap-2 mb-3">
-          <input class="form-input" style="flex:1;padding:7px 11px" x-model="novoComentario" placeholder="Escreva um comentário…" @keydown.enter.prevent="addComentario()">
-          <button class="btn btn-primary btn-sm" @click="addComentario()">Comentar</button>
-        </div>
-        <template x-for="cm in cardRef.comentarios" :key="cm.id">
-          <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
-            <span class="tl-avatar" style="width:26px;height:26px;flex-shrink:0" :style="fotoDe(cm.autor)?('background-image:url('+fotoDe(cm.autor)+')'):('background:'+avatarBg(cm.autor)+';color:'+avatarFg(cm.autor))" x-text="fotoDe(cm.autor)?'':iniciais(cm.autor)"></span>
-            <div style="flex:1;min-width:0">
-              <div class="fs-12"><b x-text="cm.autor"></b> <span class="text-3" x-text="'· '+fmtDataHora(cm.em)"></span></div>
-              <div class="fs-13" style="white-space:pre-wrap" x-text="cm.texto"></div>
+        <div class="tl-section-label">Conversa da equipe</div>
+        <div class="chat-area" id="chat-scroll">
+          <template x-for="cm in cardRef.comentarios" :key="cm.id">
+            <div class="chat-msg" :class="cm.autor===(usuario&&usuario.nome)?'me':''">
+              <span class="chat-av" x-show="cm.autor!==(usuario&&usuario.nome)" :style="fotoDe(cm.autor)?('background-image:url('+fotoDe(cm.autor)+')'):('background:'+avatarBg(cm.autor)+';color:'+avatarFg(cm.autor))" x-text="fotoDe(cm.autor)?'':iniciais(cm.autor)"></span>
+              <div class="chat-bubble" @dblclick="cm.autor===(usuario&&usuario.nome) && removeComentario(cm.id)" :title="cm.autor===(usuario&&usuario.nome)?'duplo-clique pra apagar':''">
+                <div class="chat-nome" x-show="cm.autor!==(usuario&&usuario.nome)" x-text="cm.autor"></div>
+                <div class="chat-txt" x-text="cm.texto"></div>
+                <div class="chat-hora" x-text="horaCurta(cm.em)"></div>
+              </div>
             </div>
-            <button class="btn btn-ghost btn-sm" x-show="cm.autor===(usuario&&usuario.nome)" @click="removeComentario(cm.id)">✕</button>
-          </div>
-        </template>
-        <div x-show="!cardRef.comentarios.length" class="text-3 fs-12">Nenhum comentário ainda.</div>
+          </template>
+          <div x-show="!cardRef.comentarios.length" class="text-3 fs-12" style="text-align:center;padding:14px">Nenhuma mensagem ainda. Comece a conversa 👋</div>
+        </div>
+        <div class="chat-bar">
+          <input x-model="novoComentario" placeholder="Mensagem…" @keydown.enter.prevent="addComentario()">
+          <button class="chat-send" @click="addComentario()" title="Enviar">➤</button>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1773,6 +1775,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=63"></script>
+<script src="js/app.js?v=64"></script>
 </body>
 </html>

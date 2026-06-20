@@ -986,17 +986,29 @@ document.addEventListener('alpine:init', () => {
       if (!Array.isArray(p.anexos)) p.anexos = [];
       if (!Array.isArray(p.comentarios)) p.comentarios = [];
       this.cardRef = p; this.labelEdit = false; this.novoItemCheck = ''; this.novoComentario = ''; this.novoAnexoNome = ''; this.novoAnexoUrl = ''; this.cardModal = true;
+      this.scrollChat();
+      clearInterval(this._chatPoll); this._chatPoll = setInterval(() => this.atualizarChat(), 5000); // chat ao vivo
     },
     async salvarCard() { if (!this.cardRef) return; try { await this.salvarProjetoApi(this.cardRef); } catch (e) { alert(e.message); } },
-    fecharCard() { this.cardModal = false; this.carregarProjetos(); },
+    fecharCard() { clearInterval(this._chatPoll); this.cardModal = false; this.carregarProjetos(); },
     toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
     toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
     addItemCheck() { const t = (this.novoItemCheck || '').trim(); if (!t) return; this.cardRef.checklist.push({ id: MD.uid(), texto: t, feito: false }); this.novoItemCheck = ''; this.salvarCard(); },
     toggleItemCheck(it) { it.feito = !it.feito; this.salvarCard(); },
     removeItemCheck(id) { this.cardRef.checklist = this.cardRef.checklist.filter(x => x.id !== id); this.salvarCard(); },
     checkProgresso(p) { const c = p.checklist || []; const f = c.filter(x => x.feito).length; return { feitos: f, total: c.length, pct: c.length ? Math.round(f / c.length * 100) : 0 }; },
-    addComentario() { const t = (this.novoComentario || '').trim(); if (!t) return; this.cardRef.comentarios.unshift({ id: MD.uid(), autor: (this.usuario && this.usuario.nome) || '—', texto: t, em: new Date().toISOString() }); this.novoComentario = ''; this.salvarCard(); },
+    addComentario() { const t = (this.novoComentario || '').trim(); if (!t) return; this.cardRef.comentarios.push({ id: MD.uid(), autor: (this.usuario && this.usuario.nome) || '—', texto: t, em: new Date().toISOString() }); this.novoComentario = ''; this.salvarCard(); this.scrollChat(); },
     removeComentario(id) { this.cardRef.comentarios = this.cardRef.comentarios.filter(x => x.id !== id); this.salvarCard(); },
+    horaCurta(iso) { if (!iso) return ''; try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } },
+    scrollChat() { this.$nextTick(() => { const el = document.getElementById('chat-scroll'); if (el) el.scrollTop = el.scrollHeight; }); },
+    // atualiza só as mensagens do card aberto (sensação de tempo real)
+    async atualizarChat() {
+      if (!this.cardModal || !this.cardRef) return;
+      try {
+        const rows = await this.api('GET', '/projetos'); const fresh = (rows || []).find(x => x.id === this.cardRef.id);
+        if (fresh && fresh.dados) { const novos = fresh.dados.comentarios || []; if (JSON.stringify(novos) !== JSON.stringify(this.cardRef.comentarios || [])) { this.cardRef.comentarios = novos; this.scrollChat(); } }
+      } catch { }
+    },
     addAnexo() { const u = (this.novoAnexoUrl || '').trim(); if (!u) return; this.cardRef.anexos.push({ id: MD.uid(), nome: (this.novoAnexoNome || '').trim() || u, url: u, em: new Date().toISOString() }); this.novoAnexoNome = ''; this.novoAnexoUrl = ''; this.salvarCard(); },
     removeAnexo(id) { this.cardRef.anexos = this.cardRef.anexos.filter(x => x.id !== id); this.salvarCard(); },
     async uploadAnexo(e) {
