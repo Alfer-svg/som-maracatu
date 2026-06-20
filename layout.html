@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprovação da semana — Maracatu Digital</title>
+  <link rel="icon" href="assets/favicon.png">
+  <style>
+    :root{ --bg:#0b0b0c; --card:#16161a; --line:#2a2a31; --txt:#f4f4f5; --txt2:#a1a1aa; --accent:#22c55e; --accent2:#3b82f6; --red:#f87171; }
+    *{ box-sizing:border-box }
+    body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif; background:linear-gradient(160deg,#0b0b0c,#1a1a20); color:var(--txt); padding:24px 16px; }
+    .wrap{ max-width:720px; margin:0 auto; }
+    .head{ display:flex; align-items:center; gap:12px; margin-bottom:6px; }
+    .head img{ width:40px; height:40px; border-radius:9px; background:#000; padding:4px; }
+    h1{ font-size:22px; margin:14px 0 4px; }
+    .sub{ color:var(--txt2); font-size:14px; margin-bottom:22px; }
+    .cover{ background:linear-gradient(135deg,#16a34a,#22c55e); color:#04210f; border-radius:14px; padding:22px; text-align:center; margin-bottom:18px; }
+    .cover .lab{ font-size:11px; letter-spacing:3px; text-transform:uppercase; opacity:.7; }
+    .cover .cli{ font-size:26px; font-weight:800; margin:6px 0; }
+    .cover .sem{ font-size:13px; opacity:.85; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; }
+    .post-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+    .badge{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:999px; }
+    .post-body{ display:flex; gap:12px; align-items:flex-start; }
+    .post-body img{ width:130px; height:130px; object-fit:cover; border-radius:10px; border:1px solid var(--line); flex-shrink:0; }
+    .leg{ font-size:13px; white-space:pre-wrap; flex:1; color:var(--txt); }
+    .sec{ font-size:12px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--txt2); margin:4px 0 10px; }
+    label{ display:block; font-size:13px; font-weight:600; margin:10px 0 5px; }
+    input,textarea{ width:100%; background:#0e0e11; border:1px solid var(--line); color:var(--txt); border-radius:9px; padding:10px 12px; font-size:14px; font-family:inherit; }
+    input:focus,textarea:focus{ outline:none; border-color:var(--accent2); }
+    textarea{ min-height:80px; resize:vertical; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{ flex:1; min-width:160px; border:0; border-radius:10px; padding:14px; font-size:15px; font-weight:800; cursor:pointer; }
+    .b-ok{ background:var(--accent); color:#04210f; }
+    .b-adj{ background:transparent; color:var(--txt); border:1px solid var(--line); }
+    button:disabled{ opacity:.55; cursor:default; }
+    .banner{ border-radius:12px; padding:16px; margin-bottom:14px; }
+    .banner.ok{ background:#16a34a22; border:1px solid #16a34a66; }
+    .banner.adj{ background:#dc262622; border:1px solid #dc262666; }
+    .banner h2{ margin:0 0 4px; font-size:16px; }
+    .err{ color:var(--red); font-size:13px; margin-top:10px; text-align:center; }
+    .foot{ text-align:center; color:var(--txt2); font-size:12px; margin-top:18px; }
+    .center{ text-align:center; padding:50px 20px; }
+    .center .big{ font-size:46px; }
+    a.pdf{ display:inline-block; color:var(--accent); font-weight:700; text-decoration:none; margin-top:6px; }
+    [x-hide]{ display:none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <img src="assets/logo.png" alt="Maracatu Digital">
+      <div><div style="font-weight:800">Maracatu Digital</div><div style="font-size:12px;color:var(--txt2)">Aprovação da programação</div></div>
+    </div>
+
+    <div id="loading" class="center"><div class="sub">Carregando…</div></div>
+
+    <div id="indisponivel" class="center" x-hide>
+      <div class="big">⏳</div>
+      <h1>Ainda não disponível</h1>
+      <div class="sub">Esta programação ainda está em preparação. Você vai receber o link assim que estiver pronta. 🙂</div>
+    </div>
+
+    <div id="conteudo" x-hide>
+      <div class="cover">
+        <div class="lab">Programação semanal</div>
+        <div class="cli" id="c-cliente"></div>
+        <div class="sem" id="c-semana"></div>
+      </div>
+
+      <div id="banner"></div>
+
+      <div id="posts"></div>
+
+      <div class="card" id="extra" x-hide>
+        <div class="sec">Material</div>
+        <div id="c-obs" class="leg" style="margin-bottom:6px"></div>
+        <a class="pdf" id="c-pdf" target="_blank" x-hide>📄 Abrir PDF final ↗</a>
+      </div>
+
+      <div class="card" id="decidir">
+        <div class="sec">Sua avaliação</div>
+        <label>Seu nome</label>
+        <input id="nome" placeholder="Quem está aprovando">
+        <label>Precisa de ajuste? <span style="color:var(--txt2);font-weight:400">— descreva (só se for pedir ajuste)</span></label>
+        <textarea id="comentario" placeholder="Ex.: trocar a cor do post de quarta, ajustar a legenda de sexta…"></textarea>
+        <div class="actions">
+          <button class="b-ok" onclick="aprovar()">✓ Aprovar tudo</button>
+          <button class="b-adj" onclick="pedirAjuste()">✎ Pedir ajuste</button>
+        </div>
+        <div class="err" id="erro"></div>
+      </div>
+    </div>
+
+    <div id="sucesso" class="center" x-hide>
+      <div class="big" id="s-emoji">✅</div>
+      <h1 id="s-titulo">Recebido!</h1>
+      <div class="sub" id="s-msg"></div>
+    </div>
+
+    <div class="foot">Maracatu Digital Intelligence</div>
+  </div>
+
+  <script>
+    var API = 'https://som-backend-production-01d8.up.railway.app/api/layouts/publico';
+    var TOKEN = new URLSearchParams(location.search).get('t') || '';
+    var L = null;
+
+    function show(id){ document.getElementById(id).removeAttribute('x-hide'); }
+    function hide(id){ document.getElementById(id).setAttribute('x-hide',''); }
+    function esc(s){ var d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+    function ehImagem(u){ return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(u||''); }
+    function dia(d){ if(!d) return ''; var x=new Date(d+'T00:00:00'); if(isNaN(x))return''; var ds=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']; return ds[x.getDay()]+' '+String(x.getDate()).padStart(2,'0')+'/'+String(x.getMonth()+1).padStart(2,'0'); }
+    function dmy(d){ if(!d) return ''; var p=String(d).split('-'); return p[2]+'/'+p[1]; }
+
+    function render(){
+      document.getElementById('c-cliente').textContent = L.cliente || '';
+      document.getElementById('c-semana').textContent = 'Semana de ' + dmy(L.semanaIni) + ' a ' + dmy(L.semanaFim);
+
+      var posts = L.posts || [];
+      document.getElementById('posts').innerHTML = posts.length ? posts.map(function(p){
+        var img = p.criativo && ehImagem(p.criativo) ? '<img src="'+esc(p.criativo)+'">'
+                : (p.criativo ? '<a class="pdf" href="'+esc(p.criativo)+'" target="_blank">ver criativo ↗</a>' : '');
+        return '<div class="card"><div class="post-head">'
+          + '<span class="badge" style="background:#2a2a31;color:#a1a1aa">'+esc(dia(p.prazo))+'</span>'
+          + '<span class="badge" style="background:#3b1d6e;color:#c4b5fd">'+esc(p.tipoPost||'Feed')+'</span>'
+          + '<span style="font-weight:700;font-size:14px">'+esc(p.tema||'')+'</span></div>'
+          + '<div class="post-body">'+img+'<div class="leg">'+(esc(p.legenda)||'<span style="color:#a1a1aa">(sem legenda)</span>')+'</div></div></div>';
+      }).join('') : '<div class="card" style="text-align:center;color:var(--txt2)">Sem posts individuais — confira o PDF abaixo.</div>';
+
+      var temExtra = false;
+      if (L.observacoes){ document.getElementById('c-obs').textContent = L.observacoes; temExtra = true; } else { hide('c-obs'); }
+      if (L.anexoUrl){ var a=document.getElementById('c-pdf'); a.href=L.anexoUrl; show('c-pdf'); temExtra = true; }
+      if (temExtra) show('extra');
+
+      var banner = document.getElementById('banner');
+      if (L.status === 'APROVADO_CLIENTE'){
+        banner.innerHTML = '<div class="banner ok"><h2>✓ Você já aprovou esta semana</h2><div class="sub" style="margin:0">Obrigado! Se precisar, ainda dá pra pedir um ajuste abaixo.</div></div>';
+      } else if (L.status === 'AJUSTE'){
+        banner.innerHTML = '<div class="banner adj"><h2>✎ Ajuste registrado</h2><div class="leg">'+esc(L.ajusteCliente||'')+'</div><div class="sub" style="margin:6px 0 0">Nossa equipe já foi avisada. Quando estiver pronto você aprova.</div></div>';
+      }
+      show('conteudo');
+    }
+
+    function carregar(){
+      if (!TOKEN){ hide('loading'); show('indisponivel'); return; }
+      fetch(API + '/' + encodeURIComponent(TOKEN))
+        .then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
+        .then(function(d){
+          hide('loading');
+          if (!d || !d.disponivel){ show('indisponivel'); return; }
+          L = d; render();
+        })
+        .catch(function(){ hide('loading'); show('indisponivel'); });
+    }
+
+    function lock(v){ document.querySelectorAll('#decidir button').forEach(function(b){ b.disabled=v; }); }
+    function sucesso(emoji, titulo, msg){ hide('conteudo'); var s=document.getElementById('sucesso'); document.getElementById('s-emoji').textContent=emoji; document.getElementById('s-titulo').textContent=titulo; document.getElementById('s-msg').textContent=msg; show('sucesso'); window.scrollTo(0,0); }
+
+    function aprovar(){
+      document.getElementById('erro').textContent='';
+      lock(true);
+      fetch(API + '/' + encodeURIComponent(TOKEN) + '/aprovar', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nome: document.getElementById('nome').value.trim() })
+      }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
+        .then(function(){ sucesso('✅','Aprovado! Obrigado 🎉','Sua equipe já pode publicar a semana.'); })
+        .catch(function(){ lock(false); document.getElementById('erro').textContent='Não consegui registrar agora. Tente de novo em instantes.'; });
+    }
+
+    function pedirAjuste(){
+      var c = document.getElementById('comentario').value.trim();
+      if (!c){ document.getElementById('erro').textContent='Descreva o ajuste que você precisa no campo acima.'; return; }
+      document.getElementById('erro').textContent='';
+      lock(true);
+      fetch(API + '/' + encodeURIComponent(TOKEN) + '/ajuste', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ nome: document.getElementById('nome').value.trim(), comentario: c })
+      }).then(function(r){ if(!r.ok) throw new Error('x'); return r.json(); })
+        .then(function(){ sucesso('✍️','Ajuste enviado!','Nossa equipe vai cuidar disso e te mandar a nova versão.'); })
+        .catch(function(){ lock(false); document.getElementById('erro').textContent='Não consegui enviar agora. Tente de novo em instantes.'; });
+    }
+
+    carregar();
+  </script>
+</body>
+</html>

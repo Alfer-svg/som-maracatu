@@ -1180,6 +1180,23 @@ document.addEventListener('alpine:init', () => {
       catch (e) { alert(e.message); }
     },
     ehImagem(url) { return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url || ''); },
+    // ── Fase 3: enviar pro cliente aprovar (congela um snapshot dos posts da semana) ──
+    async enviarLayoutCliente() {
+      if (!this.layoutAtual) return;
+      const snap = this.layoutPostsAtual.map(p => ({
+        prazo: p.prazo, tipoPost: p.tipoPost || 'Feed', tema: p.tema || p.nome || '',
+        legenda: p.legenda || '', criativo: p.criativo || '', status: p.status || '',
+      }));
+      if (!snap.length && !confirm('Não há posts nesta semana. Enviar mesmo assim (só o PDF/observações)?')) return;
+      await this.patchLayout({ status: 'ENVIADO', postsSnapshot: snap });
+      this.copiarLink(this.linkPublicoLayout());
+    },
+    linkPublicoLayout() {
+      if (!this.layoutAtual) return '';
+      const base = location.origin + location.pathname.replace(/[^/]*$/, '');
+      return base + 'layout.html?t=' + this.layoutAtual.token;
+    },
+    layoutDataHora(dt) { if (!dt) return ''; const d = new Date(dt); if (isNaN(d.getTime())) return ''; return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); },
     layoutStatusLabel(s) { return ({ RASCUNHO: 'Rascunho', APROVADO_GESTAO: 'Aprovado pela gestão', ENVIADO: 'Enviado ao cliente', APROVADO_CLIENTE: 'Aprovado pelo cliente', AJUSTE: 'Ajuste solicitado' })[s] || s; },
     layoutStatusCor(s) { return ({ RASCUNHO: '#8a8ba3', APROVADO_GESTAO: '#2563eb', ENVIADO: '#d97706', APROVADO_CLIENTE: '#16a34a', AJUSTE: '#dc2626' })[s] || '#8a8ba3'; },
     imprimirLayout() { window.print(); },

@@ -1457,6 +1457,21 @@
         </div>
       </template>
     </div>
+    <!-- decisão do cliente -->
+    <template x-if="layoutAtual&&layoutAtual.status==='APROVADO_CLIENTE'">
+      <div style="margin:0 18px 4px;padding:12px 14px;border-radius:10px;background:#16a34a18;border:1px solid #16a34a55">
+        <div class="fw-700 fs-13" style="color:#16a34a">✓ Aprovado pelo cliente</div>
+        <div class="text-2 fs-12" x-text="(layoutAtual.aprovadoClienteNome?('por '+layoutAtual.aprovadoClienteNome):'')+(layoutAtual.aprovadoClienteEm?(' · '+layoutDataHora(layoutAtual.aprovadoClienteEm)):'')"></div>
+      </div>
+    </template>
+    <template x-if="layoutAtual&&layoutAtual.status==='AJUSTE'">
+      <div style="margin:0 18px 4px;padding:12px 14px;border-radius:10px;background:#dc262618;border:1px solid #dc262655">
+        <div class="fw-700 fs-13" style="color:#dc2626">✎ Ajuste solicitado pelo cliente</div>
+        <div class="text-1 fs-13" style="white-space:pre-wrap;margin-top:4px" x-text="layoutAtual.ajusteCliente"></div>
+        <div class="text-3 fs-12" x-show="layoutAtual.aprovadoClienteNome" x-text="'— '+layoutAtual.aprovadoClienteNome"></div>
+      </div>
+    </template>
+
     <div class="modal-foot" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
       <div class="form-group" style="flex:1;min-width:220px;margin:0">
         <label class="form-label">PDF final do designer (link)</label>
@@ -1464,8 +1479,19 @@
       </div>
       <a x-show="layoutAtual&&layoutAtual.anexoUrl" :href="layoutAtual&&layoutAtual.anexoUrl" target="_blank" class="btn btn-ghost">abrir PDF ↗</a>
       <button class="btn btn-ghost" @click="imprimirLayout()">Imprimir</button>
+      <!-- RASCUNHO → aprovação interna -->
       <button class="btn btn-primary" x-show="layoutAtual&&layoutAtual.status==='RASCUNHO'" @click="patchLayout({status:'APROVADO_GESTAO'})">✓ Aprovar (gestão)</button>
-      <span x-show="layoutAtual&&layoutAtual.status!=='RASCUNHO'" class="text-3 fs-12">Próximo: enviar pro cliente (em breve)</span>
+      <!-- APROVADO_GESTAO → enviar pro cliente -->
+      <button class="btn btn-primary" x-show="layoutAtual&&layoutAtual.status==='APROVADO_GESTAO'" @click="enviarLayoutCliente()">📤 Enviar ao cliente</button>
+      <!-- já enviado → link público + reenviar -->
+      <template x-if="layoutAtual&&['ENVIADO','APROVADO_CLIENTE','AJUSTE'].includes(layoutAtual.status)">
+        <div class="flex items-center gap-2" style="flex-wrap:wrap;width:100%">
+          <input class="form-input" style="flex:1;min-width:200px" readonly :value="linkPublicoLayout()" @focus="$event.target.select()">
+          <button class="btn btn-primary btn-sm" @click="copiarLink(linkPublicoLayout())">Copiar link</button>
+          <a class="btn btn-ghost btn-sm" :href="linkPublicoLayout()" target="_blank">abrir ↗</a>
+          <button class="btn btn-ghost btn-sm" @click="enviarLayoutCliente()" x-show="layoutAtual.status==='AJUSTE'">Reenviar com ajustes</button>
+        </div>
+      </template>
     </div>
   </div>
 </div>
@@ -1797,6 +1823,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=66"></script>
+<script src="js/app.js?v=67"></script>
 </body>
 </html>
