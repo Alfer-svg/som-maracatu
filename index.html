@@ -495,6 +495,8 @@
                       <span x-show="p.isPost" class="tl-chip" style="background:#ede9fe;color:#6d28d9" x-text="p.tipoPost||'Feed'"></span>
                       <span x-show="(p.notas||'').trim()" class="tl-chip" style="background:#f1f2f4;color:#5e6c84" title="Tem descrição">≡</span>
                       <span x-show="(p.checklist||[]).length" class="tl-chip" :style="checkProgresso(p).pct===100?'background:#61bd4f;color:#fff':'background:#f1f2f4;color:#5e6c84'"><img class="ic-img" src="assets/icons/check-circle.png?v=3" style="height:1em;width:1em"> <span x-text="checkProgresso(p).feitos+'/'+checkProgresso(p).total"></span></span>
+                      <span x-show="(p.comentarios||[]).length" class="tl-chip" style="background:#f1f2f4;color:#5e6c84"><img class="ic-img" src="assets/icons/chat-circle.png?v=3" style="height:1em;width:1em"> <span x-text="(p.comentarios||[]).length"></span></span>
+                      <span x-show="(p.anexos||[]).length" class="tl-chip" style="background:#f1f2f4;color:#5e6c84"><img class="ic-img" src="assets/icons/paperclip.png?v=3" style="height:1em;width:1em"> <span x-text="(p.anexos||[]).length"></span></span>
                       <span x-show="p.prazo" class="tl-chip" :style="prazoCor(p)?('background:'+prazoCor(p)+';color:#fff'):'background:#f1f2f4;color:#5e6c84'"><img class="ic-img" src="assets/icons/calendar.png?v=3" style="height:1em;width:1em"> <span x-text="fmtDate(p.prazo)"></span></span>
                       <span x-show="p.isPost && p.criativo" class="tl-chip" style="background:#f1f2f4;color:#5e6c84"><img class="ic-img" src="assets/icons/palette.png?v=3" style="height:1em;width:1em"></span>
                       <span style="margin-left:auto;display:inline-flex">
@@ -1522,6 +1524,44 @@
           <button class="btn btn-ghost btn-sm" @click="addItemCheck()">+ Item</button>
         </div>
       </div>
+
+      <!-- Anexos -->
+      <div class="tl-section">
+        <div class="tl-section-label">Anexos</div>
+        <template x-for="a in cardRef.anexos" :key="a.id">
+          <div class="flex items-center gap-2" style="padding:6px 8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px">
+            <img class="ic-img" src="assets/icons/paperclip.png?v=3">
+            <a :href="a.url" target="_blank" class="fs-13 fw-700 truncate" style="flex:1" x-text="a.nome"></a>
+            <span class="text-3 fs-12" x-text="fmtDataHora(a.em)"></span>
+            <button class="btn btn-ghost btn-sm" @click="removeAnexo(a.id)">✕</button>
+          </div>
+        </template>
+        <div class="flex gap-2 mt-2" style="flex-wrap:wrap">
+          <input class="form-input" style="width:160px;padding:6px 10px" x-model="novoAnexoNome" placeholder="Nome (opcional)">
+          <input class="form-input" style="flex:1;min-width:160px;padding:6px 10px" x-model="novoAnexoUrl" placeholder="Link do arquivo (Drive/Canva…)" @keydown.enter.prevent="addAnexo()">
+          <button class="btn btn-ghost btn-sm" @click="addAnexo()">+ Anexar</button>
+        </div>
+      </div>
+
+      <!-- Comentários -->
+      <div class="tl-section">
+        <div class="tl-section-label">Comentários</div>
+        <div class="flex gap-2 mb-3">
+          <input class="form-input" style="flex:1;padding:7px 11px" x-model="novoComentario" placeholder="Escreva um comentário…" @keydown.enter.prevent="addComentario()">
+          <button class="btn btn-primary btn-sm" @click="addComentario()">Comentar</button>
+        </div>
+        <template x-for="cm in cardRef.comentarios" :key="cm.id">
+          <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+            <span class="tl-avatar" style="width:26px;height:26px;flex-shrink:0" :style="'background:'+avatarBg(cm.autor)+';color:'+avatarFg(cm.autor)" x-text="iniciais(cm.autor)"></span>
+            <div style="flex:1;min-width:0">
+              <div class="fs-12"><b x-text="cm.autor"></b> <span class="text-3" x-text="'· '+fmtDataHora(cm.em)"></span></div>
+              <div class="fs-13" style="white-space:pre-wrap" x-text="cm.texto"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" x-show="cm.autor===(usuario&&usuario.nome)" @click="removeComentario(cm.id)">✕</button>
+          </div>
+        </template>
+        <div x-show="!cardRef.comentarios.length" class="text-3 fs-12">Nenhum comentário ainda.</div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger" @click="excluirProjeto(cardRef); cardModal=false">Excluir</button>
@@ -1678,6 +1718,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=56"></script>
+<script src="js/app.js?v=57"></script>
 </body>
 </html>
