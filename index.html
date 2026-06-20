@@ -1256,8 +1256,11 @@
       <div class="form-group"><label class="form-label">Cliente</label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
       <div class="form-group"><label class="form-label">Serviço</label><select class="form-select" x-model="editing.servico"><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
       <div class="form-group"><label class="form-label">Responsável</label>
-        <input class="form-input" x-model="editing.responsavel" list="colab-list" placeholder="Atribuir a um colaborador">
-        <datalist id="colab-list"><template x-for="n in colaboradores" :key="n"><option :value="n"></option></template></datalist>
+        <select class="form-select" x-model="editing.responsavel">
+          <option value="">— escolher colaborador —</option>
+          <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
+          <template x-if="editing.responsavel && !equipe.some(m=>m.nome===editing.responsavel)"><option :value="editing.responsavel" x-text="editing.responsavel"></option></template>
+        </select>
       </div>
       <div class="form-group"><label class="form-label">Status</label><select class="form-select" x-model="editing.status"><template x-for="s in PROJ_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
       <div class="form-group"><label class="form-label">Prazo</label><input class="form-input" type="date" x-model="editing.prazo"></div>
@@ -1365,6 +1368,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=49"></script>
+<script src="js/app.js?v=50"></script>
 </body>
 </html>

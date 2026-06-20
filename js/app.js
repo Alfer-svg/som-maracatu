@@ -250,7 +250,8 @@ document.addEventListener('alpine:init', () => {
     TIPOS_INTER,
     // Pessoal — perfis de acesso + gestão de equipe
     PAPEIS_INFO,
-    usuarios: [], // equipe (vinda do backend, só admin lê)
+    usuarios: [], // equipe completa (só admin lê)
+    equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '' },
     pessoaModal: false, pessoaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
@@ -299,7 +300,7 @@ document.addEventListener('alpine:init', () => {
         this.persist('catalogo', this.catalogo);
         localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
       }
-      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.startHeartbeat(); }
+      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); }
     },
 
     get autenticado() { return !!this.token; },
@@ -321,7 +322,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -386,6 +387,7 @@ document.addEventListener('alpine:init', () => {
     // ── Pessoal: gestão de equipe (admin) ──
     papelInfo(id) { return PAPEIS_INFO.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
     async carregarUsuarios() { if (!this.ehAdmin) return; try { this.usuarios = (await this.api('GET', '/auth/usuarios')) || []; } catch (e) { this.usuarios = []; } },
+    async carregarEquipe() { try { this.equipe = (await this.api('GET', '/auth/equipe')) || []; } catch { this.equipe = []; } },
     // ── Presença / online (Operacional) ──
     async heartbeat() { try { await this.api('POST', '/auth/heartbeat', {}); } catch {} },
     async carregarPresenca() { try { this.presenca = (await this.api('GET', '/auth/presenca')) || []; } catch { this.presenca = []; } },
@@ -905,8 +907,8 @@ document.addEventListener('alpine:init', () => {
     // ───────────────── OPERACIONAL: projetos ─────────────────
     projetosDoStatus(s) { const q = this.busca.toLowerCase(); return this.projects.filter(p => p.status === s && (!q || (p.nome + ' ' + p.cliente).toLowerCase().includes(q))); },
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
-    novoProjeto(status = 'A Fazer') { this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
-    editarProjeto(p) { this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
+    novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
+    editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
     async salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');
       const resp = (e.responsavel || '').trim();
