@@ -289,19 +289,17 @@ document.addEventListener('alpine:init', () => {
     carregando: false,
 
     init() {
-      // CRM / financeiro / operacional ainda locais (migram numa próxima fase)
-      this.leads     = MD.get('som_leads', []);
+      // CRM (leads) e Operacional (projetos) agora vivem no backend — ver carregarColecoes()
       this.proposals = MD.get('som_proposals', []);
       this.contracts = MD.get('som_contracts', []);
       this.finance   = MD.get('som_finance', []);
-      this.projects  = MD.get('som_projects', []);
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento
       if (this.catalogo.length === 0 && !localStorage.getItem('som_catalogo_seeded')) {
         this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
         this.persist('catalogo', this.catalogo);
         localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
       }
-      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.startHeartbeat(); }
+      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.startHeartbeat(); }
     },
 
     get autenticado() { return !!this.token; },
@@ -323,7 +321,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -341,13 +339,36 @@ document.addEventListener('alpine:init', () => {
       } catch (e) { console.warn('carregarClientes:', e.message); }
       finally { this.carregando = false; }
     },
+    // ── CRM (leads) e Operacional (projetos): agora no backend ──
+    async carregarLeads() { try { const r = await this.api('GET', '/leads'); this.leads = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) })); } catch { } },
+    async carregarProjetos() { try { const r = await this.api('GET', '/projetos'); this.projects = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) })); } catch { } },
+    async salvarLeadApi(l) { const { id, ...dados } = l; const r = await this.api('POST', '/leads', { id, dados }); if (r && r.id && !id) l.id = r.id; return r; },
+    async salvarProjetoApi(p) { const { id, ...dados } = p; const r = await this.api('POST', '/projetos', { id, dados }); if (r && r.id && !id) p.id = r.id; return r; },
+    // migração one-time: o 1º navegador com dados locais semeia o backend; os demais usam o backend
+    async migrarColecao(chave, recurso) {
+      const locais = MD.get(chave, []);
+      if (!Array.isArray(locais) || !locais.length) return 0;
+      let remotos = []; try { remotos = (await this.api('GET', recurso)) || []; } catch { return 0; }
+      if (remotos.length) { localStorage.setItem(chave + '_bak', JSON.stringify(locais)); localStorage.removeItem(chave); return 0; }
+      let n = 0;
+      for (const item of locais) { const { id, ...dados } = item; try { await this.api('POST', recurso, { dados }); n++; } catch { } }
+      localStorage.setItem(chave + '_bak', JSON.stringify(locais)); localStorage.removeItem(chave);
+      return n;
+    },
+    async carregarColecoes() {
+      if (!this.token) return;
+      const a = await this.migrarColecao('som_leads', '/leads');
+      const b = await this.migrarColecao('som_projects', '/projetos');
+      if (a || b) console.info('Migrados pro backend — leads:', a, 'projetos:', b);
+      await this.carregarLeads(); await this.carregarProjetos();
+    },
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
     // ícones: classe Phosphor a partir do emoji-chave + cor (p/ sinais de saúde)
     phClass(e) { return PH_ICON[e] || 'ph ph-circle'; },
     phCor(e) { return SINAL_COR[e] || ''; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') this.carregarPresenca(); if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -461,15 +482,17 @@ document.addEventListener('alpine:init', () => {
     stageInfo(s) { return STAGES.find(x => x.id === s) || STAGES[0]; },
     novoLead(stage = 'Novo') { this.editing = { id: '', empresa: '', contato: '', whatsapp: '', email: '', cidade: '', servico: '', origem: 'Instagram', cnpj: '', valor: 0, stage, notas: '', createdAt: MD.today() }; this.cnpjMsg = ''; this.modal = 'lead'; },
     editarLead(l) { this.editing = { ...l }; this.cnpjMsg = ''; this.modal = 'lead'; },
-    salvarLead() {
+    async salvarLead() {
       const e = this.editing;
       if (!e.empresa) return alert('Informe a empresa/nome do lead.');
-      if (e.id) { const i = this.leads.findIndex(x => x.id === e.id); if (i > -1) this.leads[i] = { ...e }; }
-      else { e.id = MD.uid(); this.leads.unshift({ ...e }); }
-      this.persist('leads', this.leads); this.modal = null;
+      try {
+        if (e.id) { await this.salvarLeadApi(e); const i = this.leads.findIndex(x => x.id === e.id); if (i > -1) this.leads[i] = { ...e }; }
+        else { await this.salvarLeadApi(e); this.leads.unshift({ ...e }); }
+        this.modal = null;
+      } catch (err) { alert(err.message || 'Falha ao salvar o lead.'); }
     },
-    moverLead(l, stage) { const antes = l.stage; l.stage = stage; this.persist('leads', this.leads); if (stage === 'Ganho' && antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0); },
-    excluirLead(l) { if (!confirm('Excluir o lead ' + l.empresa + '?')) return; this.leads = this.leads.filter(x => x.id !== l.id); this.persist('leads', this.leads); this.modal = null; },
+    async moverLead(l, stage) { const antes = l.stage; l.stage = stage; try { await this.salvarLeadApi(l); } catch {} if (stage === 'Ganho' && antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0); },
+    async excluirLead(l) { if (!confirm('Excluir o lead ' + l.empresa + '?')) return; try { await this.api('DELETE', '/leads/' + l.id); this.leads = this.leads.filter(x => x.id !== l.id); this.modal = null; } catch (err) { alert(err.message); } },
 
     // ───────────────── COMERCIAL: clientes ─────────────────
     get clientesFiltrados() { const q = this.busca.toLowerCase(); return this.clients.filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q)); },
@@ -876,13 +899,15 @@ document.addEventListener('alpine:init', () => {
     projStatusInfo(s) { return PROJ_STATUS.find(x => x.id === s) || PROJ_STATUS[0]; },
     novoProjeto(status = 'A Fazer') { this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
     editarProjeto(p) { this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
-    salvarProjeto() {
+    async salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');
       const resp = (e.responsavel || '').trim();
       if (resp && !this.colaboradores.includes(resp)) { this.colaboradores = [...this.colaboradores, resp].sort((a, b) => a.localeCompare(b)); MD.set('som_colaboradores', this.colaboradores); }
-      if (e.id) { const i = this.projects.findIndex(x => x.id === e.id); if (i > -1) this.projects[i] = { ...e }; }
-      else { e.id = MD.uid(); this.projects.unshift({ ...e }); }
-      this.persist('projects', this.projects); this.modal = null;
+      try {
+        if (e.id) { await this.salvarProjetoApi(e); const i = this.projects.findIndex(x => x.id === e.id); if (i > -1) this.projects[i] = { ...e }; }
+        else { await this.salvarProjetoApi(e); this.projects.unshift({ ...e }); }
+        this.modal = null;
+      } catch (err) { alert(err.message || 'Falha ao salvar o projeto.'); }
     },
     // ── Modelos de projeto (dropdown com favoritos no topo) ──
     modelosFavoritos() { return this.MODELOS_PROJETO.filter(m => this.modelosFav.includes(m.nome)); },
@@ -896,8 +921,8 @@ document.addEventListener('alpine:init', () => {
       this.modelosFav = this.modelosFav.includes(n) ? this.modelosFav.filter(x => x !== n) : [...this.modelosFav, n];
       MD.set('som_modelos_fav', this.modelosFav);
     },
-    moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') p.progresso = 100; this.persist('projects', this.projects); if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
-    excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; this.projects = this.projects.filter(x => x.id !== p.id); this.persist('projects', this.projects); this.modal = null; },
+    async moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') p.progresso = 100; try { await this.salvarProjetoApi(p); } catch {} if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
+    async excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; try { await this.api('DELETE', '/projetos/' + p.id); this.projects = this.projects.filter(x => x.id !== p.id); this.modal = null; } catch (err) { alert(err.message); } },
 
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
     // Numeração automática: ORC-AAAA-NNN / CT-AAAA-NNN (sequencial por ano).
@@ -1177,7 +1202,7 @@ ${this._docFoot()}
     // converte lead Ganho → cliente
     async ganharLead(l) {
       const antes = l.stage;
-      l.stage = 'Ganho'; this.persist('leads', this.leads);
+      l.stage = 'Ganho'; try { await this.salvarLeadApi(l); } catch {}
       if (antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
         const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
