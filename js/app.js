@@ -257,7 +257,8 @@ document.addEventListener('alpine:init', () => {
     pessoaModal: false, pessoaMsg: '',
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
-    opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação)
+    opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
+    layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
     progPosts: [], // posts sendo montados no modal
@@ -383,7 +384,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=3';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') { this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -979,6 +980,39 @@ document.addEventListener('alpine:init', () => {
       try { await this.salvarProjetoApi(p); await this.carregarProjetos(); this.postModal = false; }
       catch (e) { alert(e.message || 'Falha ao salvar o post.'); }
     },
+    // ── LAYOUT da semana (Fase 2) ──
+    async carregarLayouts() { try { this.layouts = (await this.api('GET', '/layouts')) || []; } catch { this.layouts = []; } },
+    postsDoClienteSemana(cliente) {
+      const s = this.semanaAtual;
+      return this.projects.filter(p => p.isPost && p.cliente === cliente && p.prazo >= s.ini && p.prazo <= s.fim)
+        .sort((a, b) => (a.prazo || '') < (b.prazo || '') ? -1 : 1);
+    },
+    progClientesSemana() {
+      const s = this.semanaAtual;
+      const cli = [...new Set(this.projects.filter(p => p.isPost && p.prazo >= s.ini && p.prazo <= s.fim).map(p => p.cliente))].filter(Boolean).sort();
+      return cli.map(c => ({ cliente: c, posts: this.postsDoClienteSemana(c) }));
+    },
+    postsProntos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
+    layoutDoCliente(cliente) { const s = this.semanaAtual; return this.layouts.find(l => l.cliente === cliente && l.semanaIni === s.ini); },
+    async abrirLayout(cliente) {
+      const s = this.semanaAtual;
+      try {
+        const l = await this.api('POST', '/layouts', { cliente, semanaIni: s.ini, semanaFim: s.fim });
+        this.layoutAtual = l;
+        const i = this.layouts.findIndex(x => x.id === l.id); if (i >= 0) this.layouts[i] = l; else this.layouts.unshift(l);
+        this.layoutModal = true;
+      } catch (e) { alert(e.message || 'Falha ao abrir o layout.'); }
+    },
+    get layoutPostsAtual() { return this.layoutAtual ? this.postsDoClienteSemana(this.layoutAtual.cliente) : []; },
+    async patchLayout(campos) {
+      if (!this.layoutAtual) return;
+      try { const r = await this.api('PATCH', '/layouts/' + this.layoutAtual.id, campos); Object.assign(this.layoutAtual, r); const i = this.layouts.findIndex(x => x.id === r.id); if (i >= 0) this.layouts[i] = r; }
+      catch (e) { alert(e.message); }
+    },
+    ehImagem(url) { return /\.(png|jpe?g|webp|gif)(\?|$)/i.test(url || ''); },
+    layoutStatusLabel(s) { return ({ RASCUNHO: 'Rascunho', APROVADO_GESTAO: 'Aprovado pela gestão', ENVIADO: 'Enviado ao cliente', APROVADO_CLIENTE: 'Aprovado pelo cliente', AJUSTE: 'Ajuste solicitado' })[s] || s; },
+    layoutStatusCor(s) { return ({ RASCUNHO: '#8a8ba3', APROVADO_GESTAO: '#2563eb', ENVIADO: '#d97706', APROVADO_CLIENTE: '#16a34a', AJUSTE: '#dc2626' })[s] || '#8a8ba3'; },
+    imprimirLayout() { window.print(); },
     novoProjeto(status = 'A Fazer') { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status, prazo: '', progresso: 0, notas: '' }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p }; this.modal = 'project'; },
     async salvarProjeto() {

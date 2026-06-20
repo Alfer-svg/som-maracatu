@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=41">
+  <link rel="stylesheet" href="css/styles.css?v=42">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -408,10 +408,30 @@
           <div x-show="ehAdmin && !presenca.some(p=>p.online)" class="text-3 fs-12" style="margin-top:6px">Ninguém online no momento.</div>
         </div>
 
-        <!-- toggle de vista: Quadro | Programação semanal -->
+        <!-- toggle de vista: Quadro | Programação semanal | Layouts -->
         <div class="fichario" style="margin-bottom:14px">
           <div class="fichario-tab" :class="opTab==='quadro'?'active':''" @click="opTab='quadro'">Quadro</div>
           <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'">Programação semanal</div>
+          <div class="fichario-tab" :class="opTab==='layouts'?'active':''" @click="opTab='layouts'; carregarLayouts()">Layouts</div>
+        </div>
+
+        <!-- ===== LAYOUTS DA SEMANA (por cliente) ===== -->
+        <div x-show="opTab==='layouts'">
+          <div class="text-3 fs-12 mb-3">Semana de <b x-text="semanaAtual.label"></b> · o layout monta com os posts; aprove e envie pro cliente</div>
+          <template x-if="!progClientesSemana().length"><div class="card empty">Nenhum post agendado pra esta semana. Crie uma programação primeiro.</div></template>
+          <div class="grid grid-2" style="align-items:start">
+            <template x-for="g in progClientesSemana()" :key="g.cliente">
+              <div class="card" style="padding:14px">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="fw-800 fs-14" x-text="g.cliente"></div>
+                  <span class="badge" :style="'background:'+layoutStatusCor(layoutDoCliente(g.cliente)?layoutDoCliente(g.cliente).status:'RASCUNHO')+'22;color:'+layoutStatusCor(layoutDoCliente(g.cliente)?layoutDoCliente(g.cliente).status:'RASCUNHO')" x-text="layoutStatusLabel(layoutDoCliente(g.cliente)?layoutDoCliente(g.cliente).status:'RASCUNHO')"></span>
+                </div>
+                <div class="text-3 fs-12 mb-2"><b x-text="postsProntos(g.posts)"></b> de <b x-text="g.posts.length"></b> posts prontos</div>
+                <div class="progress mb-3" style="height:6px"><div :style="'width:'+(g.posts.length?Math.round(postsProntos(g.posts)/g.posts.length*100):0)+'%;background:var(--green)'"></div></div>
+                <button class="btn btn-primary btn-sm" @click="abrirLayout(g.cliente)">Ver / montar layout</button>
+              </div>
+            </template>
+          </div>
         </div>
 
         <!-- ===== PROGRAMAÇÃO SEMANAL (checklist por colaborador) ===== -->
@@ -1346,6 +1366,54 @@
   </div>
 </div>
 
+<!-- LAYOUT da semana (preview + anexo + aprovação) -->
+<div class="modal-backdrop" x-show="layoutModal" @click.self="layoutModal=false" x-cloak>
+  <div class="modal" style="max-width:760px" x-show="layoutAtual">
+    <div class="modal-head">
+      <div class="modal-title">Layout da semana</div>
+      <div class="flex items-center gap-2">
+        <span class="badge" :style="layoutAtual&&('background:'+layoutStatusCor(layoutAtual.status)+'22;color:'+layoutStatusCor(layoutAtual.status))" x-text="layoutAtual&&layoutStatusLabel(layoutAtual.status)"></span>
+        <button class="btn btn-icon btn-ghost" @click="layoutModal=false">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="layout-print">
+      <!-- capa -->
+      <div style="background:var(--primary);color:#fff;border-radius:12px;padding:22px;margin-bottom:16px;text-align:center">
+        <div style="font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.7">Programação semanal</div>
+        <div class="fw-800" style="font-size:24px;margin:6px 0" x-text="layoutAtual&&layoutAtual.cliente"></div>
+        <div style="opacity:.8;font-size:13px" x-text="semanaAtual.label+' · 2026'"></div>
+      </div>
+      <!-- posts -->
+      <template x-if="!layoutPostsAtual.length"><div class="empty">Nenhum post nesta semana.</div></template>
+      <template x-for="p in layoutPostsAtual" :key="p.id">
+        <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="diaSemanaLabel(p.prazo)"></span>
+            <span class="badge" style="background:#ede9fe;color:#6d28d9" x-text="p.tipoPost||'Feed'"></span>
+            <span class="fw-700 fs-14" x-text="p.tema||p.nome"></span>
+            <span class="badge" style="margin-left:auto" :style="'background:'+projStatusInfo(p.status).color+'22;color:'+projStatusInfo(p.status).color" x-text="p.status==='Concluído'?'pronto':p.status"></span>
+          </div>
+          <div class="flex gap-3" style="align-items:flex-start">
+            <template x-if="p.criativo && ehImagem(p.criativo)"><img :src="p.criativo" style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--border);flex-shrink:0"></template>
+            <template x-if="p.criativo && !ehImagem(p.criativo)"><a :href="p.criativo" target="_blank" class="btn btn-ghost btn-sm" style="flex-shrink:0">ver criativo ↗</a></template>
+            <div class="fs-13" style="white-space:pre-wrap;flex:1" x-text="p.legenda||'(sem legenda)'"></div>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap;gap:10px;align-items:flex-end">
+      <div class="form-group" style="flex:1;min-width:220px;margin:0">
+        <label class="form-label">PDF final do designer (link)</label>
+        <input class="form-input" :value="layoutAtual&&layoutAtual.anexoUrl" @change="patchLayout({anexoUrl:$event.target.value})" placeholder="Link do Canva/Drive…">
+      </div>
+      <a x-show="layoutAtual&&layoutAtual.anexoUrl" :href="layoutAtual&&layoutAtual.anexoUrl" target="_blank" class="btn btn-ghost">abrir PDF ↗</a>
+      <button class="btn btn-ghost" @click="imprimirLayout()">Imprimir</button>
+      <button class="btn btn-primary" x-show="layoutAtual&&layoutAtual.status==='RASCUNHO'" @click="patchLayout({status:'APROVADO_GESTAO'})">✓ Aprovar (gestão)</button>
+      <span x-show="layoutAtual&&layoutAtual.status!=='RASCUNHO'" class="text-3 fs-12">Próximo: enviar pro cliente (em breve)</span>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" x-show="modal==='project'" @click.self="modal=null" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
@@ -1487,6 +1555,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=53"></script>
+<script src="js/app.js?v=54"></script>
 </body>
 </html>

@@ -157,6 +157,12 @@ i.ph, i[class*=" ph-"], i[class^="ph-"]{vertical-align:-0.14em;line-height:1;fon
 .ic-lg{font-size:1.25em}
 /* Ícones coloridos (Fluent 3D, PNG) renderizados inline */
 img.ic-img{height:1.55em;width:1.55em;object-fit:contain;vertical-align:-0.36em;display:inline-block}
+/* Impressão: isola só o layout da semana (Salvar como PDF) */
+@media print {
+  body * { visibility: hidden; }
+  #layout-print, #layout-print * { visibility: visible; }
+  #layout-print { position: absolute; left: 0; top: 0; width: 100%; max-height: none; overflow: visible; }
+}
 .empty { text-align: center; padding: 50px 20px; color: var(--text-3); }
 .search { position: relative; flex: 1; max-width: 360px; }
 .search input { width: 100%; padding: 9px 12px 9px 34px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; background: var(--surface); outline: none; }
