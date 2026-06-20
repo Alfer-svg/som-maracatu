@@ -92,6 +92,11 @@
         </div>
       </template>
 
+      <!-- Relatórios (só admin) -->
+      <div class="nav-item" x-show="ehAdmin" :class="page==='relatorios'?'active':''" @click="go('relatorios')" title="Ponto e produção da equipe.">
+        <span class="nav-icon"><i class="ph ph-chart-line-up"></i></span><span>Relatórios</span>
+      </div>
+
       <!-- Pessoal (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Equipe e perfis de acesso ao sistema.">
         <span class="nav-icon"><i class="ph ph-identification-badge"></i></span><span>Pessoal</span>
@@ -112,7 +117,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Equipe e Acessos'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Equipe e Acessos',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -693,6 +698,64 @@
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple"></i> Editar ficha do cliente</button></div>
             </div>
           </template>
+        </div>
+      </section>
+
+      <!-- ========== RELATÓRIOS (ponto + produção) ========== -->
+      <section x-show="page==='relatorios'">
+        <!-- seletor de período -->
+        <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+          <span class="text-3 fs-12">Período:</span>
+          <template x-for="op in [['hoje','Hoje'],['7d','7 dias'],['30d','30 dias'],['mes','Mês']]" :key="op[0]">
+            <button class="btn btn-sm" :class="relPeriodo===op[0]?'btn-primary':'btn-ghost'" @click="relSetPeriodo(op[0])" x-text="op[1]"></button>
+          </template>
+          <span class="text-3 fs-12" x-show="relatorio.de" x-text="'('+relDataDia(relatorio.de)+' a '+relDataDia(relatorio.ate)+')'"></span>
+        </div>
+
+        <!-- tabela principal: funcionário × tempo online × produção -->
+        <div class="card" style="padding:0;overflow-x:auto;margin-bottom:16px">
+          <table class="table" style="min-width:820px">
+            <thead><tr>
+              <th>Funcionário</th><th>Perfil</th><th>Dias</th><th>Tempo online</th>
+              <th>1º acesso</th><th>Último</th>
+              <th title="Atendimentos registrados">Atend.</th>
+              <th title="Projetos concluídos">Projetos</th>
+              <th title="Negócios fechados">Negócios</th>
+            </tr></thead>
+            <tbody>
+              <template x-for="u in relatorio.linhas" :key="u.id">
+                <tr>
+                  <td class="fw-700" x-text="u.nome"></td>
+                  <td><span class="badge" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="papelInfo(u.papel).nome"></span></td>
+                  <td x-text="u.diasTrabalhados||0"></td>
+                  <td class="fw-700" x-text="durSeg(u.segundosOnline)"></td>
+                  <td class="fs-12 text-2" x-text="relHora(u.primeiroAcesso)"></td>
+                  <td class="fs-12 text-2" x-text="relHora(u.ultimoAcesso)"></td>
+                  <td x-text="u.producao.atendimentos||0"></td>
+                  <td x-text="u.producao.projetos||0"></td>
+                  <td><span x-text="u.producao.negocios||0"></span><span class="text-green fs-12 fw-700" x-show="u.producao.valorNegocios" x-text="' · '+fmtCur(u.producao.valorNegocios)"></span></td>
+                </tr>
+              </template>
+              <template x-if="!relatorio.linhas.length"><tr><td colspan="9" class="text-3" style="text-align:center;padding:20px">Sem dados no período.</td></tr></template>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- controle de ponto: início/fim por dia -->
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="card-title" style="padding:12px 14px;border-bottom:1px solid var(--border)">Controle de ponto — entrada e saída por dia</div>
+          <div style="max-height:360px;overflow:auto">
+            <template x-for="d in relatorio.porDia" :key="d.usuarioId+d.dia">
+              <div class="flex items-center gap-3" style="padding:9px 14px;border-bottom:1px solid var(--border)">
+                <span class="badge" style="background:var(--surface);border:1px solid var(--border);min-width:52px;justify-content:center" x-text="relDataDia(d.dia)"></span>
+                <span class="fs-13 fw-700" style="flex:1;min-width:0" x-text="relNome(d.usuarioId)"></span>
+                <span class="fs-12"><i class="ph ph-sign-in" style="color:#16a34a"></i> <span x-text="relHora(d.inicio)"></span></span>
+                <span class="fs-12"><i class="ph ph-sign-out" style="color:#dc2626"></i> <span x-text="relHora(d.fim)"></span></span>
+                <span class="fs-12 fw-700 text-3" style="min-width:70px;text-align:right" x-text="durSeg(d.segundos)"></span>
+              </div>
+            </template>
+            <div x-show="!relatorio.porDia.length" class="text-3 fs-12" style="padding:16px;text-align:center">Nenhum registro de ponto no período.</div>
+          </div>
         </div>
       </section>
 
@@ -1302,6 +1365,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=44"></script>
+<script src="js/app.js?v=45"></script>
 </body>
 </html>

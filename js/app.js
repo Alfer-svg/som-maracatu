@@ -256,6 +256,8 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     presenca: [], // quem está online (Operacional); admin vê todos
     _hbStarted: false, // guarda do heartbeat
+    relatorio: { linhas: [], porDia: [], de: '', ate: '' }, // relatório de equipe (ponto + produção)
+    relPeriodo: 'mes', relDe: '', relAte: '',
     // Operacional — modelos de projeto + colaboradores
     MODELOS_PROJETO, AREAS_PROJETO,
     modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
@@ -345,7 +347,7 @@ document.addEventListener('alpine:init', () => {
     // ícones: classe Phosphor a partir do emoji-chave + cor (p/ sinais de saúde)
     phClass(e) { return PH_ICON[e] || 'ph ph-circle'; },
     phCor(e) { return SINAL_COR[e] || ''; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') this.carregarPresenca(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'pessoal') this.carregarUsuarios(); if (p === 'operacional') this.carregarPresenca(); if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -368,6 +370,26 @@ document.addEventListener('alpine:init', () => {
       }, 45000);
     },
     durHuman(iso) { if (!iso) return '—'; let s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); if (h > 0) return h + 'h' + (m ? (' ' + m + 'min') : ''); if (m > 0) return m + 'min'; return 'agora mesmo'; },
+    // ── Relatórios (ponto + produção) ──
+    durSeg(seg) { seg = +seg || 0; const h = Math.floor(seg / 3600), m = Math.floor((seg % 3600) / 60); return h > 0 ? (h + 'h' + (m ? (' ' + m + 'min') : '')) : (m > 0 ? (m + 'min') : '—'); },
+    relHora(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); } catch { return '—'; } },
+    relDataDia(dia) { if (!dia) return '—'; const [y, m, d] = dia.split('-'); return d + '/' + m; },
+    relNome(uid) { const u = (this.relatorio.linhas || []).find(x => x.id === uid); return u ? u.nome : '—'; },
+    relSetPeriodo(p) {
+      this.relPeriodo = p;
+      const hoje = new Date(Date.now() - 3 * 3600 * 1000); const iso = d => d.toISOString().slice(0, 10);
+      let de;
+      if (p === 'hoje') de = iso(hoje);
+      else if (p === '7d') { const d = new Date(hoje); d.setDate(d.getDate() - 6); de = iso(d); }
+      else if (p === '30d') { const d = new Date(hoje); d.setDate(d.getDate() - 29); de = iso(d); }
+      else { de = iso(hoje).slice(0, 8) + '01'; } // mês corrente
+      this.relDe = de; this.relAte = iso(hoje); this.carregarRelatorio();
+    },
+    async carregarRelatorio() {
+      if (!this.relDe) { this.relSetPeriodo('mes'); return; }
+      try { this.relatorio = (await this.api('GET', '/relatorios/equipe?de=' + this.relDe + '&ate=' + this.relAte)) || { linhas: [], porDia: [] }; }
+      catch { this.relatorio = { linhas: [], porDia: [] }; }
+    },
     novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
     editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
     async salvarColaborador() {
@@ -446,7 +468,7 @@ document.addEventListener('alpine:init', () => {
       else { e.id = MD.uid(); this.leads.unshift({ ...e }); }
       this.persist('leads', this.leads); this.modal = null;
     },
-    moverLead(l, stage) { l.stage = stage; this.persist('leads', this.leads); },
+    moverLead(l, stage) { const antes = l.stage; l.stage = stage; this.persist('leads', this.leads); if (stage === 'Ganho' && antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0); },
     excluirLead(l) { if (!confirm('Excluir o lead ' + l.empresa + '?')) return; this.leads = this.leads.filter(x => x.id !== l.id); this.persist('leads', this.leads); this.modal = null; },
 
     // ───────────────── COMERCIAL: clientes ─────────────────
@@ -669,8 +691,10 @@ document.addEventListener('alpine:init', () => {
     _logInteracao(c, tipo, texto) {
       if (!c) return; if (!Array.isArray(c.timeline)) c.timeline = [];
       c.timeline.unshift({ id: MD.uid(), em: new Date().toISOString(), tipo, texto, por: (this.usuario && this.usuario.nome) || '' });
+      this.registrarProducao('atendimento', tipo + (c.empresa ? (' · ' + c.empresa) : ''));
       return this.persistirCliente(c);
     },
+    async registrarProducao(tipo, descricao, valor) { try { await this.api('POST', '/producao', { tipo, descricao, valor }); } catch {} },
     async addInteracao() {
       const c = this.monitorCliente; if (!c) return;
       const t = (this.novaInter.texto || '').trim(); if (!t) return alert('Escreva o que aconteceu.');
@@ -872,7 +896,7 @@ document.addEventListener('alpine:init', () => {
       this.modelosFav = this.modelosFav.includes(n) ? this.modelosFav.filter(x => x !== n) : [...this.modelosFav, n];
       MD.set('som_modelos_fav', this.modelosFav);
     },
-    moverProjeto(p, status) { p.status = status; if (status === 'Concluído') p.progresso = 100; this.persist('projects', this.projects); },
+    moverProjeto(p, status) { const antes = p.status; p.status = status; if (status === 'Concluído') p.progresso = 100; this.persist('projects', this.projects); if (status === 'Concluído' && antes !== 'Concluído') this.registrarProducao('projeto', p.nome || ''); },
     excluirProjeto(p) { if (!confirm('Excluir o projeto ' + p.nome + '?')) return; this.projects = this.projects.filter(x => x.id !== p.id); this.persist('projects', this.projects); this.modal = null; },
 
     // ───────────────── COMERCIAL: orçamentos (propostas) ─────────────────
@@ -1152,7 +1176,9 @@ ${this._docFoot()}
 
     // converte lead Ganho → cliente
     async ganharLead(l) {
+      const antes = l.stage;
       l.stage = 'Ganho'; this.persist('leads', this.leads);
+      if (antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
         const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, status: 'Ativo', desde: MD.today(), notas: l.notas };
         try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
