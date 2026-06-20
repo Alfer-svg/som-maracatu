@@ -375,7 +375,7 @@
                   <div class="fs-13 fw-600 truncate" x-text="p.txt"></div>
                   <div class="text-3 fs-12 truncate" x-text="p.cliNome"></div>
                 </div>
-                <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" class="btn btn-sm" style="background:var(--accent);color:#04210f;border:none" x-text="p.acaoLabel"></a>
+                <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" @click="registrarAcaoRadar(p)" class="btn btn-sm" style="background:var(--accent);color:#04210f;border:none" x-text="p.acaoLabel"></a>
                 <button class="btn btn-ghost btn-sm" @click="radarIr(p)" title="Abrir ficha do cliente">Abrir ficha</button>
                 <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,30)" title="Marcar como resolvido (some por 30 dias)">✓ feito</button>
                 <button class="btn btn-ghost btn-sm" @click="resolverPendencia(p,7)" title="Adiar — some por 7 dias" style="padding:6px 9px">💤</button>
@@ -592,6 +592,27 @@
               </template>
               <div x-show="!credenciais.length" class="text-3" style="padding:6px 0">Nenhum acesso guardado ainda.</div>
               <div class="mt-2"><button class="btn btn-ghost btn-sm" @click="novaCredencial()">+ Acesso</button></div>
+
+              <div class="ficha-sec-title">📒 Relacionamento — histórico de contatos</div>
+              <!-- registrar nova interação -->
+              <div class="flex gap-2 items-start mb-2" style="flex-wrap:wrap">
+                <select class="form-select" x-model="novaInter.tipo" style="width:140px">
+                  <template x-for="t in TIPOS_INTER" :key="t[0]"><option :value="t[0]" x-text="t[1]+' '+t[0]"></option></template>
+                </select>
+                <input class="form-input" style="flex:1;min-width:200px" x-model="novaInter.texto" placeholder="O que aconteceu? (ex: liguei, cliente pediu retorno na 6ª)" @keydown.enter="addInteracao()">
+                <button class="btn btn-primary btn-sm" @click="addInteracao()">+ Registrar</button>
+              </div>
+              <template x-for="ev in (monitorCliente.timeline||[])" :key="ev.id">
+                <div class="flex items-start gap-2" style="padding:8px 0;border-bottom:1px solid var(--border)">
+                  <span style="font-size:15px;width:22px;text-align:center" x-text="interIcon(ev.tipo)"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-13" x-text="ev.texto"></div>
+                    <div class="text-3 fs-12" x-text="ev.tipo+' · '+fmtDataHora(ev.em)+(ev.por?(' · '+ev.por):'')"></div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" @click="removerInteracao(monitorCliente, ev.id)" title="Remover">🗑</button>
+                </div>
+              </template>
+              <div x-show="!(monitorCliente.timeline||[]).length" class="text-3" style="padding:4px 0">Sem registros ainda. Toda ligação, zap ou reunião pode entrar aqui pra criar a memória do cliente.</div>
 
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)">✏️ Editar ficha do cliente</button></div>
             </div>
@@ -1152,6 +1173,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=36"></script>
+<script src="js/app.js?v=37"></script>
 </body>
 </html>

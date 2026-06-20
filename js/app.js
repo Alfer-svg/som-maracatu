@@ -157,6 +157,7 @@ const respVazio = () => ({ id: '', nome: '', cargo: '', whatsapp: '', email: '',
 const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => ({ ...respVazio(), ...r, id: r.id || MD.uid() }));
 // Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
+const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
 const docVazio = () => ({ id: '', nome: '', tipo: 'Contrato', url: '' });
 const docMerge = (arr) => (Array.isArray(arr) ? arr : []).map(d => ({ ...docVazio(), ...d, id: d.id || MD.uid() }));
 
@@ -169,6 +170,8 @@ document.addEventListener('alpine:init', () => {
     monitorSel: '', // id do cliente aberto no fichário de monitoramento
     radarAberto: true, // painel Radar do Monitoramento expandido
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
+    novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
+    TIPOS_INTER,
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -525,6 +528,37 @@ document.addEventListener('alpine:init', () => {
       const d = new Date(); d.setDate(d.getDate() + (dias || 30));
       this.radarSnooze = { ...(this.radarSnooze || {}), [p.key]: d.toISOString().slice(0, 10) };
       MD.set('som_radar_snooze', this.radarSnooze);
+    },
+    // ── Timeline de relacionamento (vive em Cliente.dados.timeline) ──
+    interIcon(t) { const m = TIPOS_INTER.find(x => x[0] === t); return m ? m[1] : '📝'; },
+    fmtDataHora(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Recife', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch { return iso; } },
+    async persistirCliente(c) {
+      const { id, ...dados } = c;
+      try { await this.api('POST', '/clientes', { id, empresa: c.empresa, dados }); await this.carregarClientes(); }
+      catch (e) { alert(e.message || 'Falha ao salvar o cliente.'); }
+    },
+    _logInteracao(c, tipo, texto) {
+      if (!c) return; if (!Array.isArray(c.timeline)) c.timeline = [];
+      c.timeline.unshift({ id: MD.uid(), em: new Date().toISOString(), tipo, texto, por: (this.usuario && this.usuario.nome) || '' });
+      return this.persistirCliente(c);
+    },
+    async addInteracao() {
+      const c = this.monitorCliente; if (!c) return;
+      const t = (this.novaInter.texto || '').trim(); if (!t) return alert('Escreva o que aconteceu.');
+      await this._logInteracao(c, this.novaInter.tipo, t);
+      this.novaInter = { tipo: 'Ligação', texto: '' };
+    },
+    async removerInteracao(c, id) {
+      if (!c || !confirm('Remover este registro do histórico?')) return;
+      c.timeline = (c.timeline || []).filter(x => x.id !== id);
+      await this.persistirCliente(c);
+    },
+    // Registra automaticamente a ação feita pelo Radar (parabéns, seguir…) no histórico do cliente
+    registrarAcaoRadar(p) {
+      const c = (this.clients || []).find(x => x.id === p.cliId); if (!c) return;
+      const tipo = p.kind === 'aniver' ? 'WhatsApp' : 'Nota';
+      const texto = p.kind === 'aniver' ? '🎂 Parabenizou pelo aniversário (via Radar)' : p.kind === 'seguir' ? '📲 Abriu o perfil pra seguir (via Radar)' : '✅ ' + p.txt;
+      this._logInteracao(c, tipo, texto);
     },
     // ── Perfil do cliente (uso interno — baliza os contatos) ──
     perfilCliente(c) {
