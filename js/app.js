@@ -268,6 +268,7 @@ document.addEventListener('alpine:init', () => {
     cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
+    cronTick: 0, // tique de 1s pra o cronômetro ao vivo
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
     progModal: false, // modal de criar programação (calendário de posts da semana)
@@ -987,11 +988,29 @@ document.addEventListener('alpine:init', () => {
       if (!Array.isArray(p.checklist)) p.checklist = [];
       if (!Array.isArray(p.anexos)) p.anexos = [];
       if (!Array.isArray(p.comentarios)) p.comentarios = [];
+      if (!Array.isArray(p.sessoes)) p.sessoes = [];
       this.cardRef = p; this.labelEdit = false; this.novoItemCheck = ''; this.novoComentario = ''; this.novoAnexoNome = ''; this.novoAnexoUrl = ''; this.cardModal = true;
       this.scrollChat();
+      clearInterval(this._cronTick); this._cronTick = setInterval(() => { this.cronTick++; }, 1000); // cronômetro ao vivo
     },
     async salvarCard() { if (!this.cardRef) return; try { await this.salvarProjetoApi(this.cardRef); } catch (e) { alert(e.message); } },
-    fecharCard() { this.cardModal = false; this.carregarProjetos(); },
+    fecharCard() { clearInterval(this._cronTick); this.cardModal = false; this.carregarProjetos(); },
+    // ── Cronômetro de produção (vira relatório de tempo) ──
+    tempoSessao(p) { return p && p.cronInicio ? Math.max(0, Math.floor((Date.now() - new Date(p.cronInicio).getTime()) / 1000)) : 0; },
+    tempoTotalCard(p) { return ((p && p.tempoTotal) || 0) + this.tempoSessao(p); },
+    fmtDur(s) { s = Math.max(0, Math.floor(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; const mm = String(m).padStart(2, '0'), xx = String(x).padStart(2, '0'); return h > 0 ? (h + ':' + mm + ':' + xx) : (mm + ':' + xx); },
+    async iniciarProducao() {
+      const p = this.cardRef; if (!p || p.cronInicio) return;
+      p.cronInicio = new Date().toISOString(); p.cronAutor = (this.usuario && this.usuario.nome) || '';
+      await this.salvarCard();
+    },
+    async pararProducao() {
+      const p = this.cardRef; if (!p || !p.cronInicio) return;
+      const seg = this.tempoSessao(p); if (!Array.isArray(p.sessoes)) p.sessoes = [];
+      p.sessoes.push({ id: MD.uid(), autor: p.cronAutor || '', inicio: p.cronInicio, fim: new Date().toISOString(), segundos: seg });
+      p.tempoTotal = (p.tempoTotal || 0) + seg; p.cronInicio = null; p.cronAutor = null;
+      await this.salvarCard();
+    },
     // ── Monitor global de mensagens (notifica mesmo com o card fechado) ──
     startChatMonitor() { if (this._chatMonitor) return; this._chatBaseline = false; this._chatSeen = {}; this._chatMonitor = setInterval(() => this.monitorChat(), 8000); this.monitorChat(); },
     async monitorChat() {

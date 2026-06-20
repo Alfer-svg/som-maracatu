@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=3">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=50">
+  <link rel="stylesheet" href="css/styles.css?v=51">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -510,6 +510,7 @@
                       <span class="m" x-show="(p.checklist||[]).length" :style="checkProgresso(p).pct===100?'color:#61bd4f':''"><i class="ph ph-check-square"></i> <span x-text="checkProgresso(p).feitos+'/'+checkProgresso(p).total"></span></span>
                       <span class="m" x-show="(p.comentarios||[]).length"><i class="ph ph-chat-circle"></i> <span x-text="(p.comentarios||[]).length"></span></span>
                       <span class="m" x-show="(p.anexos||[]).length || (p.isPost&&p.criativo)"><i class="ph ph-paperclip"></i> <span x-text="(p.anexos||[]).length + (p.isPost&&p.criativo?1:0)"></span></span>
+                      <span class="m" x-show="(p.tempoTotal||0)>0 || p.cronInicio" :style="p.cronInicio?'color:#dc2626;font-weight:800':''"><i class="ph ph-timer"></i> <span x-text="fmtDur(p.tempoTotal||0)"></span></span>
                       <span style="margin-left:auto;display:inline-flex">
                         <template x-for="m in (p.membros&&p.membros.length ? p.membros : (p.responsavel?[p.responsavel]:[]))" :key="m">
                           <span class="tl-avatar" style="margin-left:-6px;border:2px solid #fff" :style="fotoDe(m)?('background-image:url('+fotoDe(m)+')'):('background:'+avatarBg(m)+';color:'+avatarFg(m))" :title="m" x-text="fotoDe(m)?'':iniciais(m)"></span>
@@ -1479,6 +1480,27 @@
     <div class="modal-body">
       <div class="text-3 fs-12 mb-3" x-show="cardRef&&cardRef.cliente">em <b x-text="cardRef&&cardRef.cliente"></b><span x-show="cardRef&&cardRef.isPost"> · <span x-text="cardRef.tipoPost"></span></span></div>
 
+      <!-- Produção (cronômetro — alimenta o relatório de tempo) -->
+      <div class="tl-section">
+        <div class="tl-section-label">Produção</div>
+        <div class="flex items-center gap-3" style="flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:10px 12px">
+          <span x-show="cardRef.cronInicio" style="width:9px;height:9px;border-radius:50%;background:#dc2626;animation:cronpulse 1.2s infinite"></span>
+          <div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.5px" :style="cardRef.cronInicio?'color:#dc2626':''" x-text="(cronTick, fmtDur(tempoTotalCard(cardRef)))"></div>
+          <button x-show="!cardRef.cronInicio" class="btn btn-primary btn-sm" @click="iniciarProducao()">▶ Iniciar produção</button>
+          <button x-show="cardRef.cronInicio" class="btn btn-danger btn-sm" @click="pararProducao()">■ Parar</button>
+          <span x-show="cardRef.cronInicio" class="text-3 fs-12">por <b x-text="cardRef.cronAutor"></b></span>
+        </div>
+        <div x-show="(cardRef.sessoes||[]).length" style="margin-top:8px">
+          <div class="text-3 fs-12 fw-700" style="margin-bottom:3px">Sessões</div>
+          <template x-for="s in cardRef.sessoes" :key="s.id">
+            <div class="flex items-center justify-between fs-12" style="padding:3px 0;border-bottom:1px solid var(--border)">
+              <span class="text-2"><b x-text="s.autor"></b> · <span x-text="fmtDataHora(s.inicio)"></span></span>
+              <span class="fw-700" style="font-variant-numeric:tabular-nums" x-text="fmtDur(s.segundos)"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+
       <!-- Etiquetas (dropdown estilo Trello) -->
       <div class="tl-section">
         <div class="tl-section-label">Etiquetas</div>
@@ -1775,6 +1797,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=65"></script>
+<script src="js/app.js?v=66"></script>
 </body>
 </html>
