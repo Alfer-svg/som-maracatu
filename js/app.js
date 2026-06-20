@@ -159,6 +159,21 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
 
+/* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
+const PAPEIS_INFO = [
+  { id: 'admin', nome: 'Admin', desc: 'Acesso total + gerencia a equipe', cor: '#7c3aed', bg: '#ede9fe' },
+  { id: 'gestor', nome: 'Gestor', desc: 'Tudo, menos gerenciar a equipe', cor: '#2563eb', bg: '#dbeafe' },
+  { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional, CRM e Monitoramento (sem Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
+  { id: 'financeiro', nome: 'Financeiro', desc: 'Financeiro + Dashboard', cor: '#d97706', bg: '#fef3c7' },
+];
+// '*' = todas as páginas. Demais: lista de páginas liberadas.
+const PERMISSOES = {
+  admin: '*',
+  gestor: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding'],
+  colaborador: ['dashboard', 'crm', 'comercial', 'operacional', 'monitoramento', 'onboarding'],
+  financeiro: ['dashboard', 'comercial', 'orcamentos', 'contratos', 'financeiro'],
+};
+
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
 const AREAS_PROJETO = ['📱 Redes Sociais', '🎯 Tráfego Pago', '🌐 Sites & Apps', '🎬 Audiovisual', '🎨 Branding', '🗳️ Marketing Político', '🤝 Recorrente'];
 const MODELOS_PROJETO = [
@@ -209,6 +224,11 @@ document.addEventListener('alpine:init', () => {
     novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
+    // Pessoal — perfis de acesso + gestão de equipe
+    PAPEIS_INFO,
+    usuarios: [], // equipe (vinda do backend, só admin lê)
+    pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '' },
+    pessoaModal: false, pessoaMsg: '',
     // Operacional — modelos de projeto + colaboradores
     MODELOS_PROJETO, AREAS_PROJETO,
     modeloSel: '', // modelo escolhido no dropdown do "Novo projeto"
@@ -252,7 +272,7 @@ document.addEventListener('alpine:init', () => {
         this.persist('catalogo', this.catalogo);
         localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
       }
-      if (this.token) { this.carregarClientes(); this.carregarOnboardings(); }
+      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); }
     },
 
     get autenticado() { return !!this.token; },
@@ -274,7 +294,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; await this.carregarClientes(); this.carregarOnboardings();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); await this.carregarClientes(); this.carregarOnboardings();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -295,7 +315,31 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
-    go(p) { this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'onboarding') this.carregarOnboardings(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'onboarding') this.carregarOnboardings(); if (p === 'pessoal') this.carregarUsuarios(); },
+    // ── Perfis de acesso (RBAC) ──
+    get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
+    get ehAdmin() { return this.papel === 'admin'; },
+    podeVer(p) { const perm = PERMISSOES[this.papel]; return perm === '*' ? true : (Array.isArray(perm) && perm.includes(p)); },
+    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial'].find(p => this.podeVer(p)) || 'dashboard'); },
+    garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
+    // ── Pessoal: gestão de equipe (admin) ──
+    papelInfo(id) { return PAPEIS_INFO.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
+    async carregarUsuarios() { if (!this.ehAdmin) return; try { this.usuarios = (await this.api('GET', '/auth/usuarios')) || []; } catch (e) { this.usuarios = []; } },
+    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    async salvarColaborador() {
+      const f = this.pessoaForm; this.pessoaMsg = '';
+      try {
+        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined });
+        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha });
+        await this.carregarUsuarios(); this.pessoaModal = false;
+      } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
+    },
+    async removerColaborador(u) {
+      if (!confirm('Remover ' + u.nome + ' da equipe? Ele perde o acesso ao sistema.')) return;
+      try { await this.api('DELETE', '/auth/usuarios/' + u.id); await this.carregarUsuarios(); }
+      catch (e) { alert(e.message); }
+    },
     // ── Onboardings recebidos do site ──
     async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } },
     verOnboarding(o) { this.onbSel = o; this.onbModal = true; },

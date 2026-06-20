@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SOM — Sistema Operacional Maracatu</title>
   <link rel="icon" href="assets/favicon.png">
-  <link rel="stylesheet" href="css/styles.css?v=34">
+  <link rel="stylesheet" href="css/styles.css?v=35">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -42,33 +42,37 @@
     </div>
     <nav class="nav">
       <!-- Dashboard -->
-      <div class="nav-item" :class="page==='dashboard'?'active':''" @click="go('dashboard')" title="Visão geral: KPIs de clientes, receita, funil de vendas e projetos.">
+      <div class="nav-item" x-show="podeVer('dashboard')" :class="page==='dashboard'?'active':''" @click="go('dashboard')" title="Visão geral: KPIs de clientes, receita, funil de vendas e projetos.">
         <span class="nav-icon">📊</span><span>Dashboard</span>
       </div>
 
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
-      <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
-        <span class="nav-icon">💼</span>
-        <span>Comercial</span>
-        <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
-      </div>
-      <div class="nav-sub" x-show="comOpen">
-        <div class="nav-item nav-subitem" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
-          <span class="nav-icon">🎯</span><span>CRM</span>
+      <template x-if="podeVer('crm')||podeVer('orcamentos')||podeVer('servicos')||podeVer('contratos')">
+        <div>
+          <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
+            <span class="nav-icon">💼</span>
+            <span>Comercial</span>
+            <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
+          </div>
+          <div class="nav-sub" x-show="comOpen">
+            <div class="nav-item nav-subitem" x-show="podeVer('crm')" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
+              <span class="nav-icon">🎯</span><span>CRM</span>
+            </div>
+            <div class="nav-item nav-subitem" x-show="podeVer('orcamentos')" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
+              <span class="nav-icon">📄</span><span>Orçamentos</span>
+            </div>
+            <div class="nav-item nav-subitem" x-show="podeVer('servicos')" :class="page==='servicos'?'active':''" @click="go('servicos')" title="Catálogo de serviços reutilizáveis nos orçamentos.">
+              <span class="nav-icon">🧩</span><span>Serviços</span>
+            </div>
+            <div class="nav-item nav-subitem" x-show="podeVer('contratos')" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
+              <span class="nav-icon">📝</span><span>Contratos</span>
+            </div>
+          </div>
         </div>
-        <div class="nav-item nav-subitem" :class="page==='orcamentos'?'active':''" @click="go('orcamentos')" title="Orçamentos e propostas comerciais enviadas aos clientes.">
-          <span class="nav-icon">📄</span><span>Orçamentos</span>
-        </div>
-        <div class="nav-item nav-subitem" :class="page==='servicos'?'active':''" @click="go('servicos')" title="Catálogo de serviços reutilizáveis nos orçamentos.">
-          <span class="nav-icon">🧩</span><span>Serviços</span>
-        </div>
-        <div class="nav-item nav-subitem" :class="page==='contratos'?'active':''" @click="go('contratos')" title="Contratos ativos e encerrados, com vigência e valor.">
-          <span class="nav-icon">📝</span><span>Contratos</span>
-        </div>
-      </div>
+      </template>
 
       <!-- Clientes (top-level) -->
-      <div class="nav-item" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.">
+      <div class="nav-item" x-show="podeVer('comercial')" :class="page==='comercial'?'active':''" @click="go('comercial')" title="Cadastro completo de clientes (CNPJ + CEP automáticos), serviços, redes e mensalidade.">
         <span class="nav-icon">👥</span><span>Clientes</span>
       </div>
 
@@ -78,17 +82,23 @@
         {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
         {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'},
         {id:'onboarding',ico:'📥',label:'Onboardings',desc:'Formulários de onboarding recebidos do site, aguardando virar cliente.'}]" :key="item.id">
-        <div class="nav-item" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
+        <div class="nav-item" x-show="podeVer(item.id)" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
           <span class="nav-icon" x-text="item.ico"></span>
           <span x-text="item.label"></span>
           <span x-show="item.id==='onboarding' && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#04210f;min-width:20px;justify-content:center" x-text="onboardings.length"></span>
           <span x-show="item.id==='monitoramento' && radarUrgentes" class="badge" style="margin-left:auto;background:#dc2626;color:#fff;min-width:20px;justify-content:center" x-text="radarUrgentes" title="Pendências urgentes no Radar"></span>
         </div>
       </template>
+
+      <!-- Pessoal (só admin) -->
+      <div class="nav-item" x-show="ehAdmin" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Equipe e perfis de acesso ao sistema.">
+        <span class="nav-icon">🧑‍💼</span><span>Pessoal</span>
+      </div>
     </nav>
     <div class="sidebar-foot">
       <div x-text="usuario && usuario.nome" style="color:#fff;font-weight:600;font-size:12px"></div>
-      <div x-text="usuario && usuario.email" style="margin-bottom:8px"></div>
+      <div x-text="usuario && usuario.email" style="margin-bottom:6px"></div>
+      <div style="margin-bottom:8px"><span class="badge" :style="'background:'+papelInfo(papel).bg+';color:'+papelInfo(papel).cor" x-text="papelInfo(papel).nome"></span></div>
       <div class="flex gap-2">
         <button class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,.18);color:#c9c7d9" @click="senhaModal=true; pwMsg=''">Trocar senha</button>
         <button class="btn btn-ghost btn-sm" style="border-color:rgba(255,255,255,.18);color:#c9c7d9" @click="logout()">Sair</button>
@@ -100,7 +110,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Equipe e Acessos'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -653,6 +663,39 @@
         </div>
       </section>
 
+      <!-- ========== PESSOAL (equipe + perfis de acesso) ========== -->
+      <section x-show="page==='pessoal'">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-3 fs-12">Quem tem acesso ao sistema e o que cada perfil enxerga.</div>
+          <button class="btn btn-primary" @click="novoColaborador()">+ Colaborador</button>
+        </div>
+        <!-- legenda dos perfis -->
+        <div class="grid grid-4 mb-4">
+          <template x-for="p in PAPEIS_INFO" :key="p.id">
+            <div class="card" style="padding:12px">
+              <span class="badge" :style="'background:'+p.bg+';color:'+p.cor" x-text="p.nome"></span>
+              <div class="text-3 fs-12" style="margin-top:6px" x-text="p.desc"></div>
+            </div>
+          </template>
+        </div>
+        <!-- lista da equipe -->
+        <div class="card" style="padding:0;overflow:hidden">
+          <template x-if="!usuarios.length"><div class="empty">Nenhum colaborador carregado. Clique em <b>+ Colaborador</b> pra adicionar a equipe.</div></template>
+          <template x-for="u in usuarios" :key="u.id">
+            <div class="flex items-center gap-3" style="padding:11px 14px;border-bottom:1px solid var(--border)">
+              <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></div>
+              <div style="flex:1;min-width:0">
+                <div class="fs-14 fw-700 truncate" x-text="u.nome"></div>
+                <div class="text-3 fs-12 truncate" x-text="u.email"></div>
+              </div>
+              <span class="badge" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="papelInfo(u.papel).nome"></span>
+              <button class="btn btn-ghost btn-sm" @click="editarColaborador(u)">✏️</button>
+              <button class="btn btn-ghost btn-sm" @click="removerColaborador(u)" :disabled="u.id===(usuario&&usuario.id)" :title="u.id===(usuario&&usuario.id)?'Você não pode remover a si mesmo':'Remover'">🗑</button>
+            </div>
+          </template>
+        </div>
+      </section>
+
     </div>
   </main>
 </div>
@@ -1132,6 +1175,28 @@
   </div>
 </div>
 
+<!-- COLABORADOR (equipe + perfil de acesso) -->
+<div class="modal-backdrop" x-show="pessoaModal" @click.self="pessoaModal=false" x-cloak>
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head"><div class="modal-title" x-text="pessoaForm.id?'Editar colaborador':'Novo colaborador'"></div><button class="btn btn-icon btn-ghost" @click="pessoaModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nome *</label><input class="form-input" x-model="pessoaForm.nome" placeholder="Nome do colaborador"></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail *</label><input class="form-input" type="email" x-model="pessoaForm.email" :disabled="!!pessoaForm.id" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">O e-mail de login não pode ser alterado.</div></div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label class="form-label">Perfil de acesso *</label>
+        <select class="form-select" x-model="pessoaForm.papel"><template x-for="p in PAPEIS_INFO" :key="p.id"><option :value="p.id" x-text="p.nome"></option></template></select>
+        <div class="text-3 fs-12" style="margin-top:4px" x-text="papelInfo(pessoaForm.papel).desc"></div>
+      </div>
+      <div class="form-group"><label class="form-label" x-text="pessoaForm.id?'Nova senha (deixe em branco pra manter)':'Senha *'"></label><input class="form-input" type="password" x-model="pessoaForm.senha" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
+      <div class="fs-12" x-show="pessoaMsg" style="color:#dc2626;margin-top:10px" x-text="pessoaMsg"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="pessoaModal=false">Cancelar</button>
+      <button class="btn btn-primary" @click="salvarColaborador()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TROCAR SENHA -->
 <div class="modal-backdrop" x-show="senhaModal" @click.self="senhaModal=false" x-cloak>
   <div class="modal" style="max-width:380px">
@@ -1203,6 +1268,6 @@
 </div>
 
 <script src="js/brand.js"></script>
-<script src="js/app.js?v=39"></script>
+<script src="js/app.js?v=40"></script>
 </body>
 </html>
