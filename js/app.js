@@ -318,7 +318,9 @@ document.addEventListener('alpine:init', () => {
         this.persist('catalogo', this.catalogo);
         localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
       }
-      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); }
+      if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); this.startChatMonitor(); }
+      // áudio e permissão de notificação precisam de um gesto do usuário
+      document.addEventListener('click', () => { this.initAudio(); this.pedirNotif(); }, { once: true });
     },
 
     get autenticado() { return !!this.token; },
@@ -340,7 +342,7 @@ document.addEventListener('alpine:init', () => {
         const d = await this.api('POST', '/auth/login', { email: this.loginEmail, senha: this.loginSenha });
         this.token = d.token; this.usuario = d.usuario;
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -987,10 +989,50 @@ document.addEventListener('alpine:init', () => {
       if (!Array.isArray(p.comentarios)) p.comentarios = [];
       this.cardRef = p; this.labelEdit = false; this.novoItemCheck = ''; this.novoComentario = ''; this.novoAnexoNome = ''; this.novoAnexoUrl = ''; this.cardModal = true;
       this.scrollChat();
-      clearInterval(this._chatPoll); this._chatPoll = setInterval(() => this.atualizarChat(), 5000); // chat ao vivo
     },
     async salvarCard() { if (!this.cardRef) return; try { await this.salvarProjetoApi(this.cardRef); } catch (e) { alert(e.message); } },
-    fecharCard() { clearInterval(this._chatPoll); this.cardModal = false; this.carregarProjetos(); },
+    fecharCard() { this.cardModal = false; this.carregarProjetos(); },
+    // ── Monitor global de mensagens (notifica mesmo com o card fechado) ──
+    startChatMonitor() { if (this._chatMonitor) return; this._chatBaseline = false; this._chatSeen = {}; this._chatMonitor = setInterval(() => this.monitorChat(), 8000); this.monitorChat(); },
+    async monitorChat() {
+      if (!this.token) return;
+      let rows; try { rows = await this.api('GET', '/projetos'); } catch { return; }
+      const eu = (this.usuario && this.usuario.nome) || '';
+      for (const r of (rows || [])) {
+        const d = r.dados || {}; const coms = d.comentarios || [];
+        const maxTs = coms.reduce((m, c) => Math.max(m, new Date(c.em).getTime() || 0), 0);
+        const prev = this._chatSeen[r.id] || 0;
+        // card aberto: atualiza as bolhas
+        if (this.cardModal && this.cardRef && this.cardRef.id === r.id && JSON.stringify(coms) !== JSON.stringify(this.cardRef.comentarios || [])) { this.cardRef.comentarios = coms; this.scrollChat(); }
+        // mensagem nova de OUTRA pessoa, em card onde estou envolvido, e que não está aberto
+        if (this._chatBaseline && maxTs > prev) {
+          const novas = coms.filter(c => (new Date(c.em).getTime() || 0) > prev && c.autor !== eu);
+          const envolvido = (d.membros || []).includes(eu) || d.responsavel === eu;
+          const aberto = this.cardModal && this.cardRef && this.cardRef.id === r.id;
+          if (novas.length && envolvido && !aberto) { const u = novas[novas.length - 1]; this.notificarMsg(d.tema || d.nome || 'Card', u.autor, u.texto); }
+        }
+        this._chatSeen[r.id] = maxTs;
+      }
+      this._chatBaseline = true;
+    },
+    initAudio() { try { this._audioCtx = this._audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (this._audioCtx.state === 'suspended') this._audioCtx.resume(); } catch { } },
+    tocarBeep() {
+      try {
+        const ctx = this._audioCtx; if (!ctx) return; const t = ctx.currentTime;
+        const beep = (freq, ini, dur) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type = 'sine'; o.frequency.value = freq; g.gain.setValueAtTime(0.0001, t + ini); g.gain.exponentialRampToValueAtTime(0.25, t + ini + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + ini + dur); o.start(t + ini); o.stop(t + ini + dur + 0.02); };
+        beep(880, 0, 0.32); beep(1175, 0.16, 0.34);
+      } catch { }
+    },
+    async pedirNotif() { try { if (window.Notification && Notification.permission === 'default') await Notification.requestPermission(); } catch { } },
+    notificarMsg(card, autor, texto) {
+      this.tocarBeep();
+      try {
+        if (window.Notification && Notification.permission === 'granted') {
+          const n = new Notification(autor + ' · ' + card, { body: texto, icon: new URL('assets/logo.png?v=2', location.href).href, tag: 'som-chat-' + card });
+          n.onclick = () => { window.focus(); n.close(); };
+        }
+      } catch { }
+    },
     toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
     toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
     addItemCheck() { const t = (this.novoItemCheck || '').trim(); if (!t) return; this.cardRef.checklist.push({ id: MD.uid(), texto: t, feito: false }); this.novoItemCheck = ''; this.salvarCard(); },
