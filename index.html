@@ -283,7 +283,7 @@
                     <td><template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template><span x-show="!clienteServicos(c).length" class="text-3">—</span></td>
                     <td class="fw-700" x-text="fmtCur(c.mensalidade)"></td>
                     <td><span class="badge" :style="c.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="c.status"></span></td>
-                    <td><div class="flex gap-2" style="justify-content:flex-end"><button class="btn btn-ghost btn-sm" @click="editarCliente(c)">Editar</button><button class="btn btn-icon btn-ghost btn-sm" @click="excluirCliente(c)" title="Excluir cliente" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button></div></td>
+                    <td><div class="flex gap-2" style="justify-content:flex-end"><button class="btn btn-icon btn-ghost btn-sm" @click="editarCliente(c)" title="Editar cliente"><i class="ph ph-pencil-simple ic-ph"></i></button><button class="btn btn-icon btn-ghost btn-sm" @click="excluirCliente(c)" title="Excluir cliente" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button></div></td>
                   </tr>
                 </template>
               </tbody>
