@@ -454,13 +454,26 @@ document.addEventListener('alpine:init', () => {
       try { this.relatorio = (await this.api('GET', '/relatorios/equipe?de=' + this.relDe + '&ate=' + this.relAte)) || { linhas: [], porDia: [] }; }
       catch { this.relatorio = { linhas: [], porDia: [] }; }
     },
-    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
-    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '', foto: u.foto || '' }; this.pessoaMsg = ''; this.pessoaModal = true; },
+    fichaVazia() { return { cargo: '', area: '', admissao: '', regime: 'CLT', salario: '', pix: '', cpf: '', rg: '', nascimento: '', sexo: '', estadoCivil: '', telefone: '', emailPessoal: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', emergNome: '', emergFone: '', obs: '' }; },
+    novoColaborador() { this.pessoaForm = { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '', ficha: this.fichaVazia() }; this.pessoaMsg = ''; this.cepMsg = ''; this.pessoaModal = true; },
+    editarColaborador(u) { this.pessoaForm = { id: u.id, nome: u.nome, email: u.email, papel: u.papel, senha: '', foto: u.foto || '', ficha: { ...this.fichaVazia(), ...(u.ficha || {}) } }; this.pessoaMsg = ''; this.cepMsg = ''; this.pessoaModal = true; },
+    async buscarCepFicha() {
+      const fc = this.pessoaForm.ficha; const raw = (fc.cep || '').replace(/\D/g, '');
+      if (raw.length !== 8) { this.cepMsg = '⚠ CEP precisa ter 8 dígitos.'; return; }
+      this.cepLoading = true; this.cepMsg = 'Buscando…'; fc.cep = raw.replace(/^(\d{5})(\d{3})$/, '$1-$2');
+      try {
+        const r = await fetch('https://brasilapi.com.br/api/cep/v2/' + raw);
+        if (r.ok) { const d = await r.json(); fc.logradouro = d.street || fc.logradouro; fc.bairro = d.neighborhood || fc.bairro; fc.cidade = d.city || fc.cidade; fc.uf = d.state || fc.uf; }
+        else { const r2 = await fetch('https://viacep.com.br/ws/' + raw + '/json/'); const d2 = await r2.json(); if (d2.erro) throw new Error('CEP não encontrado.'); fc.logradouro = d2.logradouro || fc.logradouro; fc.bairro = d2.bairro || fc.bairro; fc.cidade = d2.localidade || fc.cidade; fc.uf = d2.uf || fc.uf; }
+        this.cepMsg = '';
+      } catch (e) { this.cepMsg = '⚠ ' + (e.message || 'Falha no CEP'); }
+      finally { this.cepLoading = false; }
+    },
     async salvarColaborador() {
       const f = this.pessoaForm; this.pessoaMsg = '';
       try {
-        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '' });
-        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '' });
+        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '', ficha: f.ficha || {} });
+        else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '', ficha: f.ficha || {} });
         await this.carregarUsuarios(); this.carregarEquipe(); this.pessoaModal = false;
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }
     },
