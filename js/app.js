@@ -103,7 +103,7 @@ const EMPRESA = {
   nome: 'Maracatu Digital Intelligence',
   cnpj: '44.258.426/0001-15',
   email: 'laura@maracatumktdigital.com',
-  fone: '(81) 99914-3099',
+  fone: '(11) 96624-9876',
   endereco: 'Av. A, 4165 – Torre 6, Sl 611 e 612 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
   cidade: 'Cabo de Santo Agostinho/PE',
 };
@@ -119,7 +119,9 @@ const REDES = [
   { id: 'gmn',       label: 'Google Meu Negócio', slug: 'google', cor: '4285F4' },
 ];
 // URL do logo oficial da rede (Simple Icons), colorido pela marca.
-const redeIcon = (r) => `https://cdn.simpleicons.org/${r.slug}/${r.cor}`;
+// LinkedIn foi removido do Simple Icons (cdn 404) → SVG embutido (funciona offline e no PDF).
+const LINKEDIN_ICON = "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='%230A66C2'%3E%3Cpath%20d='M20.447%2020.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853%200-2.136%201.445-2.136%202.939v5.667H9.351V9h3.414v1.561h.046c.477-.9%201.637-1.85%203.37-1.85%203.601%200%204.267%202.37%204.267%205.455v6.286zM5.337%207.433a2.062%202.062%200%2001-2.063-2.065%202.064%202.064%200%20112.063%202.065zm1.782%2013.019H3.555V9h3.564v11.452zM22.225%200H1.771C.792%200%200%20.774%200%201.729v20.542C0%2023.227.792%2024%201.771%2024h20.451C23.2%2024%2024%2023.227%2024%2022.271V1.729C24%20.774%2023.2%200%2022.222%200h.003z'/%3E%3C/svg%3E";
+const redeIcon = (r) => (r.slug === 'linkedin' ? LINKEDIN_ICON : `https://cdn.simpleicons.org/${r.slug}/${r.cor}`);
 
 // Catálogo inicial de serviços (semeado 1x se o catálogo estiver vazio). Valor em
 // branco — o usuário define por proposta. O serviço de redes já vem com o box de redes.
@@ -1566,7 +1568,7 @@ ${this._docFoot()}
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
 .pad{padding:22px 46px 36px}
 .head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
-.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:70px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:10px 18px}
+.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:92px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:11px 20px}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
 .head-doc{text-align:right}.head-doc .doc-type{font-size:10px;font-weight:700;letter-spacing:3px;color:#C9A24B}.head-doc .doc-num{font-size:20px;font-weight:800;margin-top:3px}.head-doc .sub{font-size:10.5px;color:#bdbdbd;margin-top:2px}
 .empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
