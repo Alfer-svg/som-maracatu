@@ -1047,7 +1047,7 @@ document.addEventListener('alpine:init', () => {
       this.tocarBeep();
       try {
         if (window.Notification && Notification.permission === 'granted') {
-          const n = new Notification(autor + ' · ' + card, { body: texto, icon: new URL('assets/logo.png?v=2', location.href).href, tag: 'som-chat-' + card });
+          const n = new Notification(autor + ' · ' + card, { body: texto, icon: new URL('assets/icon.png?v=6', location.href).href, tag: 'som-chat-' + card });
           n.onclick = () => { window.focus(); n.close(); };
         }
       } catch { }
@@ -1364,7 +1364,7 @@ document.addEventListener('alpine:init', () => {
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
 .pad{padding:30px 46px 46px}
 .head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
-.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:48px;width:auto}
+.head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:46px;width:auto;object-fit:contain;background:#fff;border-radius:9px;padding:8px 14px}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
 .head-doc{text-align:right}.head-doc .doc-type{font-size:10px;font-weight:700;letter-spacing:3px;color:#C9A24B}.head-doc .doc-num{font-size:20px;font-weight:800;margin-top:3px}.head-doc .sub{font-size:10.5px;color:#bdbdbd;margin-top:2px}
 .empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
@@ -1400,7 +1400,7 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
       const subsHTML = (subs || []).map(s => `<div class="sub">${e(s)}</div>`).join('');
       const logo = (typeof LOGO_DATAURI !== 'undefined' && LOGO_DATAURI) ? `<img class="logo" src="${LOGO_DATAURI}" alt="">` : '';
       return `<div class="head">
-<div class="head-brand">${logo}<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE · MARKETING DIGITAL</span></div></div>
+<div class="head-brand">${logo || '<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE · MARKETING DIGITAL</span></div>'}</div>
 <div class="head-doc"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div>
 </div>
 <div class="empresa-bar">CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.email)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.endereco)}</div>`;
