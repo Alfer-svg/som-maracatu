@@ -1559,6 +1559,25 @@
   </div>
 </div>
 
+<!-- VISUALIZAR DOCUMENTO (contrato/proposta pronto p/ impressão e envio) -->
+<div class="modal-backdrop" x-show="modal==='docview'" @click.self="modal=null" x-cloak>
+  <div class="modal" style="max-width:920px;width:95vw;height:92vh;display:flex;flex-direction:column">
+    <div class="modal-head">
+      <div class="modal-title" x-text="(docTipo==='contrato'?'Contrato ':'Proposta ')+((docObj&&docObj.numero)||'')"></div>
+      <button class="btn btn-icon btn-ghost" @click="modal=null">✕</button>
+    </div>
+    <div class="modal-body" style="flex:1;padding:0;overflow:hidden;background:#eee">
+      <iframe :srcdoc="docHtml" style="width:100%;height:100%;border:0;background:#fff"></iframe>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="editarDoc()"><i class="ph ph-pencil-simple ic-ph"></i> Editar dados</button>
+      <button class="btn btn-ghost" x-show="docTipo==='contrato'" @click="lancarContratoFinanceiro(docObj)" title="Gera as mensalidades no Financeiro (a receber)"><i class="ph ph-currency-circle-dollar ic-ph"></i> Gerar Financeiro</button>
+      <button class="btn btn-primary" @click="imprimirDoc(docTipo, docObj)"><i class="ph ph-printer ic-ph"></i> Imprimir / PDF p/ enviar</button>
+      <button class="btn btn-ghost" @click="modal=null">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- PROJETO -->
 <!-- PROGRAMAÇÃO — cria vários projetos do mesmo cliente p/ um colaborador -->
 <div class="modal-backdrop" x-show="progModal" @click.self="progModal=false" x-cloak>
@@ -2110,6 +2129,6 @@
 </div>
 
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=88"></script>
+<script src="js/app.js?v=90"></script>
 </body>
 </html>

@@ -310,6 +310,7 @@ document.addEventListener('alpine:init', () => {
     modal: null, // 'lead' | 'client' | 'finance' | 'project'
     editing: {},
     projetoSel: '', // dropdown de tipo de projeto no orçamento ('Outros' libera texto livre)
+    docHtml: '', docTipo: '', docObj: null, // preview de documento pronto (contrato/proposta)
     cnpjLoading: false, cnpjMsg: '',
     cepLoading: false, cepMsg: '',
 
@@ -1551,12 +1552,25 @@ ${this._docFoot()}
         return linhas.join('\n');
       }).join('\n');
     },
+    // Abre um documento já renderizado (pronto pra imprimir/enviar) na tela.
+    verDocumento(tipo, obj) { this.docTipo = tipo; this.docObj = obj; this.docHtml = tipo === 'contrato' ? this._contratoHTML(obj) : this._propostaHTML(obj); this.modal = 'docview'; },
+    editarDoc() { const t = this.docTipo, o = this.docObj; this.modal = null; if (t === 'contrato') this.editarContrato(o); else this.editarOrcamento(o); },
     gerarContrato(o) {
-      const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
-      const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
-      const objeto = this._servicosTexto(o.servicos) || o.descricao || '';
-      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: o.observacoes || '' };
-      this.modal = 'contrato';
+      const num = o.numero || '';
+      // não duplica: reaproveita o contrato já gerado desse orçamento (e limpa duplicados antigos do mesmo)
+      const mesmos = num ? this.contracts.filter(x => x.propostaNumero === num) : [];
+      let ct = mesmos.find(x => x.financeLancado) || mesmos[0];
+      if (mesmos.length > 1 && ct) { this.contracts = this.contracts.filter(x => x.propostaNumero !== num || x.id === ct.id); this.persist('contracts', this.contracts); }
+      if (ct) { alert('Já existe um contrato para este orçamento (' + (ct.numero || '') + '). Abrindo o contrato existente.'); }
+      if (!ct) {
+        const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
+        const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
+        const objeto = this._servicosTexto(o.servicos) || o.descricao || '';
+        ct = { id: MD.uid(), numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto, servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: o.vigenciaMeses == 1 ? 'Único' : 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: num, status: 'Ativo', observacoes: o.observacoes || '' };
+        this.contracts.unshift(ct); this.persist('contracts', this.contracts);
+      }
+      this.editing = { ...ct };
+      this.verDocumento('contrato', ct); // mostra o contrato pronto pra impressão/envio
     },
 
     // ───────────────── COMERCIAL: catálogo de serviços ─────────────────
