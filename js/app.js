@@ -1126,7 +1126,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     },
 
     // ───────────────── FINANCEIRO ─────────────────
-    get financeFiltrado() { return [...this.finance].sort((a, b) => (b.data || '').localeCompare(a.data || '')); },
+    get financeFiltrado() { const q = this.busca.toLowerCase(); return [...this.finance].sort((a, b) => (b.data || '').localeCompare(a.data || '')).filter(f => !q || ((f.descricao || '') + ' ' + (f.cliente || '') + ' ' + (f.categoria || '') + ' ' + (f.tipo || '')).toLowerCase().includes(q)); },
     novoLancamento(tipo = 'receita') { this.editing = { id: '', tipo, descricao: '', valor: 0, categoria: tipo === 'receita' ? 'Mensalidade' : 'Ferramentas', cliente: '', fornecedor: '', emailCobranca: '', whatsappCobranca: '', status: 'pendente', vencimento: MD.today(), data: MD.today() }; this.modal = 'finance'; },
     editarLancamento(f) { this.editing = { ...f }; this.modal = 'finance'; },
     salvarLancamento() {

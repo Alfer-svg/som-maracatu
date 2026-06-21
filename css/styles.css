@@ -251,8 +251,12 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 .progress > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
 
 /* ---------- Fichário (monitoramento) ---------- */
-.fichario { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: -1px; position: relative; z-index: 1; }
+.fichario { display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; margin-bottom: -1px; padding-bottom: 2px; position: relative; z-index: 1; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.fichario::-webkit-scrollbar { height: 6px; }
+.fichario::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.fichario::-webkit-scrollbar-track { background: transparent; }
 .fichario-tab {
+  flex: 0 0 auto; white-space: nowrap;
   padding: 9px 16px; border: 1px solid var(--border); border-bottom: none;
   border-radius: 10px 10px 0 0; background: var(--surface-2); color: var(--text-2);
   font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all .12s;
