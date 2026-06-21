@@ -104,7 +104,7 @@ const EMPRESA = {
   cnpj: '44.258.426/0001-15',
   email: 'laura@maracatumktdigital.com',
   fone: '(81) 99914-3099',
-  endereco: 'Av. A, 4165 – Torre 2, Sl 620 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
+  endereco: 'Av. A, 4165 – Torre 6, Sl 611 e 612 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
   cidade: 'Cabo de Santo Agostinho/PE',
 };
 // Texto institucional fixo da proposta (modelo Bella Napoli).
@@ -815,8 +815,10 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (s.score != null && s.score < 40) add('alta', 4, '🔴', 'Saúde crítica (' + s.score + '%) — revisar redes/site/objetivos', 'saude', '', { acaoFicha: true });
       // 📲 Responsáveis com rede pra seguir
       this.respComRede(c).filter(r => !r.seguindo).forEach(r => {
-        const href = this.igLink(r.instagram) || this.liLink(r.linkedin);
-        add('media', 40, '📲', 'Seguir ' + (r.nome || 'contato') + (r.instagram ? ' (@' + String(r.instagram).replace(/^@/, '') + ')' : ''), 'seguir', r.id, href ? { acaoLabel: 'Abrir perfil', acaoHref: href } : { acaoFicha: true });
+        const ig = this.igLink(r.instagram), li = this.liLink(r.linkedin);
+        const href = ig || li; // abre Instagram se houver; senão LinkedIn
+        const rede = ig ? ('@' + String(r.instagram).replace(/^@/, '')) : (li ? 'LinkedIn' : '');
+        add('media', 40, '📲', 'Seguir ' + (r.nome || 'contato') + (rede ? ' (' + rede + ')' : ''), 'seguir', r.id, href ? { acaoLabel: ig ? 'Abrir Instagram' : 'Abrir LinkedIn', acaoHref: href } : { acaoFicha: true });
       });
       // 🎯 Metas batidas → renovar
       (c.objetivos || []).forEach(o => { if (o.nome && +o.alvo > 0 && this.progressoObj(o) >= 100) add('baixa', 70, '🎯', 'Meta "' + o.nome + '" batida — renovar objetivo', 'meta', o.id, { acaoFicha: true }); });
@@ -1562,18 +1564,18 @@ ${this._docFoot()}
     _cssDoc() {
       return `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box}body{font-family:'Inter',-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1f1f1f;margin:0;padding:0;font-size:13px;line-height:1.55}
-.pad{padding:30px 46px 46px}
+.pad{padding:22px 46px 36px}
 .head{background:#141414;color:#fff;display:flex;justify-content:space-between;align-items:center;padding:26px 46px}
 .head-brand{display:flex;align-items:center;gap:14px}.head-brand .logo{height:70px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:10px 18px}
 .wm{font-size:19px;font-weight:800;letter-spacing:.4px;line-height:1.05}.wm span{display:block;font-size:8.5px;font-weight:600;letter-spacing:2.4px;color:#C9A24B;margin-top:5px}
 .head-doc{text-align:right}.head-doc .doc-type{font-size:10px;font-weight:700;letter-spacing:3px;color:#C9A24B}.head-doc .doc-num{font-size:20px;font-weight:800;margin-top:3px}.head-doc .sub{font-size:10.5px;color:#bdbdbd;margin-top:2px}
 .empresa-bar{background:#f5f3ee;color:#6f6a5e;font-size:10px;letter-spacing:.2px;padding:8px 46px;border-bottom:2px solid #C9A24B;line-height:1.5}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:26px 0 12px;padding-left:11px;border-left:3px solid #C9A24B}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;margin:16px 0 9px;padding-left:11px;border-left:3px solid #C9A24B}
 .meta-cli{display:flex;flex-wrap:wrap;gap:6px 26px;margin:18px 0 4px;font-size:13px}.meta-cli b{color:#141414}
 .intro{white-space:pre-wrap;color:#444;text-align:justify}
 .serv{margin:12px 0;padding:14px 16px;background:#fafafa;border:1px solid #eee;border-radius:12px}
 .serv-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.serv-head .n{font-weight:700;font-size:15px;color:#141414}
-.serv-val{color:#141414;font-weight:800;white-space:nowrap;font-size:15px}.serv-val small{color:#999;font-weight:600;font-size:11px}
+.serv-val{color:#141414;font-weight:800;white-space:nowrap;font-size:15px}.serv-val small{color:#555;font-weight:700;font-size:11px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
 .chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e6e6e6;border-radius:20px;padding:3px 11px 3px 8px;font-size:11px;color:#444}.chip img{width:13px;height:13px}.chip b{font-weight:700;color:#141414}
 .verba-nota{font-size:11px;color:#8a7a3e;font-style:italic;margin:7px 0 0}
@@ -1584,8 +1586,8 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
 .bloco{margin:10px 0}.bloco b{display:block;margin-bottom:2px;color:#141414}
 .clausula{margin:14px 0}.clausula h3{font-size:12.5px;margin:0 0 4px;color:#141414}.clausula p{margin:3px 0;text-align:justify;color:#333}
 .midia-card{background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:8px;padding:9px 12px;margin:9px 0 2px;font-size:11.5px;color:#7a6a3a;line-height:1.5}
-.assin{display:flex;justify-content:space-between;gap:48px;margin-top:56px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141414;padding-top:8px;font-size:11px;color:#444}
-.sig-digital{display:flex;gap:22px;margin-top:46px;flex-wrap:wrap}
+.assin{display:flex;justify-content:space-between;gap:48px;margin-top:30px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141414;padding-top:8px;font-size:11px;color:#444}
+.sig-digital{display:flex;gap:22px;margin-top:26px;flex-wrap:wrap}
 .esig{flex:1;min-width:240px;background:#f1f8f1;border:1px solid #cfe6cf;border-radius:12px;padding:14px 16px}
 .esig-tag{font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:#2e7d32}
 .esig-co{font-weight:800;color:#141414;margin-top:7px;font-size:13px}.esig-sub{font-size:10.5px;color:#777;margin-top:2px}
@@ -1597,17 +1599,19 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
     },
     _docHead(tipo, num, subs) {
       const e = this._esc;
+      const emailRemetente = (this.usuario && this.usuario.email) || EMPRESA.email; // quem envia = usuário logado
       const subsHTML = (subs || []).map(s => `<div class="sub">${e(s)}</div>`).join('');
       const logo = (typeof LOGO_DATAURI !== 'undefined' && LOGO_DATAURI) ? `<img class="logo" src="${LOGO_DATAURI}" alt="">` : '';
       return `<div class="head">
 <div class="head-brand">${logo || '<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE · MARKETING DIGITAL</span></div>'}</div>
 <div class="head-doc"><div class="doc-type">${e(tipo)}</div><div class="doc-num">Nº ${e(num)}</div>${subsHTML}</div>
 </div>
-<div class="empresa-bar">CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.email)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.endereco)}</div>`;
+<div class="empresa-bar">CNPJ ${e(EMPRESA.cnpj)} · ${e(emailRemetente)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.endereco)}</div>`;
     },
     _docFoot() {
       const e = this._esc;
-      return `<div class="foot">${e(EMPRESA.nome)} · CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.fone)} · ${e(EMPRESA.email)}</div>`;
+      const emailRemetente = (this.usuario && this.usuario.email) || EMPRESA.email;
+      return `<div class="foot">${e(EMPRESA.nome)} · CNPJ ${e(EMPRESA.cnpj)} · ${e(EMPRESA.fone)} · ${e(emailRemetente)}</div>`;
     },
     // ===== PROPOSTA (modelo Bella Napoli) =====
     // Rodapé da proposta: presencial (linhas pra assinar impresso) ou digital
