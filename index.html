@@ -11,7 +11,7 @@
   <link rel="icon" href="assets/favicon.png?v=6">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=69">
+  <link rel="stylesheet" href="css/styles.css?v=70">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -335,7 +335,19 @@
                   <td class="fs-12 text-2" x-text="fmtDate(o.data)"></td>
                   <td class="fw-700 text-green" x-text="fmtCur(orcTotal(o))+'/mês'"></td>
                   <td><span class="badge" :style="'background:'+orcStatusInfo(o.status).color+'22;color:'+orcStatusInfo(o.status).color" x-text="o.status"></span></td>
-                  <td><button class="btn btn-ghost btn-sm" @click="editarOrcamento(o)">Editar</button></td>
+                  <td style="text-align:right;position:relative" x-data="{m:false}">
+                    <button class="btn btn-icon btn-ghost btn-sm" @click="m=!m" title="Ações"><i class="ph ph-dots-three ic-ph"></i></button>
+                    <div class="row-menu" x-show="m" @click.outside="m=false" x-cloak>
+                      <button @click="editarOrcamento(o); m=false"><i class="ph ph-pencil-simple ic-ph"></i> Editar</button>
+                      <button @click="imprimirDoc('orcamento', o); m=false"><i class="ph ph-file-pdf ic-ph"></i> Visualizar PDF</button>
+                      <button @click="enviarOrcEmail(o); m=false"><i class="ph ph-envelope ic-ph"></i> Enviar por e-mail</button>
+                      <button @click="enviarOrcWhatsApp(o); m=false"><i class="ph ph-whatsapp-logo ic-ph"></i> Enviar por WhatsApp</button>
+                      <button @click="enviarPropostaDigital(o); m=false"><i class="ph ph-link ic-ph"></i> Link digital (aceite online)</button>
+                      <button @click="gerarContrato(o); m=false"><i class="ph ph-scroll ic-ph"></i> Gerar contrato</button>
+                      <div class="row-menu-sep"></div>
+                      <button class="danger" @click="excluirOrcamento(o); m=false"><i class="ph ph-trash ic-ph"></i> Excluir</button>
+                    </div>
+                  </td>
                 </tr>
               </template>
             </tbody>
@@ -1968,6 +1980,6 @@
 </div>
 
 <script src="js/brand.js?v=5"></script>
-<script src="js/app.js?v=72"></script>
+<script src="js/app.js?v=73"></script>
 </body>
 </html>

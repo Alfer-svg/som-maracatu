@@ -1351,16 +1351,39 @@ ${this._docFoot()}
       if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
     },
     excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; this.proposals = this.proposals.filter(x => x.id !== o.id); this.persist('proposals', this.proposals); this.modal = null; },
-    // Cria a proposta DIGITAL no backend (link público) e abre as opções de envio.
-    async enviarPropostaDigital(o) {
+    // Cria a proposta DIGITAL no backend e devolve o link público (aceite online).
+    async _criarLinkProposta(o) {
       const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
+      const r = await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados: o });
+      // Resolve relativo à página atual (funciona em subpasta do GitHub Pages e em localhost).
+      return new URL('proposta.html?t=' + r.token, location.href).href;
+    },
+    // Cria a proposta DIGITAL e abre o modal com as opções de envio (link/copiar/wa/email).
+    async enviarPropostaDigital(o) {
       try {
-        const r = await this.api('POST', '/propostas', { numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), html, dados: o });
-        // Resolve relativo à página atual (funciona em subpasta do GitHub Pages e em localhost).
-        const link = new URL('proposta.html?t=' + r.token, location.href).href;
+        const link = await this._criarLinkProposta(o);
         this.propostaEnvio = { numero: o.numero, cliente: o.cliente || '', email: o.email || '', link };
         this.modal = 'propostaEnvio';
       } catch (e) { alert('Erro ao criar a proposta digital: ' + (e.message || e)); }
+    },
+    // Envio direto por WhatsApp — gera o link e abre o wa.me com a mensagem pronta.
+    async enviarOrcWhatsApp(o) {
+      try {
+        const link = await this._criarLinkProposta(o);
+        const num = (o.whatsapp || prompt('WhatsApp do cliente (com DDD):', '') || '').trim();
+        const msg = 'Olá! Segue a proposta da ' + EMPRESA.nome + (o.numero ? ' (' + o.numero + ')' : '') + ':\n' + link;
+        window.open((num ? this.waLink(num) : 'https://wa.me/') + '?text=' + encodeURIComponent(msg), '_blank');
+      } catch (e) { alert('Erro ao gerar o link da proposta: ' + (e.message || e)); }
+    },
+    // Envio direto por e-mail — gera o link e abre o cliente de e-mail (mailto).
+    async enviarOrcEmail(o) {
+      try {
+        const link = await this._criarLinkProposta(o);
+        const email = (o.email || prompt('E-mail do cliente:', '') || '').trim();
+        const subj = 'Proposta ' + (o.numero || '') + ' — ' + EMPRESA.nome;
+        const body = 'Olá!\n\nSegue a proposta da ' + EMPRESA.nome + ':\n' + link + '\n\nQualquer dúvida, estou à disposição.';
+        window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
+      } catch (e) { alert('Erro: ' + (e.message || e)); }
     },
     copiarLink(txt) { navigator.clipboard?.writeText(txt).then(() => alert('Link copiado!')).catch(() => prompt('Copie o link:', txt)); },
     // Validade como DATA (a partir de data + N dias) pra exibir no documento.
