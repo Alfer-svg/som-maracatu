@@ -425,6 +425,13 @@ document.addEventListener('alpine:init', () => {
     // ── Relatórios (ponto + produção) ──
     durSeg(seg) { seg = +seg || 0; const h = Math.floor(seg / 3600), m = Math.floor((seg % 3600) / 60); return h > 0 ? (h + 'h' + (m ? (' ' + m + 'min') : '')) : (m > 0 ? (m + 'min') : '—'); },
     relHora(iso) { if (!iso) return '—'; try { return new Date(iso).toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }); } catch { return '—'; } },
+    // Saudação de boas-vindas (Bom dia/tarde/noite no horário de Recife) + 1º nome
+    get saudacao() {
+      let h = 12; try { h = (+new Date().toLocaleString('en-US', { timeZone: 'America/Recife', hour: 'numeric', hour12: false })) % 24; } catch {}
+      const s = h < 12 ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+      const nome = (this.usuario && this.usuario.nome) ? this.usuario.nome.split(' ')[0] : '';
+      return s + (nome ? ', ' + nome : '');
+    },
     relDataDia(dia) { if (!dia) return '—'; const [y, m, d] = dia.split('-'); return d + '/' + m; },
     relNome(uid) { const u = (this.relatorio.linhas || []).find(x => x.id === uid); return u ? u.nome : '—'; },
     relSetPeriodo(p) {
