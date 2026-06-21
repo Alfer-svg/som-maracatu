@@ -1291,41 +1291,59 @@
       </div>
       <label class="form-label" style="margin-top:16px;display:block">Serviços incluídos</label>
       <template x-for="(s,i) in editing.servicos" :key="s.id">
-        <div class="card" style="padding:12px;margin-bottom:10px">
-          <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo</label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
-          <div class="flex gap-2" style="align-items:flex-end">
-            <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
-            <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
-            <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><i class="ph ph-trash ic-ph"></i></button>
-          </div>
-          <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
-            <label class="form-label">Redes incluídas</label>
-            <div class="flex" style="flex-wrap:wrap;gap:8px">
-              <template x-for="r in REDES" :key="r.id">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 9px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(s.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
-                  <input type="checkbox" :checked="(s.redes||[]).includes(r.id)" @change="toggleRede(s, r.id)">
-                  <img :src="redeIcon(r)" width="15" height="15" :alt="r.label"><span x-text="r.label"></span>
-                </label>
-              </template>
+        <div class="card" style="padding:0;margin-bottom:10px;overflow:hidden">
+          <!-- Recolhido: resumo clicável -->
+          <div x-show="!s._open" class="flex items-center justify-between" style="padding:12px 14px;cursor:pointer;gap:10px" @click="abrirServico(s)">
+            <div style="min-width:0">
+              <div class="fw-700" x-text="s.nome||'(serviço sem nome)'"></div>
+              <div class="fs-12 text-3 truncate" x-show="s.escopo" x-text="(s.escopo||'').split('\n')[0]"></div>
+            </div>
+            <div class="flex items-center gap-2" style="flex-shrink:0">
+              <span class="fw-700 text-green" x-text="(+s.valor?fmtCur(s.valor)+'/mês':'—')"></span>
+              <button type="button" class="btn btn-ghost btn-sm" @click.stop="abrirServico(s)">Editar</button>
+              <button type="button" class="btn btn-icon btn-ghost btn-sm" @click.stop="removeServicoOrc(i)" title="Remover"><i class="ph ph-trash ic-ph"></i></button>
             </div>
           </div>
-          <div class="form-group" x-show="Array.isArray(s.ads)" style="margin-top:8px">
-            <label class="form-label">Plataformas de tráfego + verba sugerida</label>
-            <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
-              <div class="flex" style="align-items:center;gap:10px;margin-bottom:5px">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;min-width:150px">
-                  <input type="checkbox" :checked="(s.ads||[]).includes(a.id)" @change="toggleAds(s, a.id)">
-                  <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"><span x-text="a.label"></span>
-                </label>
-                <div x-show="(s.ads||[]).includes(a.id)" class="flex" style="align-items:center;gap:5px">
-                  <span class="fs-12 text-2">R$</span>
-                  <input class="form-input" type="number" min="0" style="width:120px;padding:5px 8px" :value="(s.verbaAds||{})[a.id]||''" @input="setVerbaAds(s, a.id, $event.target.value)" placeholder="verba/mês">
-                </div>
+          <!-- Aberto: editor -->
+          <div x-show="s._open" style="padding:12px 14px">
+            <div class="form-group" x-show="catalogo.length" style="margin-bottom:8px"><label class="form-label">Usar do catálogo</label><select class="form-select" @change="aplicarCatalogo(s, $event.target.value); $event.target.value=''"><option value="">— escolher serviço cadastrado —</option><template x-for="it in catalogo" :key="it.id"><option :value="it.id" x-text="it.nome + (it.valor?(' — '+fmtCur(it.valor)+'/mês'):'')"></option></template></select></div>
+            <div class="flex gap-2" style="align-items:flex-end">
+              <div class="form-group" style="flex:1"><label class="form-label">Serviço</label><input class="form-input" x-model="s.nome" list="serv-list"></div>
+              <div class="form-group" style="width:150px"><label class="form-label">Mensalidade (R$)</label><input class="form-input" type="number" x-model="s.valor"></div>
+              <button class="btn btn-icon btn-ghost" @click="removeServicoOrc(i)" title="Remover serviço"><i class="ph ph-trash ic-ph"></i></button>
+            </div>
+            <div class="form-group" x-show="Array.isArray(s.redes)" style="margin-top:8px">
+              <label class="form-label">Redes incluídas</label>
+              <div class="flex" style="flex-wrap:wrap;gap:8px">
+                <template x-for="r in REDES" :key="r.id">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:5px 9px;border:1px solid var(--border,#e2e2e2);border-radius:8px" :style="(s.redes||[]).includes(r.id)?'border-color:#111;background:#1110':''">
+                    <input type="checkbox" :checked="(s.redes||[]).includes(r.id)" @change="toggleRede(s, r.id)">
+                    <img :src="redeIcon(r)" width="15" height="15" :alt="r.label"><span x-text="r.label"></span>
+                  </label>
+                </template>
               </div>
-            </template>
-            <div class="fs-12 text-2" style="margin-top:3px">Verba de mídia sugerida — não entra no total do orçamento.</div>
+            </div>
+            <div class="form-group" x-show="Array.isArray(s.ads)" style="margin-top:8px">
+              <label class="form-label">Plataformas de tráfego + verba sugerida</label>
+              <template x-for="a in ADS_PLATAFORMAS" :key="a.id">
+                <div class="flex" style="align-items:center;gap:10px;margin-bottom:5px">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;min-width:150px">
+                    <input type="checkbox" :checked="(s.ads||[]).includes(a.id)" @change="toggleAds(s, a.id)">
+                    <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"><span x-text="a.label"></span>
+                  </label>
+                  <div x-show="(s.ads||[]).includes(a.id)" class="flex" style="align-items:center;gap:5px">
+                    <span class="fs-12 text-2">R$</span>
+                    <input class="form-input" type="number" min="0" style="width:120px;padding:5px 8px" :value="(s.verbaAds||{})[a.id]||''" @input="setVerbaAds(s, a.id, $event.target.value)" placeholder="verba/mês">
+                  </div>
+                </div>
+              </template>
+              <div class="fs-12 text-2" style="margin-top:3px">Verba de mídia sugerida — não entra no total do orçamento.</div>
+            </div>
+            <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
+            <div class="flex" style="justify-content:flex-end;margin-top:10px">
+              <button type="button" class="btn btn-primary btn-sm" @click="recolherServico(s)"><i class="ph ph-check ic-ph"></i> Salvar serviço</button>
+            </div>
           </div>
-          <div class="form-group" style="margin-top:8px"><label class="form-label">Escopo (1 item por linha)</label><textarea class="form-textarea" rows="3" x-model="s.escopo" placeholder="Gerenciamento de até 4 redes sociais&#10;12 a 15 criativos por mês&#10;Relatório mensal de performance"></textarea></div>
         </div>
       </template>
       <datalist id="serv-list"><template x-for="sv in SERVICOS"><option :value="sv"></option></template></datalist>
@@ -1931,6 +1949,6 @@
 </div>
 
 <script src="js/brand.js?v=5"></script>
-<script src="js/app.js?v=70"></script>
+<script src="js/app.js?v=71"></script>
 </body>
 </html>
