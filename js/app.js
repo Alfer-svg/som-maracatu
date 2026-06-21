@@ -1519,9 +1519,24 @@ ${this._docFoot()}
       return out;
     },
     // Cria um CONTRATO completo já preenchido a partir de um orçamento.
+    // Acha o cliente cadastrado pelo nome (empresa/fantasia ou razão social).
+    _clientePorNome(nome) {
+      const n = String(nome || '').trim().toLowerCase(); if (!n) return null;
+      return this.clients.find(c => String(c.empresa || '').trim().toLowerCase() === n || String(c.razaoSocial || '').trim().toLowerCase() === n) || null;
+    },
+    // Monta o endereço completo a partir dos campos do cadastro (ou usa o legado `endereco`).
+    _enderecoCliente(c) {
+      if (!c) return '';
+      const ruaNum = [c.logradouro, c.numero].filter(Boolean).join(', ');
+      const cidUf = [c.cidade, c.uf].filter(Boolean).join('/');
+      const partes = [ruaNum, c.complemento, c.bairro, cidUf, c.cep && ('CEP ' + c.cep)].filter(Boolean);
+      return partes.join(' – ') || c.endereco || '';
+    },
     gerarContrato(o) {
+      const c = this._clientePorNome(o.cliente); // puxa CNPJ/endereço/representante do cadastro
+      const resp0 = c && Array.isArray(c.responsaveis) ? c.responsaveis[0] : null;
       const serv = (o.servicos || []).map(s => '• ' + (s.nome || '') + (s.valor ? (' — ' + MD.fmtCur(s.valor) + '/mês') : '')).join('\n');
-      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || '', documento: '', endereco: '', representante: o.contato || '', projeto: o.projeto || '', objeto: serv || o.descricao || '', servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: '' };
+      this.editing = { id: '', numero: this.proximoNumero('CT', this.contracts), cliente: o.cliente || (c && (c.empresa || c.razaoSocial)) || '', documento: (c && (c.cnpj || c.documento || c.cpf)) || '', endereco: this._enderecoCliente(c), representante: o.contato || (resp0 && resp0.nome) || (c && c.contato) || '', projeto: o.projeto || '', objeto: serv || o.descricao || '', servicos: o.servicos || [], valor: this.orcTotal(o), periodicidade: 'Mensal', formaPagamento: o.formaPagamento || 'Boleto', diaVencimento: o.diaVencimento || 5, inicio: MD.today(), meses: +o.vigenciaMeses || 6, fidelidadeMeses: 6, multaPercentual: 50, indiceReajuste: 'IPCA', aprovacaoDias: 2, suspensaoDias: 10, foro: EMPRESA.cidade, politico: false, propostaNumero: o.numero || '', status: 'Ativo', observacoes: '' };
       this.modal = 'contrato';
     },
 
