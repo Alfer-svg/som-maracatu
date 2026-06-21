@@ -6,13 +6,15 @@
   /* Marca Maracatu Digital: preto + dourado + creme (extraído do site) */
   --primary:   #0A0A0A;   /* preto */
   --primary-2: #242424;
-  --accent:    #FFDF00;   /* dourado (destaques/ativos) */
-  --accent-2:  #F5B800;
+  --accent:      #F87171;   /* vermelho claro (destaques/ativos) */
+  --accent-2:    #F25C5C;   /* vermelho um tom mais forte (gradientes/hover) */
+  --accent-soft: #FEECEC;   /* vermelho bem clarinho (fundos/tints) */
+  --accent-ink:  #b91c1c;   /* vermelho escuro p/ texto sobre o tint claro */
   --green:     #16A34A;
   --red:       #DC2626;
   --blue:      #2563EB;
   --cyan:      #0891B2;
-  --pink:      #FFDF00;   /* legado → mapeado pro dourado */
+  --pink:      #F87171;   /* legado → mapeado pro vermelho claro */
 
   --bg:        #F5F5F1;
   --surface:   #FFFFFF;
@@ -59,9 +61,9 @@ a { color: inherit; text-decoration: none; }
   display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
   color: var(--text-2); font-weight: 600; cursor: pointer; transition: all .15s; font-size: 13.5px;
 }
-.nav-item:hover { background: #FEECEC; color: #b91c1c; }
-.nav-item.active { background: #F87171; color: #fff; box-shadow: 0 4px 14px rgba(248,113,113,.40); }
-.nav-item.active:hover { background: #F87171; color: #fff; }
+.nav-item:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.nav-item.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(248,113,113,.40); }
+.nav-item.active:hover { background: var(--accent); color: #fff; }
 .nav-icon { width: 24px; text-align: center; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; }
 .nav-caret { margin-left: auto; font-size: 11px; color: var(--text-3); }
 .nav-sub { display: flex; flex-direction: column; gap: 2px; }
@@ -100,7 +102,7 @@ a { color: inherit; text-decoration: none; }
   font-weight: 700; font-size: 13px; cursor: pointer; transition: all .15s; background: var(--surface-2); color: var(--text); }
 .btn:hover { filter: brightness(.97); }
 .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 6px 16px rgba(10,10,10,.18); }
-.btn-accent { background: var(--accent); color: #0A0A0A; }
+.btn-accent { background: var(--accent); color: #fff; }
 .btn-ghost { background: transparent; border-color: var(--border); color: var(--text-2); }
 .btn-danger { background: var(--red); color: #fff; }
 .btn-icon { padding: 8px; }
@@ -118,7 +120,7 @@ a { color: inherit; text-decoration: none; }
   width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px;
   font-family: var(--font); background: var(--surface); color: var(--text); outline: none; transition: border-color .15s;
 }
-.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .form-textarea { min-height: 80px; resize: vertical; }
 
 /* ---------- Table ---------- */
