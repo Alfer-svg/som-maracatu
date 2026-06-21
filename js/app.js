@@ -1611,11 +1611,23 @@ ${this._docFoot()}
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
         const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
-        const imgH = canvas.height * pw / canvas.width;
+        const M = 12;                 // margem (mm) em todos os lados
+        const cw = pw - 2 * M;        // largura útil
+        const cph = ph - 2 * M;       // altura útil por página
+        const imgH = canvas.height * cw / canvas.width; // altura total da imagem na largura útil
         const img = canvas.toDataURL('image/jpeg', 0.92);
-        let pos = 0, restante = imgH;
-        pdf.addImage(img, 'JPEG', 0, pos, pw, imgH); restante -= ph;
-        while (restante > 0) { pos -= ph; pdf.addPage(); pdf.addImage(img, 'JPEG', 0, pos, pw, imgH); restante -= ph; }
+        let pageStart = 0;
+        while (pageStart < imgH - 0.5) {
+          if (pageStart > 0) pdf.addPage();
+          pdf.addImage(img, 'JPEG', M, M - pageStart, cw, imgH); // posiciona a fatia da página
+          // máscara branca cobrindo as 4 margens (jsPDF não recorta a imagem)
+          pdf.setFillColor(255, 255, 255);
+          pdf.rect(0, 0, pw, M, 'F');            // topo
+          pdf.rect(0, ph - M, pw, M, 'F');       // rodapé (espaço em branco no fim da página)
+          pdf.rect(0, 0, M, ph, 'F');            // esquerda
+          pdf.rect(pw - M, 0, M, ph, 'F');       // direita
+          pageStart += cph;
+        }
         return pdf.output('datauristring').split(',')[1];
       } finally { ifr.remove(); }
     },
@@ -1779,10 +1791,13 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#141414;ma
 .total{margin:18px 0 6px;background:#141414;color:#fff;border-radius:14px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}.total span{font-size:12px;letter-spacing:2px;color:#C9A24B;font-weight:700}.total b{font-size:26px;font-weight:800;color:#fff}
 .nota-perfil{font-size:11.5px;color:#888;font-style:italic;margin:10px 2px 2px;line-height:1.55}
 table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{text-align:left;padding:9px 12px;border-bottom:1px solid #eee}th{background:#141414;color:#C9A24B;font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}tbody tr:nth-child(even){background:#fafafa}
+.ct-title{text-align:center;margin:26px 0 22px;padding:0 16px}
+.ct-title .ct-kicker{display:block;font-size:12px;font-weight:800;letter-spacing:6px;color:#C9A24B;margin-bottom:8px}
+.ct-title .ct-name{display:inline-block;font-size:23px;font-weight:800;color:#141414;text-transform:uppercase;letter-spacing:.4px;line-height:1.18;border-top:2px solid #C9A24B;border-bottom:2px solid #C9A24B;padding:11px 6px}
 .bloco{margin:10px 0}.bloco b{display:block;margin-bottom:2px;color:#141414}
 .clausula{margin:14px 0}.clausula h3{font-size:12.5px;margin:0 0 4px;color:#141414}.clausula p{margin:3px 0;text-align:justify;color:#333}
 .midia-card{background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:8px;padding:9px 12px;margin:9px 0 2px;font-size:11.5px;color:#7a6a3a;line-height:1.5}
-.assin{display:flex;justify-content:space-between;gap:48px;margin-top:30px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141414;padding-top:8px;font-size:11px;color:#444}
+.assin{display:flex;justify-content:space-between;gap:48px;margin-top:70px}.assin div{flex:1;text-align:center;border-top:1.5px solid #141414;padding-top:9px;font-size:11px;color:#444}.assin.assin-test{margin-top:80px}
 .sig-digital{display:flex;gap:22px;margin-top:26px;flex-wrap:wrap}
 .esig{flex:1;min-width:240px;background:#f1f8f1;border:1px solid #cfe6cf;border-radius:12px;padding:14px 16px}
 .esig-tag{font-size:9.5px;font-weight:800;letter-spacing:1.5px;color:#2e7d32}
@@ -1791,11 +1806,13 @@ table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{t
 .aceite-txt{font-size:11px;color:#7a6a3a;margin-bottom:11px;line-height:1.5}
 .btn-aceite{display:block;width:100%;text-align:center;background:#141414;color:#C9A24B;font-weight:800;font-size:13px;text-decoration:none;padding:12px 18px;border-radius:10px;letter-spacing:.3px;border:none;cursor:pointer}
 .foot{margin-top:40px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px;text-align:center}
-@media print{.pad{padding:24px 32px}.head{padding:22px 32px}.empresa-bar{padding:8px 32px}
+@media print{@page{margin:14mm 13mm}.pad{padding:14px 18px}.head{padding:22px 32px}.empresa-bar{padding:8px 32px}
 /* só o box do total não pode quebrar; serviços/cláusulas podem fluir entre páginas pra não deixar buraco branco */
 .total{break-inside:avoid}
 /* títulos e cabeçalho do serviço não ficam órfãos no fim da página */
-h2{break-after:avoid}.serv-head{break-after:avoid}.serv{break-inside:auto}}`;
+h2{break-after:avoid}.serv-head{break-after:avoid}.serv{break-inside:auto}
+/* título e blocos de assinatura não se partem entre páginas */
+.ct-title{break-inside:avoid;break-after:avoid}.assin{break-inside:avoid}.clausula h3{break-after:avoid}}`;
     },
     _docHead(tipo, num, subs) {
       const e = this._esc;
@@ -1876,7 +1893,7 @@ ${this._docFoot()}
       ])}` : '';
       return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato ${e(c.numero)}</title><style>${this._cssDoc()}</style></head><body>
 ${this._docHead('CONTRATO', c.numero, ['Início: ' + MD.fmtDate(c.inicio)])}
-<h2 style="text-align:center;border:0;color:#111;font-size:14px;margin-top:18px">Contrato de Prestação de Serviços de Marketing Digital</h2>
+<div class="ct-title"><span class="ct-kicker">CONTRATO DE</span><div class="ct-name">Prestação de Serviços de Marketing Digital</div></div>
 <div class="bloco"><b>CONTRATADA:</b> ${e(EMPRESA.nome)}, CNPJ nº ${e(EMPRESA.cnpj)}, com sede em ${e(EMPRESA.endereco)}.</div>
 <div class="bloco"><b>CONTRATANTE:</b> ${e(c.cliente || '—')}${c.documento ? ', CNPJ/CPF nº ' + e(c.documento) : ''}${c.endereco ? ', com sede em ' + e(c.endereco) : ''}${c.representante ? ', neste ato representada por ' + e(c.representante) : ''}.</div>
 <p style="color:#333">As partes acima celebram o presente Contrato, que se regerá pelas cláusulas seguintes.</p>
@@ -1901,7 +1918,7 @@ ${cl('18', 'DO FORO', ['Fica eleito o foro da Comarca de ' + e(foro) + ' para di
 ${c.observacoes ? `<div class="bloco"><b>Observações</b>${e(c.observacoes)}</div>` : ''}
 <p style="margin-top:18px;color:#333">E por estarem assim justas e contratadas, firmam o presente em via eletrônica. ${e(EMPRESA.cidade)}, ${MD.fmtDate(c.inicio)}.</p>
 <div class="assin"><div>${e(EMPRESA.nome)}<br>CONTRATADA</div><div>${e(c.cliente || 'Cliente')}<br>CONTRATANTE</div></div>
-<div class="assin" style="margin-top:36px"><div>Testemunha 1 — CPF:</div><div>Testemunha 2 — CPF:</div></div>
+<div class="assin assin-test"><div>Testemunha 1<br>Nome / CPF:</div><div>Testemunha 2<br>Nome / CPF:</div></div>
 ${anexoPolitico}
 ${this._docFoot()}
 </body></html>`;
