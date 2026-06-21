@@ -97,20 +97,21 @@ const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'S
 // Coleções que sincronizam no backend (compartilhadas por toda a equipe).
 // Para tornar QUALQUER coleção compartilhada, basta adicionar a chave aqui.
 const COLECOES_SYNC = ['catalogo', 'contracts', 'finance', 'fornecedores'];
-// Dicas de trabalho mostradas na tela de login (uma aleatória a cada acesso).
+// Recadinhos mostrados na tela de login (um aleatório a cada acesso) — leves e com emoji.
 const DICAS_LOGIN = [
-  'Gere o contrato direto do orçamento aprovado — ele puxa CNPJ, endereço e serviços sozinho.',
-  'No Radar do cliente nada de follow-up esquecido: ele lembra quem precisa de atenção.',
-  'Orçamento aprovado? Um clique em "Gerar contrato" e já sai pronto pra assinatura.',
-  'Cadastre o e-mail do cliente em Contatos e ele aparece automático no orçamento.',
-  'Use o catálogo de serviços pra montar orçamento em segundos, sem redigitar o escopo.',
-  'Enviou o contrato pro ZapSign? Já dispara e-mail/WhatsApp pro cliente assinar.',
-  'Cadastro do cliente completo = contrato perfeito sem digitar nada.',
-  'Acompanhe o funil no CRM — lead parado é oportunidade esfriando.',
-  'Lançou o contrato? Gere o Financeiro e as mensalidades entram como a receber.',
-  'Anexe o briefing no cadastro pra equipe toda ter o contexto do cliente.',
-  'Revise os orçamentos perto do vencimento de validade antes que percam o prazo.',
-  'Pequenas constâncias batem grandes esforços: toque um item do Radar por dia.',
+  '🚀 Orçamento aprovado? Um clique em "Gerar contrato" e tá pronto pra assinar.',
+  '🎯 O Radar não deixa follow-up escapar — ele cutuca quem precisa de você.',
+  '⚡ Monta orçamento em segundos puxando do catálogo de serviços.',
+  '✍️ Mandou o contrato pro ZapSign? Já vai e-mail/WhatsApp pro cliente assinar.',
+  '🧠 Cadastro do cliente caprichado = contrato perfeito sem digitar nada.',
+  '📈 Lead parado no CRM é grana esfriando. Bora mexer no funil!',
+  '💸 Fechou o contrato? Gera o Financeiro e as mensalidades já entram.',
+  '📎 Joga o briefing no cadastro pra galera toda saber do cliente.',
+  '⏰ De olho nos orçamentos perto de vencer a validade.',
+  '🔥 Constância bate esforço: um item do Radar por dia já muda o jogo.',
+  '🤝 Contato e e-mail no cadastro = tudo auto-preenchido depois.',
+  '☕ Bom te ver! Que tal começar fechando um orçamento parado?',
+  '🏆 Cliente bem atendido vira indicação. Capricha no relacionamento.',
 ];
 // Contratos — situação da vigência.
 const CONTR_STATUS = [
@@ -703,6 +704,16 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get aPagar()     { return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && this._finNoMes(f)).reduce((a, f) => a + (+f.valor || 0), 0); },
     finMesAnterior() { if (this.finMes === 0) { this.finMes = 11; this.finAno--; } else this.finMes--; },
     finMesProximo() { if (this.finMes === 11) { this.finMes = 0; this.finAno++; } else this.finMes++; },
+    // Previsão de caixa: a receber / a pagar com vencimento de hoje até hoje+N dias.
+    _dataEm(dias) { const d = new Date(); d.setDate(d.getDate() + dias); return d.toISOString().slice(0, 10); },
+    receberEm(dias) { const h = MD.today(), lim = this._dataEm(dias); return this.finance.filter(f => f.tipo === 'receita' && f.status !== 'pago' && f.vencimento && f.vencimento >= h && f.vencimento <= lim).reduce((a, f) => a + (+f.valor || 0), 0); },
+    pagarEm(dias)   { const h = MD.today(), lim = this._dataEm(dias); return this.finance.filter(f => f.tipo === 'despesa' && f.status !== 'pago' && f.vencimento && f.vencimento >= h && f.vencimento <= lim).reduce((a, f) => a + (+f.valor || 0), 0); },
+    // Cor de fundo da linha: pago = verde levíssimo, atrasado = vermelho levíssimo, senão zebra.
+    lancRowBg(f, i) {
+      if (f.status === 'pago') return 'background:rgba(34,197,94,.07)';
+      if (f.vencimento && f.vencimento < MD.today()) return 'background:rgba(239,68,68,.07)';
+      return (i % 2) ? 'background:rgba(0,0,0,.022)' : '';
+    },
     get mrr()        { return this.clients.filter(c => c.status !== 'Inativo').reduce((a, c) => a + (+c.mensalidade || 0), 0); },
 
     // ───────────────── CRM ─────────────────

@@ -23,14 +23,12 @@
 .lg-hero{position:relative;height:128px;background:#141210}
 .lg-hero img.lg-bg{width:100%;height:100%;object-fit:cover;object-position:center 34%;filter:grayscale(100%) contrast(1.05);opacity:.9}
 .lg-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,16,.15),rgba(20,18,16,.92))}
-.lg-logo{position:absolute;left:22px;bottom:13px;z-index:2;height:30px;width:auto;max-width:62%;object-fit:contain;background:#fff;border-radius:8px;padding:6px 12px;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.lg-logo{position:absolute;left:20px;bottom:14px;z-index:2;height:42px;width:auto;max-width:72%;object-fit:contain;background:#fff;border-radius:9px;padding:8px 15px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
 .lg-body{padding:26px 26px 24px}
 .lg-title{font-size:20px;font-weight:800;color:#1b1b1b;letter-spacing:-.2px}
 .lg-sub{font-size:11.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#C9A24B;margin-top:3px}
-.lg-tip{display:flex;gap:10px;align-items:flex-start;background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:10px;padding:11px 13px;margin:18px 0 18px}
-.lg-tip .lg-tip-ico{font-size:16px;line-height:1.2}
-.lg-tip b{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#a98a3a;margin-bottom:3px}
-.lg-tip span.lg-tip-txt{font-size:12.5px;color:#6f6a5e;line-height:1.45}
+.lg-tip{background:#fbf7ec;border:1px solid #ecdfb8;border-left:3px solid #C9A24B;border-radius:10px;padding:12px 14px;margin:18px 0 18px}
+.lg-tip span.lg-tip-txt{font-size:13px;color:#5f5a50;line-height:1.5}
 .lg-field{margin-bottom:12px}
 .lg-row{display:flex;align-items:center;justify-content:space-between;margin:2px 0 16px;font-size:12.5px}
 .lg-check{display:flex;align-items:center;gap:7px;cursor:pointer;color:#555}
@@ -53,10 +51,7 @@
       <div class="lg-title">Bem-vindo de volta</div>
       <div class="lg-sub">SOM · Sistema Operacional Maracatu</div>
 
-      <div class="lg-tip">
-        <span class="lg-tip-ico">💡</span>
-        <div><b>Dica de trabalho</b><span class="lg-tip-txt" x-text="dicaLogin"></span></div>
-      </div>
+      <div class="lg-tip"><span class="lg-tip-txt" x-text="dicaLogin"></span></div>
 
       <form @submit.prevent="fazerLogin()">
         <div class="lg-field"><label class="form-label">E-mail</label>
@@ -484,6 +479,19 @@
           <div class="card kpi"><div class="kpi-label">A receber / A pagar (mês)</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
 
+        <!-- previsão de caixa: 7 / 15 / 30 dias -->
+        <div class="grid grid-3 mb-4" x-show="finTab==='lancamentos'">
+          <template x-for="dias in [7,15,30]" :key="dias">
+            <div class="card kpi">
+              <div class="kpi-label">Próximos <span x-text="dias"></span> dias</div>
+              <div class="flex items-center justify-between" style="margin-top:6px">
+                <div><div class="fs-11 text-3">A receber</div><div class="fw-800 fs-17 text-green" x-text="fmtCur(receberEm(dias))"></div></div>
+                <div style="text-align:right"><div class="fs-11 text-3">A pagar</div><div class="fw-800 fs-17 text-red" x-text="fmtCur(pagarEm(dias))"></div></div>
+              </div>
+            </div>
+          </template>
+        </div>
+
         <!-- Navegação Lançamentos/Fornecedores agora é submenu da barra (grupo Financeiro) -->
 
         <!-- ── LANÇAMENTOS ── -->
@@ -508,8 +516,8 @@
             <table class="table">
               <thead><tr><th>Descrição</th><th>Categoria</th><th>Cliente / Fornecedor</th><th>Vencimento</th><th>Valor</th><th>Status</th><th></th></tr></thead>
               <tbody>
-                <template x-for="f in financeFiltrado" :key="f.id">
-                  <tr>
+                <template x-for="(f,i) in financeFiltrado" :key="f.id">
+                  <tr :style="lancRowBg(f,i)">
                     <td class="fw-700"><span :class="f.tipo==='receita'?'text-green':'text-red'" x-text="f.tipo==='receita'?'↑ ':'↓ '"></span><span x-text="f.descricao"></span></td>
                     <td class="fs-12 text-2" x-text="f.categoria"></td>
                     <td class="fs-12 text-2" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||'—'"></td>
@@ -2213,6 +2221,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=104"></script>
+<script src="js/app.js?v=105"></script>
 </body>
 </html>
