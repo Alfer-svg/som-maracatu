@@ -43,11 +43,12 @@ a { color: inherit; text-decoration: none; }
   color: #fff; display: flex; flex-direction: column; padding: 18px 12px; position: sticky; top: 0; height: 100vh;
   border-right: 1px solid rgba(255,255,255,.08);
 }
-.brand { display: block; padding: 4px 6px 18px; text-align: center; }
+.brand {
+  display: block; text-align: center;
+  background: #fff; margin: -18px -12px 16px; padding: 16px 14px;
+}
 .brand-logo {
   width: 100%; max-width: 168px; height: auto; display: block; margin: 0 auto;
-  background: #fff; border-radius: 12px; padding: 11px 14px;
-  box-shadow: 0 2px 12px rgba(0,0,0,.45);
 }
 .brand-name { font-weight: 800; font-size: 13px; line-height: 1; letter-spacing: .6px; color: #fff; margin-top: 12px; }
 .brand-sub  { font-size: 10px; color: rgba(255,255,255,.55); margin-top: 4px; letter-spacing: .3px; }
