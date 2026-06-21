@@ -1072,7 +1072,7 @@
 <!-- ═══════════ MODAIS ═══════════ -->
 
 <!-- LEAD -->
-<div class="modal-backdrop" x-show="modal==='lead'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='lead'" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Lead':'Novo Lead'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
@@ -1101,7 +1101,7 @@
 </div>
 
 <!-- CLIENTE -->
-<div class="modal-backdrop" x-show="modal==='client'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='client'" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body" style="display:block">
@@ -1295,7 +1295,7 @@
 </div>
 
 <!-- FINANCEIRO -->
-<div class="modal-backdrop" x-show="modal==='finance'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='finance'" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
@@ -1342,7 +1342,7 @@
 </div>
 
 <!-- FORNECEDOR -->
-<div class="modal-backdrop" x-show="modal==='fornecedor'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='fornecedor'" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="(fornForm.id?'Editar ':'Novo ')+'Fornecedor'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
@@ -1364,7 +1364,7 @@
 </div>
 
 <!-- ORÇAMENTO / PROPOSTA -->
-<div class="modal-backdrop" x-show="modal==='orcamento'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='orcamento'" x-cloak>
   <div class="modal" style="max-width:700px">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Nova ')+'Proposta'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body">
@@ -1464,7 +1464,7 @@
 </div>
 
 <!-- ENVIO DA PROPOSTA DIGITAL -->
-<div class="modal-backdrop" x-show="modal==='propostaEnvio'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='propostaEnvio'" x-cloak>
   <div class="modal" style="max-width:560px">
     <div class="modal-head"><div class="modal-title">Proposta digital criada ✓</div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body" x-show="propostaEnvio">
@@ -1485,7 +1485,7 @@
 </div>
 
 <!-- SERVIÇO (catálogo) -->
-<div class="modal-backdrop" x-show="modal==='servico'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='servico'" x-cloak>
   <div class="modal" style="max-width:520px">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body">
@@ -1532,7 +1532,7 @@
 </div>
 
 <!-- CONTRATO -->
-<div class="modal-backdrop" x-show="modal==='contrato'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='contrato'" x-cloak>
   <div class="modal" style="max-width:700px">
     <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Contrato'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body">
@@ -1572,7 +1572,7 @@
 </div>
 
 <!-- VISUALIZAR DOCUMENTO (contrato/proposta pronto p/ impressão e envio) -->
-<div class="modal-backdrop" x-show="modal==='docview'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='docview'" x-cloak>
   <div class="modal" style="max-width:920px;width:95vw;height:92vh;display:flex;flex-direction:column">
     <div class="modal-head">
       <div class="modal-title" x-text="(docTipo==='contrato'?'Contrato ':'Proposta ')+((docObj&&docObj.numero)||'')"></div>
@@ -1601,7 +1601,7 @@
 
 <!-- PROJETO -->
 <!-- PROGRAMAÇÃO — cria vários projetos do mesmo cliente p/ um colaborador -->
-<div class="modal-backdrop" x-show="progModal" @click.self="progModal=false" x-cloak>
+<div class="modal-backdrop" x-show="progModal" x-cloak>
   <div class="modal" style="max-width:640px">
     <div class="modal-head"><div class="modal-title">Nova programação semanal</div><button class="btn btn-icon btn-ghost" @click="progModal=false">✕</button></div>
     <div class="modal-body">
@@ -1919,7 +1919,7 @@
   </div>
 </div>
 
-<div class="modal-backdrop" x-show="modal==='project'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='project'" x-cloak>
   <div class="modal">
     <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Projeto':'Novo Projeto'"></div><button class="btn btn-icon btn-ghost" @click="modal=null">✕</button></div>
     <div class="modal-body grid grid-2" style="gap:14px">
@@ -2153,6 +2153,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=98"></script>
+<script src="js/app.js?v=99"></script>
 </body>
 </html>
