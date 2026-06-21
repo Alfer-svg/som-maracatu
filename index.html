@@ -7,7 +7,7 @@
   <link rel="icon" href="assets/favicon.png?v=6">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=66">
+  <link rel="stylesheet" href="css/styles.css?v=67">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -98,13 +98,27 @@
         <span class="nav-icon"><img class="ic-img" src="assets/icons/identification-badge.png?v=7"></span><span>Pessoal</span>
       </div>
     </nav>
-    <div class="sidebar-foot">
-      <div x-text="usuario && usuario.nome" style="color:var(--text);font-weight:700;font-size:12px"></div>
-      <div x-text="usuario && usuario.email" style="margin-bottom:6px"></div>
-      <div style="margin-bottom:8px"><span class="badge" :style="'background:'+papelInfo(papel).bg+';color:'+papelInfo(papel).cor" x-text="papelInfo(papel).nome"></span></div>
-      <div class="flex gap-2">
-        <button class="btn btn-ghost btn-sm" style="border-color:var(--line);color:var(--text-2)" @click="senhaModal=true; pwMsg=''">Trocar senha</button>
-        <button class="btn btn-ghost btn-sm" style="border-color:var(--line);color:var(--text-2)" @click="logout()">Sair</button>
+    <div class="sidebar-foot" x-data="{fo:false}" @mouseenter="fo=true" @mouseleave="fo=false">
+      <!-- Recolhido: avatar + 1º nome -->
+      <div class="foot-collapsed" x-show="!fo" @click="fo=true">
+        <span class="foot-avatar" x-text="(usuario&&usuario.nome||'A').charAt(0)"></span>
+        <span class="foot-firstname" x-text="(usuario&&usuario.nome||'').split(' ')[0]"></span>
+        <span class="foot-caret">▴</span>
+      </div>
+      <!-- Expandido: usuário + perfil + ações -->
+      <div class="foot-expanded" x-show="fo" x-cloak>
+        <div class="foot-user">
+          <span class="foot-avatar" x-text="(usuario&&usuario.nome||'A').charAt(0)"></span>
+          <div class="flex-1" style="min-width:0">
+            <div class="foot-name" x-text="usuario&&usuario.nome"></div>
+            <div class="foot-mail" x-text="usuario&&usuario.email"></div>
+            <div class="foot-role"><span class="badge" :style="'background:'+papelInfo(papel).bg+';color:'+papelInfo(papel).cor" x-text="papelInfo(papel).nome"></span></div>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-ghost btn-sm" style="border-color:var(--line);color:var(--text-2)" @click="senhaModal=true; pwMsg=''">Trocar senha</button>
+          <button class="btn btn-ghost btn-sm" style="border-color:var(--line);color:var(--text-2)" @click="logout()">Sair</button>
+        </div>
       </div>
       <div class="brand-foot"><span class="brand-foot-name">SOM</span> · Sistema Operacional Maracatu</div>
     </div>
