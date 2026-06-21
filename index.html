@@ -1569,10 +1569,19 @@
     <div class="modal-body" style="flex:1;padding:0;overflow:hidden;background:#eee">
       <iframe :srcdoc="docHtml" style="width:100%;height:100%;border:0;background:#fff"></iframe>
     </div>
-    <div class="modal-foot">
+    <div class="modal-foot" style="flex-wrap:wrap;gap:8px">
+      <!-- status de assinatura (quando já enviado) -->
+      <template x-if="docTipo==='contrato' && docObj && docObj.assinatura">
+        <div class="flex gap-2" style="align-items:center;margin-right:auto">
+          <span class="badge" :style="'background:'+assinaturaCor(docObj.assinatura.status)+'22;color:'+assinaturaCor(docObj.assinatura.status)" x-text="assinaturaLabel(docObj.assinatura.status)"></span>
+          <button class="btn btn-ghost btn-sm" @click="copiarLinkAssinatura(docObj)" x-show="linkAssinatura(docObj)"><i class="ph ph-link ic-ph"></i> Copiar link</button>
+          <button class="btn btn-ghost btn-sm" @click="atualizarAssinatura(docObj)" :disabled="assinaturaLoading"><i class="ph ph-arrows-clockwise ic-ph"></i> Atualizar</button>
+        </div>
+      </template>
       <button class="btn btn-ghost" @click="editarDoc()"><i class="ph ph-pencil-simple ic-ph"></i> Editar dados</button>
       <button class="btn btn-ghost" x-show="docTipo==='contrato'" @click="lancarContratoFinanceiro(docObj)" title="Gera as mensalidades no Financeiro (a receber)"><i class="ph ph-currency-circle-dollar ic-ph"></i> Gerar Financeiro</button>
-      <button class="btn btn-primary" @click="imprimirDoc(docTipo, docObj)"><i class="ph ph-printer ic-ph"></i> Imprimir / PDF p/ enviar</button>
+      <button class="btn btn-ghost" @click="imprimirDoc(docTipo, docObj)"><i class="ph ph-printer ic-ph"></i> Imprimir / PDF</button>
+      <button class="btn btn-primary" x-show="docTipo==='contrato' && !(docObj && docObj.assinatura)" @click="enviarParaAssinatura(docObj)" :disabled="assinaturaLoading"><i class="ph ph-signature ic-ph"></i> <span x-text="assinaturaLoading?'Enviando…':'Enviar para assinatura'"></span></button>
       <button class="btn btn-ghost" @click="modal=null">Fechar</button>
     </div>
   </div>
@@ -2128,7 +2137,10 @@
   </div>
 </div>
 
+<!-- geração de PDF no cliente (contrato p/ assinatura ZapSign) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=93"></script>
+<script src="js/app.js?v=94"></script>
 </body>
 </html>

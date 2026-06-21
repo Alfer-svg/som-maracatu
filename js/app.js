@@ -314,6 +314,7 @@ document.addEventListener('alpine:init', () => {
     editing: {},
     projetoSel: '', // dropdown de tipo de projeto no orçamento ('Outros' libera texto livre)
     docHtml: '', docTipo: '', docObj: null, // preview de documento pronto (contrato/proposta)
+    assinaturaLoading: false, // gerando PDF / enviando p/ ZapSign
     cnpjLoading: false, cnpjMsg: '',
     cepLoading: false, cepMsg: '',
 
@@ -1582,6 +1583,67 @@ ${this._docFoot()}
     // Abre um documento já renderizado (pronto pra imprimir/enviar) na tela.
     verDocumento(tipo, obj) { this.docTipo = tipo; this.docObj = obj; this.docHtml = tipo === 'contrato' ? this._contratoHTML(obj) : this._propostaHTML(obj); this.modal = 'docview'; },
     editarDoc() { const t = this.docTipo, o = this.docObj; this.modal = null; if (t === 'contrato') this.editarContrato(o); else this.editarOrcamento(o); },
+    // ── Assinatura eletrônica (ZapSign) ──
+    assinaturaLabel(s) { return ({ pending: 'Aguardando assinatura', signed: 'Assinado ✔', refused: 'Recusado', 'new': 'Aguardando assinatura' }[s] || s || '—'); },
+    assinaturaCor(s) { return s === 'signed' ? '#16a34a' : s === 'refused' ? '#dc2626' : '#C9A24B'; },
+    // Renderiza o HTML do documento num iframe oculto e gera um PDF A4 (base64) via html2canvas+jsPDF.
+    async _gerarPdfBase64(html) {
+      const ifr = document.createElement('iframe');
+      ifr.style.cssText = 'position:fixed;left:-99999px;top:0;width:794px;height:1123px;border:0;background:#fff';
+      document.body.appendChild(ifr);
+      ifr.srcdoc = html;
+      await new Promise(res => { ifr.onload = res; setTimeout(res, 1500); });
+      await new Promise(r => setTimeout(r, 500)); // dá tempo de carregar logo/banner
+      try {
+        const canvas = await html2canvas(ifr.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', windowWidth: 794 });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+        const imgH = canvas.height * pw / canvas.width;
+        const img = canvas.toDataURL('image/jpeg', 0.92);
+        let pos = 0, restante = imgH;
+        pdf.addImage(img, 'JPEG', 0, pos, pw, imgH); restante -= ph;
+        while (restante > 0) { pos -= ph; pdf.addPage(); pdf.addImage(img, 'JPEG', 0, pos, pw, imgH); restante -= ph; }
+        return pdf.output('datauristring').split(',')[1];
+      } finally { ifr.remove(); }
+    },
+    async enviarParaAssinatura(c) {
+      const cli = this._clientePorNome(c.cliente);
+      const r0 = cli && Array.isArray(cli.responsaveis) ? cli.responsaveis[0] : null;
+      const nome = c.representante || (r0 && r0.nome) || c.cliente || 'Signatário';
+      let email = (cli && cli.email) || (r0 && r0.email) || (cli && cli.emailCobranca) || '';
+      let fone = (cli && cli.whatsapp) || (r0 && r0.whatsapp) || '';
+      if (!email && !fone) email = (prompt('E-mail do cliente para enviar o contrato para assinatura:', '') || '').trim();
+      if (!email && !fone) return;
+      let foneNum = (fone || '').replace(/\D/g, ''); if (foneNum.length > 11 && foneNum.startsWith('55')) foneNum = foneNum.slice(2);
+      if (!confirm('Enviar o contrato ' + (c.numero || '') + ' para assinatura de ' + nome + (email ? (' (' + email + ')') : (' (WhatsApp ' + foneNum + ')')) + '?')) return;
+      this.assinaturaLoading = true;
+      try {
+        const base64_pdf = await this._gerarPdfBase64(this._contratoHTML(c));
+        const resp = await this.api('POST', '/assinatura/contrato', { name: 'Contrato ' + (c.numero || ''), base64_pdf, signers: [{ name: nome, email, phone_number: email ? '' : foneNum }] });
+        c.assinatura = { ...resp, enviadoEm: MD.today() };
+        const i = this.contracts.findIndex(x => x.id === c.id); if (i > -1) this.contracts[i] = { ...c };
+        this.persist('contracts', this.contracts);
+        if (this.docObj && this.docObj.id === c.id) this.docObj = c;
+        alert('Contrato enviado para assinatura ✅' + (email ? ('\nE-mail enviado para ' + email) : ('\nWhatsApp enviado para ' + foneNum)));
+      } catch (e) { alert('Erro ao enviar para assinatura: ' + (e.message || e)); }
+      finally { this.assinaturaLoading = false; }
+    },
+    async atualizarAssinatura(c) {
+      if (!c.assinatura || !c.assinatura.token) return;
+      this.assinaturaLoading = true;
+      try {
+        const resp = await this.api('POST', '/assinatura/status', { token: c.assinatura.token });
+        c.assinatura = { ...c.assinatura, ...resp };
+        if (resp.status === 'signed') c.status = 'Assinado';
+        const i = this.contracts.findIndex(x => x.id === c.id); if (i > -1) this.contracts[i] = { ...c };
+        this.persist('contracts', this.contracts);
+        if (this.docObj && this.docObj.id === c.id) this.docObj = c;
+      } catch (e) { alert('Erro ao atualizar status: ' + (e.message || e)); }
+      finally { this.assinaturaLoading = false; }
+    },
+    linkAssinatura(c) { const s = c && c.assinatura && (c.assinatura.signers || [])[0]; return s ? (s.sign_url || s.signing_link || '') : ''; },
+    copiarLinkAssinatura(c) { const l = this.linkAssinatura(c); if (l) { navigator.clipboard.writeText(l); alert('Link de assinatura copiado:\n' + l); } },
     gerarContrato(o) {
       const num = o.numero || '';
       // não duplica: reaproveita o contrato já gerado desse orçamento (e limpa duplicados antigos do mesmo)
