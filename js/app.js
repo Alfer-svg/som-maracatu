@@ -92,6 +92,9 @@ const ORC_STATUS = [
 ];
 // Tipos de projeto pré-definidos no orçamento ('Outros' libera texto livre).
 const PROJETO_OPCOES = ['Gestão + Tráfego', 'Tráfego', 'Gestão'];
+// Coleções que sincronizam no backend (compartilhadas por toda a equipe).
+// Para tornar QUALQUER coleção compartilhada, basta adicionar a chave aqui.
+const COLECOES_SYNC = ['catalogo', 'contracts', 'finance', 'fornecedores'];
 // Contratos — situação da vigência.
 const CONTR_STATUS = [
   { id: 'Ativo',     color: '#16a34a' },
@@ -327,12 +330,7 @@ document.addEventListener('alpine:init', () => {
       this.contracts = MD.get('som_contracts', []);
       this.finance   = MD.get('som_finance', []);
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
-      this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento
-      if (this.catalogo.length === 0 && !localStorage.getItem('som_catalogo_seeded')) {
-        this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
-        this.persist('catalogo', this.catalogo);
-        localStorage.setItem('som_catalogo_seeded', '1'); // não re-semeia se o usuário apagar tudo
-      }
+      this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
       if (this.token) { this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); this.startChatMonitor(); }
       // áudio e permissão de notificação precisam de um gesto do usuário
       document.addEventListener('click', () => { this.initAudio(); this.pedirNotif(); }, { once: true });
@@ -398,6 +396,7 @@ document.addEventListener('alpine:init', () => {
       const c = await this.migrarPropostas();
       if (a || b || c) console.info('Migrados pro backend — leads:', a, 'projetos:', b, 'orçamentos:', c);
       await this.carregarLeads(); await this.carregarProjetos(); await this.carregarPropostas();
+      await this.carregarColecoesSync(); // contratos, financeiro, catálogo, fornecedores (compartilhados)
     },
     // Orçamentos agora ficam no backend (compartilhados entre todos os usuários).
     async carregarPropostas() {
@@ -625,7 +624,31 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (!confirm('Arquivar o onboarding de "' + o.empresa + '"? (sai da fila, sem virar cliente)')) return;
       try { await this.api('POST', '/onboarding/admin/' + o.id + '/arquivar', {}); await this.carregarOnboardings(); } catch (e) { alert(e.message); }
     },
-    persist(key, arr) { MD.set('som_' + key, arr); },
+    // Grava local (cache offline) e, se for coleção compartilhada, sincroniza no backend.
+    persist(key, arr) { MD.set('som_' + key, arr); if (this.token && COLECOES_SYNC.includes(key)) this.api('POST', '/colecoes/' + key, { itens: arr }).catch(() => {}); },
+    // Carrega as coleções compartilhadas do backend, unindo (por id) o que houver de local
+    // que ainda não subiu — assim nada se perde e todos passam a ver os mesmos dados.
+    async carregarColecoesSync() {
+      if (!this.token) return;
+      for (const key of COLECOES_SYNC) {
+        try {
+          let remoto = await this.api('GET', '/colecoes/' + key);
+          remoto = Array.isArray(remoto) ? remoto : [];
+          const local = MD.get('som_' + key, []);
+          const ids = new Set(remoto.map(x => x && x.id).filter(Boolean));
+          const novos = (Array.isArray(local) ? local : []).filter(x => x && x.id && !ids.has(x.id));
+          const merged = novos.length ? [...novos, ...remoto] : remoto;
+          if (novos.length) await this.api('POST', '/colecoes/' + key, { itens: merged }).catch(() => {});
+          this[key] = merged; MD.set('som_' + key, merged);
+          // semeia o catálogo só na 1ª vez (backend e local vazios), evitando duplicar entre navegadores
+          if (key === 'catalogo' && !merged.length && !localStorage.getItem('som_catalogo_seeded')) {
+            this.catalogo = CATALOGO_SEED.map(s => ({ id: MD.uid(), ...s }));
+            localStorage.setItem('som_catalogo_seeded', '1');
+            this.persist('catalogo', this.catalogo);
+          }
+        } catch (e) { console.warn('colecao', key, e.message); }
+      }
+    },
 
     // ───────────────── DASHBOARD ─────────────────
     get clientesAtivos() { return this.clients.filter(c => c.status !== 'Inativo').length; },
