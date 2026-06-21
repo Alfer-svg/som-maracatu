@@ -248,6 +248,7 @@ document.addEventListener('alpine:init', () => {
   Alpine.data('app', () => ({
     page: 'dashboard',
     comOpen: true, // grupo "Comercial" (CRM + Clientes) aberto na barra lateral
+    finOpen: false, // grupo "Financeiro" (Lançamentos + Fornecedores)
     STAGES, SERVICOS, ORIGENS, PROJ_STATUS, FIN_CATEGORIAS, FORN_CATEGORIAS, ORC_STATUS, CONTR_STATUS, PERIODICIDADES, FORMAS_PAGAMENTO, EMPRESA, REDES, ADS, ADS_PLATAFORMAS, ITENS_CRED,
     busca: '',
     monitorSel: '', // id do cliente aberto no fichário de monitoramento

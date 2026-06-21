@@ -75,9 +75,28 @@
         <span x-show="podeVer('onboarding') && onboardings.length" class="badge" style="margin-left:auto;background:var(--accent);color:#fff;min-width:20px;justify-content:center" x-text="onboardings.length" title="Onboardings aguardando revisão"></span>
       </div>
 
+      <!-- Financeiro (grupo: Lançamentos + Fornecedores) -->
+      <template x-if="podeVer('financeiro')">
+        <div>
+          <div class="nav-item" :class="page==='financeiro'&&!finOpen?'active':''" @click="finOpen=!finOpen" title="Financeiro — receitas, despesas e fornecedores.">
+            <span class="nav-icon"><i class="ph ph-wallet ic-ph"></i></span>
+            <span>Financeiro</span>
+            <span class="nav-caret" x-text="finOpen?'▾':'▸'"></span>
+          </div>
+          <div class="nav-sub" x-show="finOpen">
+            <div class="nav-item nav-subitem" :class="page==='financeiro'&&finTab==='lancamentos'?'active':''" @click="go('financeiro'); finTab='lancamentos'" title="Receitas e despesas, contas a receber e a pagar.">
+              <span class="nav-icon"><i class="ph ph-receipt ic-ph"></i></span><span>Lançamentos</span>
+            </div>
+            <div class="nav-item nav-subitem" :class="page==='financeiro'&&finTab==='fornecedores'?'active':''" @click="go('financeiro'); finTab='fornecedores'" title="Cadastro de fornecedores (quem você paga).">
+              <span class="nav-icon"><i class="ph ph-buildings ic-ph"></i></span><span>Fornecedores</span>
+              <span x-show="fornecedores.length" class="badge" style="margin-left:auto;background:var(--surface-2);color:var(--text);min-width:20px;justify-content:center" x-text="fornecedores.length"></span>
+            </div>
+          </div>
+        </div>
+      </template>
+
       <!-- Demais módulos -->
       <template x-for="item in [
-        {id:'financeiro',ico:'💰',label:'Financeiro',desc:'Receitas e despesas, contas a receber e a pagar, saldo do mês.'},
         {id:'operacional',ico:'🚀',label:'Operacional',desc:'Projetos e entregas da agência, em kanban por status.'},
         {id:'monitoramento',ico:'🩺',label:'Monitoramento',desc:'Saúde de cada cliente: serviços, redes sociais e condição (sinais 🟢🟡🔴).'}]" :key="item.id">
         <div class="nav-item" x-show="podeVer(item.id)" :class="page===item.id?'active':''" @click="go(item.id)" :title="item.desc">
@@ -374,11 +393,7 @@
           <div class="card kpi"><div class="kpi-label">A receber / A pagar</div><div class="kpi-value fs-18"><span class="text-green" x-text="fmtCur(aReceber)"></span> / <span class="text-red" x-text="fmtCur(aPagar)"></span></div></div>
         </div>
 
-        <!-- Abas: Lançamentos | Fornecedores -->
-        <div class="fichario mb-3">
-          <div class="fichario-tab" :class="finTab==='lancamentos'?'active':''" @click="finTab='lancamentos'"><i class="ph ph-wallet ic-ph"></i> Lançamentos</div>
-          <div class="fichario-tab" :class="finTab==='fornecedores'?'active':''" @click="finTab='fornecedores'"><i class="ph ph-buildings ic-ph"></i> Fornecedores <span x-show="fornecedores.length" class="badge" style="margin-left:6px;background:var(--surface-2);min-width:18px;justify-content:center" x-text="fornecedores.length"></span></div>
-        </div>
+        <!-- Navegação Lançamentos/Fornecedores agora é submenu da barra (grupo Financeiro) -->
 
         <!-- ── LANÇAMENTOS ── -->
         <div x-show="finTab==='lancamentos'">
@@ -1949,6 +1964,6 @@
 </div>
 
 <script src="js/brand.js?v=5"></script>
-<script src="js/app.js?v=71"></script>
+<script src="js/app.js?v=72"></script>
 </body>
 </html>
