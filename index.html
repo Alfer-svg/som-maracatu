@@ -398,13 +398,13 @@
         <template x-if="contracts.length===0"><div class="card empty">Nenhum contrato ainda. Clique em “+ Contrato”, ou gere um a partir de um orçamento aprovado.</div></template>
         <div class="card" x-show="contracts.length">
           <table class="table">
-            <thead><tr><th>Número</th><th>Cliente</th><th>Objeto</th><th>Início</th><th>Vigência</th><th>Valor</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Número</th><th>Cliente</th><th>Projeto</th><th>Início</th><th>Vigência</th><th>Valor</th><th>Status</th><th></th></tr></thead>
             <tbody>
               <template x-for="c in contratosFiltrados" :key="c.id">
                 <tr>
                   <td class="fw-700" x-text="c.numero||'—'"></td>
                   <td x-text="c.cliente||'—'"></td>
-                  <td class="fs-12 text-2" x-text="c.objeto||'—'"></td>
+                  <td class="fs-12 text-2" :title="c.objeto||''" x-text="c.projeto || (c.servicos&&c.servicos[0]&&c.servicos[0].nome) || '—'"></td>
                   <td class="fs-12 text-2" x-text="fmtDate(c.inicio)"></td>
                   <td class="fs-12 text-2" x-text="(+c.meses?c.meses+' meses':'—')+(contrFim(c)?(' · até '+fmtDate(contrFim(c))):'')"></td>
                   <td class="fw-700" x-text="fmtCur(c.valor)+(c.periodicidade==='Mensal'?'/mês':'')"></td>
