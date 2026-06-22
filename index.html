@@ -1416,7 +1416,7 @@
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Descrição * <span class="hq" title="Do que se trata — ex.: 'Mensalidade junho — Studyo'.">?</span></label><input class="form-input" x-model="editing.descricao"></div>
       <div class="form-group"><label class="form-label">Categoria <span class="hq" title="Agrupa os lançamentos nos relatórios (ex.: Mensalidade, Ferramentas, Mídia).">?</span></label><select class="form-select" x-model="editing.categoria"><template x-for="c in FIN_CATEGORIAS"><option x-text="c"></option></template></select></div>
       <!-- Receita → Cliente; Despesa → Fornecedor (caixa de seleção) -->
-      <div class="form-group" x-show="editing.tipo==='receita'"><label class="form-label">Cliente <span class="hq" title="Quem vai pagar esta receita.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group" x-show="editing.tipo==='receita'"><label class="form-label">Cliente <span class="hq" title="Quem vai pagar esta receita.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list"><datalist id="cli-list"><template x-for="c in clientesLista"><option :value="c.empresa"></option></template></datalist></div>
       <div class="form-group" x-show="editing.tipo==='despesa'">
         <label class="form-label">Fornecedor <span class="hq" title="Para quem você paga esta despesa.">?</span></label>
         <select class="form-select" x-model="editing.fornecedor">
@@ -1597,7 +1597,7 @@
       <div class="grid grid-2" style="gap:14px">
         <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
         <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clientesLista"><option :value="c.empresa"></option></template></datalist></div>
         <div class="form-group"><label class="form-label">Projeto <span class="hq" title="Tipo/nome do projeto (ex.: Gestão + Tráfego).">?</span></label>
           <select class="form-select" x-model="projetoSel" @change="if(projetoSel!=='Outros'){editing.projeto=projetoSel}else if(PROJETO_OPCOES.includes(editing.projeto)){editing.projeto=''}">
             <option value="" disabled>Selecione…</option>
@@ -1765,7 +1765,7 @@
       <div class="grid grid-2" style="gap:14px">
         <div class="form-group"><label class="form-label">Número <span class="hq" title="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
         <div class="form-group"><label class="form-label">Status <span class="hq" title="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in CONTR_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente (CONTRATANTE) <span class="hq" title="Cliente que está contratando (CONTRATANTE).">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Cliente (CONTRATANTE) <span class="hq" title="Cliente que está contratando (CONTRATANTE).">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-ct"><datalist id="cli-ct"><template x-for="c in clientesLista"><option :value="c.empresa"></option></template></datalist></div>
         <div class="form-group"><label class="form-label">CNPJ / CPF <span class="hq" title="CNPJ (empresa) ou CPF (pessoa).">?</span></label><input class="form-input" x-model="editing.documento"></div>
         <div class="form-group" style="grid-column:1/-1"><label class="form-label">Endereço da CONTRATANTE <span class="hq" title="Endereço completo do cliente.">?</span></label><input class="form-input" x-model="editing.endereco"></div>
         <div class="form-group"><label class="form-label">Representante <span class="hq" title="Quem representa o cliente na assinatura.">?</span></label><input class="form-input" x-model="editing.representante"></div>
@@ -1835,7 +1835,7 @@
         <div class="form-group"><label class="form-label">Cliente * <span class="hq" title="Cliente vinculado (obrigatório).">?</span></label>
           <select class="form-select" x-model="progForm.cliente">
             <option value="">— escolher cliente —</option>
-            <template x-for="c in clients" :key="c.id"><option :value="c.empresa" x-text="c.empresa"></option></template>
+            <template x-for="c in clientesLista" :key="c.id"><option :value="c.empresa" x-text="c.empresa"></option></template>
           </select>
         </div>
         <div class="form-group"><label class="form-label">Responsável * <span class="hq" title="Pessoa responsável (obrigatório).">?</span></label>
@@ -2171,7 +2171,7 @@
         </div>
       </div>
       <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do projeto * <span class="hq" title="Nome do projeto/tarefa (obrigatório).">?</span></label><input class="form-input" x-model="editing.nome"></div>
-      <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clients"><option :value="c.empresa"></option></template></datalist></div>
+      <div class="form-group"><label class="form-label">Cliente <span class="hq" title="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" list="cli-list2"><datalist id="cli-list2"><template x-for="c in clientesLista"><option :value="c.empresa"></option></template></datalist></div>
       <div class="form-group"><label class="form-label">Serviço <span class="hq" title="Serviço relacionado.">?</span></label><select class="form-select" x-model="editing.servico"><template x-for="s in SERVICOS"><option x-text="s"></option></template></select></div>
       <div class="form-group"><label class="form-label">Responsável <span class="hq" title="Pessoa responsável pelo projeto.">?</span></label>
         <select class="form-select" x-model="editing.responsavel">
@@ -2379,6 +2379,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=121"></script>
+<script src="js/app.js?v=122"></script>
 </body>
 </html>

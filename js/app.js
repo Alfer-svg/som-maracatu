@@ -812,6 +812,8 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         .filter(c => !q || (c.empresa + ' ' + (c.razaoSocial || '') + ' ' + (c.contato || '')).toLowerCase().includes(q));
     },
     get clientesArquivadosCount() { return this.clients.filter(c => c.status === 'Inativo').length; },
+    // Lista de clientes pros dropdowns/datalists dos formulários — só ATIVOS (não Inativo).
+    get clientesLista() { return this.clients.filter(c => (c.status || 'Ativo') !== 'Inativo').sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
     ativarCliente(c) { c.status = 'Ativo'; return this.persistirCliente(c); },
     arquivarCliente(c) { c.status = 'Inativo'; return this.persistirCliente(c); },
     async puxarDoSite() {
