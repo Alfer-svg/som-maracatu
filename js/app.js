@@ -301,7 +301,7 @@ document.addEventListener('alpine:init', () => {
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
     TRELLO_LABELS, dragId: null, dropCol: null, // arrastar cards entre listas (estilo Trello)
-    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, novoItemCheck: '', // card-detalhe Trello
+    cardModal: false, cardRef: null, labelNames: {}, labelEdit: false, labelDrop: false, labelDropProj: false, membroDrop: false, novoItemCheck: '', // card-detalhe Trello
     novoComentario: '', novoAnexoNome: '', novoAnexoUrl: '', // comentários + anexos do card
     cloudCfg: { cloud: '', preset: '' }, uploadando: false, // storage de arquivos (Cloudinary)
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
@@ -1583,6 +1583,7 @@ ${this._docFoot()}
     mostrarToast(msg) { this.toastMsg = msg; clearTimeout(this._toastT); this._toastT = setTimeout(() => { this.toastMsg = ''; }, 8000); },
     toggleLabelCard(key) { const a = this.cardRef.labels; const i = a.indexOf(key); if (i >= 0) a.splice(i, 1); else a.push(key); this.salvarCard(); },
     toggleMembro(nome) { const a = this.cardRef.membros; const i = a.indexOf(nome); if (i >= 0) a.splice(i, 1); else a.push(nome); this.salvarCard(); },
+    get equipeForaDoCard() { const ja = (this.cardRef && this.cardRef.membros) || []; return this.equipe.filter(m => !ja.includes(m.nome)); }, // quem ainda NÃO está no projeto
     addItemCheck() { const t = (this.novoItemCheck || '').trim(); if (!t) return; this.cardRef.checklist.push({ id: MD.uid(), texto: t, feito: false }); this.novoItemCheck = ''; this.salvarCard(); },
     toggleItemCheck(it) { it.feito = !it.feito; this.salvarCard(); },
     removeItemCheck(id) { this.cardRef.checklist = this.cardRef.checklist.filter(x => x.id !== id); this.salvarCard(); },

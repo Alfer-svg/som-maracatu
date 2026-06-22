@@ -2084,13 +2084,28 @@
       <div class="tl-section">
         <div class="tl-section-label">Membros</div>
         <div class="flex gap-2 items-center" style="flex-wrap:wrap">
-          <template x-for="m in equipe" :key="m.id">
-            <div @click="toggleMembro(m.nome)" class="flex items-center gap-2" style="cursor:pointer;padding:4px 8px 4px 4px;border-radius:20px;border:1px solid var(--border)" :style="(cardRef.membros||[]).includes(m.nome)?'background:'+papelInfo(m.papel).bg:''">
-              <span class="tl-avatar" style="width:22px;height:22px" :style="m.foto?('background-image:url('+m.foto+')'):('background:'+papelInfo(m.papel).bg+';color:'+papelInfo(m.papel).cor)" x-text="m.foto?'':iniciais(m.nome)"></span>
-              <span class="fs-12 fw-600" x-text="m.nome"></span>
-              <span x-show="(cardRef.membros||[]).includes(m.nome)" style="color:var(--green);font-weight:800">✓</span>
+          <!-- já no projeto (clica pra remover) -->
+          <template x-for="nome in (cardRef.membros||[])" :key="nome">
+            <div @click="toggleMembro(nome)" class="flex items-center gap-2" style="cursor:pointer;padding:4px 8px 4px 4px;border-radius:20px;border:1px solid var(--border);background:var(--accent-soft)" title="Remover do projeto">
+              <span class="tl-avatar" style="width:22px;height:22px" :style="fotoDe(nome)?('background-image:url('+fotoDe(nome)+')'):('background:'+avatarBg(nome)+';color:'+avatarFg(nome))" x-text="fotoDe(nome)?'':iniciais(nome)"></span>
+              <span class="fs-12 fw-600" x-text="nome"></span>
+              <span style="color:#dc2626;font-weight:800">✕</span>
             </div>
           </template>
+          <!-- dropdown: só quem AINDA NÃO está no projeto -->
+          <div style="position:relative" @click.outside="membroDrop=false">
+            <button type="button" class="btn btn-ghost btn-sm" @click="membroDrop=!membroDrop" :disabled="!equipeForaDoCard.length"><i class="ph ph-plus ic-ph"></i> Adicionar membro ▾</button>
+            <div x-show="membroDrop" x-cloak class="lbl-drop" style="min-width:210px">
+              <div class="text-3 fs-12 fw-700" style="margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Adicionar ao projeto</div>
+              <template x-if="!equipeForaDoCard.length"><div class="text-3 fs-12" style="padding:4px">Todos já estão no projeto.</div></template>
+              <template x-for="m in equipeForaDoCard" :key="m.id">
+                <div class="flex items-center gap-2 lbl-row-plain" style="cursor:pointer;padding:7px 8px;border-radius:8px" @click="toggleMembro(m.nome); membroDrop=false">
+                  <span class="tl-avatar" style="width:22px;height:22px" :style="m.foto?('background-image:url('+m.foto+')'):('background:'+papelInfo(m.papel).bg+';color:'+papelInfo(m.papel).cor)" x-text="m.foto?'':iniciais(m.nome)"></span>
+                  <span class="fs-13 fw-600" x-text="m.nome"></span>
+                </div>
+              </template>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2462,7 +2477,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=128"></script>
+<script src="js/app.js?v=129"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
