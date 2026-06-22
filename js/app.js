@@ -620,7 +620,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       catch (e) { alert(e.message); }
     },
     // ── Onboardings recebidos do site ──
-    async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } },
+    async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } this.autoConverterOnboardings(); },
     verOnboarding(o) { this.onbSel = o; this.onbModal = true; },
     onbLinhas(o) {
       const d = (o && o.dados) || {}; const out = []; const add = (l, v) => { if (v != null && String(v).trim()) out.push({ label: l, v: String(v) }); };
@@ -630,7 +630,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const a = (d.briefing && d.briefing.ativos) || {}; add('Logo', a.logo); add('Manual de marca', a.manual); add('Drive de mídia', a.drive);
       return out;
     },
-    async converterOnboarding(o) {
+    _dadosDoOnboarding(o) {
       const d = o.dados || {};
       const a = d.answers || null; // onboarding novo (maracatumktdigital.com): respostas por chave data-q
       let dados;
@@ -672,12 +672,42 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
         };
       }
+      return dados;
+    },
+    async converterOnboarding(o) {
+      const dados = this._dadosDoOnboarding(o);
       try {
         await this.api('POST', '/clientes', { empresa: o.empresa, dados });
         await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
         this.onbModal = false; await this.carregarClientes(); await this.carregarOnboardings();
         alert('Cliente "' + o.empresa + '" criado a partir do onboarding. ✅');
       } catch (e) { alert(e.message || 'Falha ao converter.'); }
+    },
+    // Auto-converte onboardings pendentes em clientes (roda ao abrir o SOM). Trava anti-duplicado por nome; mantém o registro (status convertido) como histórico.
+    async autoConverterOnboardings() {
+      if (this._autoConvRodando) return;
+      if (!this.ehAdmin && !this.podeVer('comercial')) return; // só quem cria cliente
+      const pend = (this.onboardings || []).filter(o => o.status === 'pendente');
+      if (!pend.length) return;
+      this._autoConvRodando = true;
+      try {
+        if (!this.clients || !this.clients.length) { try { await this.carregarClientes(); } catch {} }
+        const nomes = new Set((this.clients || []).map(c => (c.empresa || '').trim().toLowerCase()).filter(Boolean));
+        let criados = 0;
+        for (const o of pend) {
+          const nome = (o.empresa || '').trim().toLowerCase();
+          try {
+            if (nome && !nomes.has(nome)) { // novo → cria cliente
+              await this.api('POST', '/clientes', { empresa: o.empresa, dados: this._dadosDoOnboarding(o) });
+              nomes.add(nome); criados++;
+            }
+            // duplicado OU já criado → marca convertido pra sair da fila (registro fica como histórico)
+            await this.api('POST', '/onboarding/admin/' + o.id + '/convertido', {});
+          } catch (e) { /* deixa na fila pra tentar no próximo carregamento */ }
+        }
+        if (criados) await this.carregarClientes();
+        try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch {}
+      } finally { this._autoConvRodando = false; }
     },
     async arquivarOnboarding(o) {
       if (!confirm('Arquivar o onboarding de "' + o.empresa + '"? (sai da fila, sem virar cliente)')) return;
