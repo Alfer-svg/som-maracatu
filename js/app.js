@@ -1672,7 +1672,7 @@ ${this._docFoot()}
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
     // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
     TIPOS_POST,
-    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', descricao: '', legenda: '', criativo: '' }; },
+    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
       // Sugere SEMPRE a próxima semana (seg→dom), editável.
@@ -1693,7 +1693,7 @@ ${this._docFoot()}
         for (const po of posts) {
           await this.salvarProjetoApi({
             id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
-            responsavel: f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
+            responsavel: po.responsavel || f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
             isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda, criativo: po.criativo,
           });
         }

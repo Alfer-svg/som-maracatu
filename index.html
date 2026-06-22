@@ -1863,7 +1863,7 @@
             <template x-for="c in clientesLista" :key="c.id"><option :value="c.empresa" x-text="c.empresa"></option></template>
           </select>
         </div>
-        <div class="form-group"><label class="form-label">Responsável * <span class="hq" data-tip="Pessoa responsável (obrigatório).">?</span></label>
+        <div class="form-group"><label class="form-label">Responsável padrão * <span class="hq" data-tip="Aplicado aos posts; dá pra trocar em cada post abaixo.">?</span></label>
           <select class="form-select" x-model="progForm.responsavel">
             <option value="">— escolher colaborador —</option>
             <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
@@ -1881,11 +1881,15 @@
       <div style="max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:10px">
         <template x-for="(po,i) in progPosts" :key="i">
           <div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px">
-            <div class="flex items-center gap-2 mb-2">
+            <div class="flex items-center gap-2 mb-2" style="flex-wrap:wrap">
               <span class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="'Post '+(i+1)"></span>
               <input class="form-input" type="date" style="width:150px" x-model="po.data">
               <select class="form-select" style="width:120px" x-model="po.tipo"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select>
-              <input class="form-input" style="flex:1" x-model="po.tema" placeholder="Tema (ex: São João)">
+              <input class="form-input" style="flex:1;min-width:120px" x-model="po.tema" placeholder="Tema (ex: São João)">
+              <select class="form-select" style="width:150px" x-model="po.responsavel" title="Responsável deste post (vazio = usa o padrão)">
+                <option value="">Responsável (padrão)</option>
+                <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
+              </select>
               <button type="button" class="btn btn-ghost btn-sm" @click="removePostProg(i)" title="Remover post">🗑</button>
             </div>
             <div style="margin-bottom:8px">
@@ -2088,6 +2092,16 @@
             </div>
           </template>
         </div>
+      </div>
+
+      <!-- Responsável (trocável a qualquer momento) -->
+      <div class="tl-section">
+        <div class="tl-section-label">Responsável</div>
+        <select class="form-select" x-model="cardRef.responsavel" @change="salvarCard()">
+          <option value="">— sem responsável —</option>
+          <template x-for="m in equipe" :key="m.id"><option :value="m.nome" x-text="m.nome"></option></template>
+          <template x-if="cardRef.responsavel && !equipe.some(m=>m.nome===cardRef.responsavel)"><option :value="cardRef.responsavel" x-text="cardRef.responsavel"></option></template>
+        </select>
       </div>
 
       <!-- Data + (post) tipo -->
@@ -2448,7 +2462,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=126"></script>
+<script src="js/app.js?v=127"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
