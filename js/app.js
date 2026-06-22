@@ -213,7 +213,7 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 // Documentos do cliente (links — contrato, proposta, etc.). Salvo em dados.documentos.
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
-const TIPOS_POST = ['Feed', 'Carrossel', 'Story', 'Reels', 'Vídeo'];
+const TIPOS_POST = ['Estático', 'Carrossel', 'Animação', 'Vídeo'];
 
 /* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
 const PAPEIS_INFO = [
@@ -307,7 +307,7 @@ document.addEventListener('alpine:init', () => {
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
     progPosts: [], // posts sendo montados no modal
-    postModal: false, postForm: { id: '', data: '', tipo: 'Feed', tema: '', legenda: '', criativo: '' }, postRef: null,
+    postModal: false, postForm: { id: '', data: '', tipo: 'Estático', tema: '', legenda: '', criativo: '' }, postRef: null,
     _hbStarted: false, // guarda do heartbeat
     relatorio: { linhas: [], porDia: [], de: '', ate: '' }, // relatório de equipe (ponto + produção)
     relPeriodo: 'mes', relDe: '', relAte: '',
@@ -1578,6 +1578,36 @@ ${this._docFoot()}
       const iso = d => d.toISOString().slice(0, 10);
       return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
     },
+    // Próxima semana (seg→dom) — sugestão padrão da programação.
+    get proximaSemana() {
+      const ini = new Date(this.semanaAtual.ini + 'T00:00:00'); ini.setDate(ini.getDate() + 7);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      const iso = d => d.toISOString().slice(0, 10);
+      return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
+    },
+    semanaLabelDe(iniIso) {
+      if (!iniIso) return '';
+      const ini = new Date(iniIso + 'T00:00:00'); if (isNaN(ini.getTime())) return '';
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      return f(ini) + ' a ' + f(fim);
+    },
+    // ── IA (Claude): elabora descrição/legenda a partir do rascunho; guarda a sugestão em _ia_<campo> pra aprovação. ──
+    async gerarIA(obj, campo, tipo) {
+      const base = (obj[campo] || '').trim();
+      if (!base) return alert('Escreva um rascunho no campo primeiro — a IA elabora a partir dele.');
+      obj['_iaLoad_' + campo] = true;
+      try {
+        const r = await this.api('POST', '/ia/elaborar', { tipo, texto: base, cliente: obj.cliente || (this.progForm && this.progForm.cliente) || '', tema: obj.tema || obj.nome || '' });
+        const t = (r && r.texto) || '';
+        if (!t) return alert('A IA não retornou texto. Tente de novo.');
+        obj['_ia_' + campo] = t;
+      } catch (e) { alert('IA: ' + (e.message || 'falha ao gerar')); }
+      finally { obj['_iaLoad_' + campo] = false; }
+    },
+    aprovarIA(obj, campo) { if (obj['_ia_' + campo]) { obj[campo] = obj['_ia_' + campo]; delete obj['_ia_' + campo]; if (obj === this.cardRef) this.salvarCard(); } },
+    descartarIA(obj, campo) { delete obj['_ia_' + campo]; },
     progColaboradores() {
       const q = this.busca.toLowerCase();
       const nomes = this.equipe.map(m => m.nome);
@@ -1598,10 +1628,11 @@ ${this._docFoot()}
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
     // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
     TIPOS_POST,
-    postVazio() { return { data: this.semanaAtual.ini, tipo: 'Feed', tema: '', legenda: '', criativo: '' }; },
+    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', descricao: '', legenda: '', criativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
-      this.progForm = { cliente: '', responsavel: '' };
+      // Sugere SEMPRE a próxima semana (seg→dom), editável.
+      this.progForm = { cliente: '', responsavel: '', semanaIni: this.proximaSemana.ini };
       this.progPosts = [this.postVazio(), this.postVazio(), this.postVazio()];
       this.progModal = true;
     },
@@ -1618,8 +1649,8 @@ ${this._docFoot()}
         for (const po of posts) {
           await this.salvarProjetoApi({
             id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
-            responsavel: f.responsavel, status: 'A Fazer', prazo: po.data || '', progresso: 0, notas: '',
-            isPost: true, tipoPost: po.tipo, tema: po.tema, legenda: po.legenda, criativo: po.criativo,
+            responsavel: f.responsavel, status: 'A Fazer', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
+            isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda, criativo: po.criativo,
           });
         }
         await this.carregarProjetos();
@@ -1628,10 +1659,10 @@ ${this._docFoot()}
     },
     // ── Post individual (ver/editar) ──
     diaSemanaLabel(dataStr) { if (!dataStr) return ''; const d = new Date(dataStr + 'T00:00:00'); if (isNaN(d.getTime())) return ''; const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; return dias[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); },
-    editarPost(p) { this.postRef = p; this.postForm = { id: p.id, data: p.prazo || '', tipo: p.tipoPost || 'Feed', tema: p.tema || p.nome || '', legenda: p.legenda || '', criativo: p.criativo || '' }; this.postModal = true; },
+    editarPost(p) { this.postRef = p; this.postForm = { id: p.id, data: p.prazo || '', tipo: p.tipoPost || 'Estático', tema: p.tema || p.nome || '', descricao: p.descricao || '', legenda: p.legenda || '', criativo: p.criativo || '' }; this.postModal = true; },
     async salvarPost() {
       const f = this.postForm, p = this.postRef; if (!p) return;
-      p.tipoPost = f.tipo; p.tema = f.tema; p.nome = f.tema || p.nome; p.legenda = f.legenda; p.criativo = f.criativo; p.prazo = f.data;
+      p.tipoPost = f.tipo; p.tema = f.tema; p.nome = f.tema || p.nome; p.descricao = f.descricao; p.legenda = f.legenda; p.criativo = f.criativo; p.prazo = f.data;
       try { await this.salvarProjetoApi(p); await this.carregarProjetos(); this.postModal = false; }
       catch (e) { alert(e.message || 'Falha ao salvar o post.'); }
     },
@@ -1669,7 +1700,7 @@ ${this._docFoot()}
     async enviarLayoutCliente() {
       if (!this.layoutAtual) return;
       const snap = this.layoutPostsAtual.map(p => ({
-        prazo: p.prazo, tipoPost: p.tipoPost || 'Feed', tema: p.tema || p.nome || '',
+        prazo: p.prazo, tipoPost: p.tipoPost || 'Estático', tema: p.tema || p.nome || '',
         legenda: p.legenda || '', criativo: p.criativo || '', status: p.status || '',
       }));
       if (!snap.length && !confirm('Não há posts nesta semana. Enviar mesmo assim (só o PDF/observações)?')) return;
