@@ -678,7 +678,10 @@
             <template x-for="g in progColaboradores()" :key="g.nome">
               <div class="card" style="padding:0;overflow:hidden">
                 <div class="flex items-center justify-between" style="padding:11px 14px;border-bottom:1px solid var(--border)">
-                  <div class="fw-800 fs-14" x-text="g.nome"></div>
+                  <div>
+                    <div class="fw-800 fs-14" x-text="g.nome"></div>
+                    <div class="text-3 fs-12" x-show="g.projetos.some(p=>p.cliente)" x-text="[...new Set(g.projetos.map(p=>p.cliente).filter(Boolean))].join(' · ')"></div>
+                  </div>
                   <span class="badge" :style="progFeitos(g.projetos)===g.projetos.length?'background:#dcfce7;color:#16a34a':'background:var(--surface-2);color:var(--text-2)'" x-text="progFeitos(g.projetos)+'/'+g.projetos.length+' feitos'"></span>
                 </div>
                 <template x-for="p in progOrdena(g.projetos)" :key="p.id">
