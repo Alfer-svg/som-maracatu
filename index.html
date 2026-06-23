@@ -332,7 +332,7 @@
           <template x-if="clientesFiltrados.length===0"><div class="card empty" x-text="verArquivados ? 'Nenhum cliente arquivado.' : 'Nenhum cliente ativo. Use Ver arquivados pra reativar, ou + Cliente.'"></div></template>
           <div class="card" x-show="clientesFiltrados.length">
             <table class="table">
-              <thead><tr><th>Cliente</th><th>CNPJ</th><th>Serviço</th><th>Mensalidade</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Cliente</th><th>CNPJ</th><th>Serviço</th><th>Mensalidade</th><th>Status</th><th>Cadastro</th><th></th></tr></thead>
               <tbody>
                 <template x-for="c in clientesFiltrados" :key="c.id">
                   <tr>
@@ -341,6 +341,10 @@
                     <td><template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template><span x-show="!clienteServicos(c).length" class="text-3">—</span></td>
                     <td class="fw-700" x-text="fmtCur(c.mensalidade)"></td>
                     <td><span class="badge" :style="c.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="c.status"></span></td>
+                    <td style="min-width:120px"><div class="flex items-center gap-2" :title="completudeCadastro(c).faltam.length ? ('Falta: '+completudeCadastro(c).faltam.join(', ')) : 'Cadastro completo 🎉'">
+                      <span class="fw-700 fs-12" :style="'color:'+corScore(completudeCadastro(c).pct)" x-text="completudeCadastro(c).pct+'%'"></span>
+                      <div class="progress" style="flex:1;min-width:48px"><div :style="'width:'+completudeCadastro(c).pct+'%;background:'+corScore(completudeCadastro(c).pct)"></div></div>
+                    </div></td>
                     <td><div class="flex gap-2" style="justify-content:flex-end">
                       <button x-show="verArquivados" class="btn btn-sm" @click="ativarCliente(c)" title="Ativar cliente" style="background:#dcfce7;color:#16a34a;font-weight:600"><i class="ph ph-check-circle ic-ph"></i> Ativar</button>
                       <button x-show="!verArquivados" class="btn btn-icon btn-ghost btn-sm" @click="arquivarCliente(c)" title="Arquivar (inativar)"><i class="ph ph-archive ic-ph"></i></button>
