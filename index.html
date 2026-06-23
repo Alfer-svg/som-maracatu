@@ -924,8 +924,10 @@
               <template x-for="r in redesDoCliente(monitorCliente)" :key="r.id">
                 <div class="rede-row">
                   <span class="rede-nome"><img :src="redeIcon(r)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="r.label"><span x-text="r.label"></span></span>
-                  <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,monitorCliente.redes[r.id].score||0)+'%;background:'+corScore(monitorCliente.redes[r.id].score)"></div></div>
-                  <span class="rede-pct" :style="'color:'+corScore(monitorCliente.redes[r.id].score)" x-text="(monitorCliente.redes[r.id].score||0)+'%'"></span>
+                  <!-- Google Meu Negócio: nota (0–5) + nº de avaliações, não barra de % -->
+                  <span x-show="r.id==='gmn'" style="flex:1;font-weight:800;color:#b45309"><span x-text="(monitorCliente.redes[r.id].score ? '★ '+monitorCliente.redes[r.id].score : '★ —')"></span> <span class="text-3" style="font-weight:500" x-text="'· '+(monitorCliente.redes[r.id].avaliacoes||0)+' avaliações'"></span></span>
+                  <div class="progress" style="flex:1" x-show="r.id!=='gmn'"><div :style="'width:'+Math.min(100,monitorCliente.redes[r.id].score||0)+'%;background:'+corScore(monitorCliente.redes[r.id].score)"></div></div>
+                  <span class="rede-pct" x-show="r.id!=='gmn'" :style="'color:'+corScore(monitorCliente.redes[r.id].score)" x-text="(monitorCliente.redes[r.id].score||0)+'%'"></span>
                   <a x-show="monitorCliente.redes[r.id].url" :href="monitorCliente.redes[r.id].url" target="_blank" style="margin-left:8px;color:var(--blue);font-weight:700" title="abrir perfil">↗</a>
                 </div>
               </template>
@@ -2480,7 +2482,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=133"></script>
+<script src="js/app.js?v=134"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
