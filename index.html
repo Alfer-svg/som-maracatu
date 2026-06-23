@@ -894,6 +894,13 @@
                     <div class="fs-12 text-3" style="text-transform:uppercase;letter-spacing:.5px;font-weight:700">Saúde do cliente</div>
                     <div class="fw-800 fs-18" x-text="saudeCliente(monitorCliente).score!=null ? (saudeCliente(monitorCliente).score+'%') : 'sem dados'"></div>
                   </div>
+                  <div style="min-width:120px" :title="completudeCadastro(monitorCliente).faltam.length ? ('Falta preencher: '+completudeCadastro(monitorCliente).faltam.join(', ')) : 'Cadastro completo 🎉'">
+                    <div class="fs-12 text-3" style="text-transform:uppercase;letter-spacing:.5px;font-weight:700">Cadastro preenchido</div>
+                    <div class="flex items-center gap-2">
+                      <div class="fw-800 fs-18" :style="'color:'+corScore(completudeCadastro(monitorCliente).pct)" x-text="completudeCadastro(monitorCliente).pct+'%'"></div>
+                      <div class="progress" style="flex:1;min-width:60px"><div :style="'width:'+completudeCadastro(monitorCliente).pct+'%;background:'+corScore(completudeCadastro(monitorCliente).pct)"></div></div>
+                    </div>
+                  </div>
                   <div class="flex gap-2" style="flex-wrap:wrap;margin-left:auto">
                     <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="redesDoCliente(monitorCliente).length"><i class="ph ph-device-mobile ic-ph"></i> <span x-text="mediaRedes(monitorCliente)+'%'"></span></span>
                     <span class="badge" style="background:var(--surface);border:1px solid var(--border)" x-show="monitorCliente.site&&monitorCliente.site.url"><i class="ph ph-globe ic-ph"></i> <span x-text="Math.round((((monitorCliente.site.seo)||0)+((monitorCliente.site.sgo)||0))/2)+'%'"></span></span>
@@ -2509,7 +2516,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=144"></script>
+<script src="js/app.js?v=145"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

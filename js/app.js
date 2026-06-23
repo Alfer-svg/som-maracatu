@@ -1019,6 +1019,31 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       const score = partes.length ? Math.round(partes.reduce((a, b) => a + b, 0) / partes.length) : null;
       return { score, sinal: score == null ? '⚪' : (score >= 70 ? '🟢' : score >= 40 ? '🟡' : '🔴') };
     },
+    // Quanto do cadastro do cliente está preenchido (%) — pros campos que importam no monitoramento.
+    completudeCadastro(c) {
+      if (!c) return { pct: 0, faltam: [] };
+      const has = (v) => v != null && String(v).trim() !== '';
+      const resp = c.responsaveis || [], b = c.briefing || {}, cri = b.criativo || {};
+      const temRede = (k) => !!(c.redes && c.redes[k] && has(c.redes[k].url));
+      const checks = [
+        ['CNPJ', has(c.cnpj)],
+        ['Razão social', has(c.razaoSocial) || has(c.empresa)],
+        ['Cidade/UF', has(c.cidade) && has(c.uf)],
+        ['Endereço', has(c.cep) && has(c.logradouro)],
+        ['E-mail', has(c.email) || resp.some((r) => has(r.email))],
+        ['WhatsApp', has(c.whatsapp) || has(c.telefone) || resp.some((r) => has(r.whatsapp))],
+        ['Responsável', has(c.contato) || resp.length > 0],
+        ['Site', has(c.site && c.site.url)],
+        ['Redes sociais', !!(c.redes && Object.keys(c.redes).some((k) => k !== 'gmn' && temRede(k)))],
+        ['Google Meu Negócio', !!(c.gmn && c.gmn.rating != null) || temRede('gmn')],
+        ['Serviços', (c.servicos || []).length > 0],
+        ['Objetivos', (c.objetivos || []).length > 0],
+        ['Mensalidade', Number(c.mensalidade) > 0],
+        ['Briefing', has(b.publico) || has(b.posicionamento) || has(cri.linguagem) || has(b.slogan) || has(c.slogan)],
+      ];
+      const ok = checks.filter((x) => x[1]).length;
+      return { pct: Math.round((ok / checks.length) * 100), faltam: checks.filter((x) => !x[1]).map((x) => x[0]) };
+    },
     saudeAlertas(c) {
       const a = [];
       if (!(c.responsaveis || []).length) a.push('Sem responsáveis');
