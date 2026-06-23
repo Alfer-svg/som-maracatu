@@ -223,6 +223,7 @@ const PAPEIS_INFO = [
   { id: 'gestor', nome: 'Gestor', desc: 'Tudo, menos gerenciar a equipe', cor: '#2563eb', bg: '#dbeafe' },
   { id: 'comercial', nome: 'Comercial', desc: 'Vendas: CRM, clientes, orçamentos e contratos (sem Financeiro nem Operacional)', cor: '#0d9488', bg: '#ccfbf1' },
   { id: 'colaborador', nome: 'Colaborador', desc: 'Operacional e Monitoramento (sem CRM, Financeiro nem senhas)', cor: '#16a34a', bg: '#dcfce7' },
+  { id: 'colaborador2', nome: 'Colaborador 2', desc: 'Só o Operacional — e só os trabalhos em que está envolvido', cor: '#0891b2', bg: '#cffafe' },
   { id: 'financeiro', nome: 'Financeiro', desc: 'Financeiro + Dashboard', cor: '#d97706', bg: '#fef3c7' },
 ];
 // '*' = todas as páginas. Demais: lista de páginas liberadas.
@@ -231,6 +232,7 @@ const PERMISSOES = {
   gestor: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding'],
   comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding'],
   colaborador: ['dashboard', 'comercial', 'operacional', 'monitoramento', 'onboarding'],
+  colaborador2: ['operacional'], // só o Operacional — e dentro dele, só os trabalhos em que está envolvido (filtrado em carregarProjetos)
   financeiro: ['dashboard', 'comercial', 'orcamentos', 'contratos', 'financeiro'],
 };
 
@@ -420,7 +422,18 @@ document.addEventListener('alpine:init', () => {
     },
     // ── CRM (leads) e Operacional (projetos): agora no backend ──
     async carregarLeads() { try { const r = await this.api('GET', '/leads'); this.leads = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) })); } catch { } },
-    async carregarProjetos() { try { const r = await this.api('GET', '/projetos'); this.projects = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) })); } catch { } },
+    async carregarProjetos() {
+      try {
+        const r = await this.api('GET', '/projetos');
+        let lista = (r || []).map(x => ({ id: x.id, ...(x.dados || {}) }));
+        // Colaborador 2 só enxerga os trabalhos em que está envolvido (responsável ou membro).
+        if (this.papel === 'colaborador2') {
+          const eu = (this.usuario && this.usuario.nome) || '';
+          lista = lista.filter(p => p.responsavel === eu || (Array.isArray(p.membros) && p.membros.includes(eu)));
+        }
+        this.projects = lista;
+      } catch { }
+    },
     async salvarLeadApi(l) { const { id, ...dados } = l; const r = await this.api('POST', '/leads', { id, dados }); if (r && r.id && !id) l.id = r.id; return r; },
     async salvarProjetoApi(p) { const { id, ...dados } = p; const r = await this.api('POST', '/projetos', { id, dados }); if (r && r.id && !id) p.id = r.id; return r; },
     // migração one-time: o 1º navegador com dados locais semeia o backend; os demais usam o backend
