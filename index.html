@@ -340,7 +340,7 @@
                     <td><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.contato||'')+(c.cidade?' · '+c.cidade:'')"></div></td>
                     <td class="fs-12 text-2" x-text="c.cnpj||'—'"></td>
                     <td><template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template><span x-show="!clienteServicos(c).length" class="text-3">—</span></td>
-                    <td class="fw-700" x-text="fmtCur(c.mensalidade)"></td>
+                    <td class="fw-700" x-text="ehAdmin ? fmtCur(c.mensalidade) : 'R$ •••••'" :title="ehAdmin ? '' : 'Mensalidade visível só para o Admin'"></td>
                     <td><span class="badge" :style="c.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="c.status"></span></td>
                     <td style="min-width:120px"><div class="flex items-center gap-2" :title="completudeCadastro(c).faltam.length ? ('Falta: '+completudeCadastro(c).faltam.join(', ')) : 'Cadastro completo 🎉'">
                       <span class="fw-700 fs-12" :style="'color:'+corScore(completudeCadastro(c).pct)" x-text="completudeCadastro(c).pct+'%'"></span>
