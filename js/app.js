@@ -404,13 +404,14 @@ document.addEventListener('alpine:init', () => {
       try {
         const rows = await this.api('GET', '/clientes');
         this.clients = (rows || []).map(r => ({ id: r.id, ...(r.dados || {}), empresa: (r.dados && r.dados.empresa) || r.empresa }));
-        // SEO automático: se algum cliente tem site mas ainda não foi medido (sem
-        // site.lh), dispara o backfill no backend (PageSpeed) UMA vez por sessão e
-        // recarrega ~90s depois pra mostrar as notas. Sem clique nenhum.
-        const pendSeo = this.clients.some(c => c.site && c.site.url && !(c.site && c.site.lh));
-        if (pendSeo && !this._seoBackfill) {
-          this._seoBackfill = true;
-          this.api('POST', '/clientes/avaliar-seo-pendentes', {}).catch(() => {});
+        // Enriquecimento automático do monitoramento: se algum cliente tem site mas
+        // ainda não foi enriquecido (sem __enriquecidoEm), dispara o backfill no
+        // backend (redes/domínio/hospedagem/SEO/contato) UMA vez por sessão e recarrega
+        // ~90s depois pra mostrar os campos preenchidos. Sem clique nenhum.
+        const pendEnriq = this.clients.some(c => c.site && c.site.url && !c.__enriquecidoEm);
+        if (pendEnriq && !this._enriqBackfill) {
+          this._enriqBackfill = true;
+          this.api('POST', '/clientes/enriquecer-pendentes', {}).catch(() => {});
           setTimeout(() => { this.carregarClientes(); }, 90000);
         }
       } catch (e) { console.warn('carregarClientes:', e.message); }
