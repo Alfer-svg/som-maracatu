@@ -216,6 +216,7 @@
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
       <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro' && papel!=='colaborador2'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
+      <button class="btn btn-ghost" x-show="page==='operacional' && opTab==='quadro'" @click="novoCriativo()" title="Cria um card de criativo (designer) direto no quadro — igual ao da programação"><i class="ph ph-image ic-ph"></i> + Criativo</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
     </header>
 
@@ -2543,7 +2544,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=147"></script>
+<script src="js/app.js?v=148"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -1971,6 +1971,20 @@ ${this._docFoot()}
     imprimirLayout() { window.print(); },
     novoProjeto(status) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; const col = status || (this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer'; this.editing = { id: '', nome: '', cliente: '', servico: 'Gestão de Redes Sociais', responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', progresso: 0, notas: '', labels: [] }; this.modal = 'project'; },
     editarProjeto(p) { if (!this.equipe.length) this.carregarEquipe(); this.modeloSel = ''; this.editing = { ...p, labels: Array.isArray(p.labels) ? [...p.labels] : [] }; this.modal = 'project'; },
+    // + Criativo: cria um card de criativo (igual ao da programação) direto no quadro e já abre pra preencher.
+    // Sem dropdown de modelo — já é o card de designer (isPost, com tipo/tema/legenda/criativos).
+    async novoCriativo(status) {
+      if (!this.equipe.length) this.carregarEquipe();
+      const col = status || (this.boardAtual && this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer';
+      const novo = {
+        id: '', nome: 'Novo criativo', cliente: '', servico: 'Criação de Conteúdo',
+        responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', prazoEntrega: '', progresso: 0, notas: '',
+        isPost: true, tipoPost: 'Estático', tema: '', descricao: '', legenda: '', criativo: '', criativos: [],
+        labels: [], membros: [], checklist: [],
+      };
+      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
+      catch (e) { alert(e.message || 'Falha ao criar o criativo.'); }
+    },
     async salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');
       const resp = (e.responsavel || '').trim();
