@@ -1538,7 +1538,7 @@
 </div>
 
 <!-- DASHBOARD FINANCEIRO DO CLIENTE -->
-<div class="modal-backdrop" x-show="modal==='finCliente'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='finCliente'" x-cloak>
   <div class="modal" style="max-width:720px" x-data x-show="finClienteResumo">
     <template x-if="finClienteResumo">
       <div>
@@ -1625,7 +1625,7 @@
 </div>
 
 <!-- ACRÉSCIMO / DESCONTO -->
-<div class="modal-backdrop" x-show="modal==='ajuste'" @click.self="modal=null" x-cloak>
+<div class="modal-backdrop" x-show="modal==='ajuste'" x-cloak>
   <div class="modal" style="max-width:430px">
     <div class="modal-head"><div class="modal-title"><i class="ph ph-plus-minus ic-ph"></i> Acréscimo / Desconto</div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
     <div class="modal-body">
@@ -1990,7 +1990,7 @@
 </div>
 
 <!-- POST individual (ver/editar) -->
-<div class="modal-backdrop" x-show="postModal" @click.self="postModal=false" x-cloak>
+<div class="modal-backdrop" x-show="postModal" x-cloak>
   <div class="modal" style="max-width:560px">
     <div class="modal-head"><div class="modal-title">Post — <span x-text="postRef&&postRef.cliente"></span></div><button class="btn btn-icon btn-ghost" @click="postModal=false">✕</button></div>
     <div class="modal-body">
@@ -2018,7 +2018,7 @@
 </div>
 
 <!-- LAYOUT da semana (preview + anexo + aprovação) -->
-<div class="modal-backdrop" x-show="layoutModal" @click.self="layoutModal=false" x-cloak>
+<div class="modal-backdrop" x-show="layoutModal" x-cloak>
   <div class="modal" style="max-width:760px" x-show="layoutAtual">
     <div class="modal-head">
       <div class="modal-title">Layout da semana</div>
@@ -2075,7 +2075,7 @@
 </div>
 
 <!-- CARD (detalhe estilo Trello: etiquetas, membros, data, descrição, checklist) -->
-<div class="modal-backdrop" x-show="cardModal" @click.self="fecharCard()" x-cloak>
+<div class="modal-backdrop" x-show="cardModal" x-cloak>
   <div class="modal" style="max-width:620px" x-show="cardRef">
     <div class="modal-head">
       <input class="form-input" style="font-weight:800;font-size:16px;border:none;padding:4px 0" x-model="cardRef.nome" @change="if(cardRef.isPost) cardRef.tema=cardRef.nome; salvarCard()">
@@ -2375,7 +2375,7 @@
 </div>
 
 <!-- ACESSO (Configurações › Usuários) — login + perfil + senha -->
-<div class="modal-backdrop" x-show="pessoaModal" @click.self="pessoaModal=false" x-cloak>
+<div class="modal-backdrop" x-show="pessoaModal" x-cloak>
   <div class="modal" style="max-width:460px">
     <div class="modal-head"><div class="modal-title" x-text="pessoaForm.id?'Editar acesso':'Novo usuário'"></div><button class="btn btn-icon btn-ghost" @click="pessoaModal=false">✕</button></div>
     <div class="modal-body">
@@ -2407,7 +2407,7 @@
 </div>
 
 <!-- FICHA DE REGISTRO (Pessoal) — RH -->
-<div class="modal-backdrop" x-show="fichaModal" @click.self="fichaModal=false" x-cloak>
+<div class="modal-backdrop" x-show="fichaModal" x-cloak>
   <div class="modal" style="max-width:640px">
     <div class="modal-head"><div class="modal-title">Ficha de registro</div><button class="btn btn-icon btn-ghost" @click="fichaModal=false">✕</button></div>
     <div class="modal-body">
@@ -2480,7 +2480,7 @@
 </div>
 
 <!-- TROCAR SENHA -->
-<div class="modal-backdrop" x-show="senhaModal" @click.self="senhaModal=false" x-cloak>
+<div class="modal-backdrop" x-show="senhaModal" x-cloak>
   <div class="modal" style="max-width:380px">
     <div class="modal-head"><div class="modal-title">Trocar senha</div><button class="btn btn-icon btn-ghost" @click="senhaModal=false">✕</button></div>
     <div class="modal-body">
@@ -2493,7 +2493,7 @@
 </div>
 
 <!-- ACESSO (cofre) -->
-<div class="modal-backdrop" x-show="credModal" @click.self="credModal=false" x-cloak>
+<div class="modal-backdrop" x-show="credModal" x-cloak>
   <div class="modal" style="max-width:440px">
     <div class="modal-head"><div class="modal-title" x-text="credForm.id?'Editar acesso':'Novo acesso'"></div><button class="btn btn-icon btn-ghost" @click="credModal=false">✕</button></div>
     <div class="modal-body">
@@ -2512,7 +2512,7 @@
 </div>
 
 <!-- SENHA MASTER DO COFRE -->
-<div class="modal-backdrop" x-show="cofreModal" @click.self="cofreModal=null" x-cloak>
+<div class="modal-backdrop" x-show="cofreModal" x-cloak>
   <div class="modal" style="max-width:400px">
     <div class="modal-head">
       <div class="modal-title" x-text="cofreModal==='desbloquear'?'Desbloquear acessos':(cofreModal==='trocar'?'Trocar senha master':'Definir senha master')"></div>
@@ -2533,7 +2533,7 @@
 </div>
 
 <!-- DETALHE DO ONBOARDING -->
-<div class="modal-backdrop" x-show="onbModal" @click.self="onbModal=false" x-cloak>
+<div class="modal-backdrop" x-show="onbModal" x-cloak>
   <div class="modal" style="max-width:540px">
     <div class="modal-head"><div class="modal-title" x-text="onbSel.empresa||''"></div><button class="btn btn-icon btn-ghost" @click="onbModal=false">✕</button></div>
     <div class="modal-body">
