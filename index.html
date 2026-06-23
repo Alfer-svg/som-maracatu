@@ -754,13 +754,20 @@
                         <span class="tl-label" :style="'background:'+labelCor(lb)+';color:'+labelTextCor(lb)" x-text="labelNome(lb)"></span>
                       </template>
                     </div>
-                    <div class="flex items-center gap-2" style="margin-bottom:2px"><span x-show="p.isPost" class="tl-type" x-text="p.tipoPost||'Estático'"></span></div>
+                    <div class="flex items-center gap-2" style="margin-bottom:6px;flex-wrap:wrap" x-show="p.isPost">
+                      <!-- Data do post em DESTAQUE e editável direto no card (clique abre o calendário) -->
+                      <label @click.stop style="position:relative;display:inline-flex;align-items:center;gap:6px;background:#FEF3E2;color:#92600A;border:1px solid #FCE7A8;border-radius:8px;padding:4px 9px;font-weight:800;font-size:12.5px;cursor:pointer" title="Data do post — clique para alterar">
+                        <i class="ph ph-calendar-blank"></i><span x-text="p.prazo ? diaSemanaLabel(p.prazo) : 'Definir data'"></span>
+                        <input type="date" :value="p.prazo||''" @click.stop @change="alterarPrazo(p, $event.target.value)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
+                      </label>
+                      <span class="tl-type" x-text="p.tipoPost||'Estático'"></span>
+                    </div>
                     <div class="fs-13 fw-700" style="line-height:1.3" x-text="p.tema||p.nome"></div>
                     <div class="text-3 fs-12" style="margin-top:2px" x-show="p.cliente" x-text="p.cliente"></div>
                     <!-- rodapé discreto (metadados estilo Trello) -->
                     <div class="tl-meta">
                       <span class="m" x-show="(p.notas||'').trim()" title="Tem descrição"><i class="ph ph-text-align-left"></i></span>
-                      <span class="m" x-show="p.prazo" :style="prazoCor(p)?('color:'+prazoCor(p)+';font-weight:700'):''"><i class="ph ph-clock"></i> <span x-text="fmtDate(p.prazo)"></span></span>
+                      <span class="m" x-show="p.prazo && !p.isPost" :style="prazoCor(p)?('color:'+prazoCor(p)+';font-weight:700'):''"><i class="ph ph-clock"></i> <span x-text="fmtDate(p.prazo)"></span></span>
                       <span class="m" x-show="(p.checklist||[]).length" :style="checkProgresso(p).pct===100?'color:#61bd4f':''"><i class="ph ph-check-square"></i> <span x-text="checkProgresso(p).feitos+'/'+checkProgresso(p).total"></span></span>
                       <span class="m" x-show="(p.comentarios||[]).length"><i class="ph ph-chat-circle"></i> <span x-text="(p.comentarios||[]).length"></span></span>
                       <span class="m" x-show="(p.anexos||[]).length || (p.isPost&&p.criativo)"><i class="ph ph-paperclip"></i> <span x-text="(p.anexos||[]).length + (p.isPost&&p.criativo?1:0)"></span></span>
@@ -2482,7 +2489,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=134"></script>
+<script src="js/app.js?v=135"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

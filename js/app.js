@@ -1713,6 +1713,8 @@ ${this._docFoot()}
     progFeitos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
     prazoNaSemana(p) { const s = this.semanaAtual; return p.prazo && p.prazo >= s.ini && p.prazo <= s.fim; },
     toggleConcluido(p) { this.moverProjeto(p, p.status === 'Concluído' ? 'A Fazer' : 'Concluído'); },
+    // Altera a data do post direto pelo card do quadro (sem abrir o modal) e persiste.
+    async alterarPrazo(p, val) { p.prazo = val || ''; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message || 'Falha ao salvar a data.'); } },
     // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
     TIPOS_POST,
     postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '' }; },
