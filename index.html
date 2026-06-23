@@ -765,11 +765,12 @@
                       </template>
                     </div>
                     <div class="flex items-center gap-2" style="margin-bottom:6px;flex-wrap:wrap" x-show="p.isPost">
-                      <!-- Data do post em DESTAQUE e editável direto no card (clique abre o calendário) -->
-                      <label @click.stop style="position:relative;display:inline-flex;align-items:center;gap:6px;background:#FEF3E2;color:#92600A;border:1px solid #FCE7A8;border-radius:8px;padding:4px 9px;font-weight:800;font-size:12.5px;cursor:pointer" title="Data do post — clique para alterar">
+                      <!-- Data da postagem em DESTAQUE e editável direto no card (clique abre o calendário) -->
+                      <label @click.stop style="position:relative;display:inline-flex;align-items:center;gap:6px;background:#FEF3E2;color:#92600A;border:1px solid #FCE7A8;border-radius:8px;padding:4px 9px;font-weight:800;font-size:12.5px;cursor:pointer" title="Data da postagem — clique para alterar">
                         <i class="ph ph-calendar-blank"></i><span x-text="p.prazo ? diaSemanaLabel(p.prazo) : 'Definir data'"></span>
                         <input type="date" :value="p.prazo||''" @click.stop @change="alterarPrazo(p, $event.target.value)" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer">
                       </label>
+                      <span x-show="p.prazoEntrega" style="display:inline-flex;align-items:center;gap:5px;background:#E0F2FE;color:#075985;border:1px solid #BAE6FD;border-radius:8px;padding:4px 9px;font-weight:700;font-size:12px" title="Prazo de entrega da arte"><i class="ph ph-package"></i><span x-text="'Entrega '+diaSemanaLabel(p.prazoEntrega)"></span></span>
                       <span class="tl-type" x-text="p.tipoPost||'Estático'"></span>
                     </div>
                     <div class="fs-13 fw-700" style="line-height:1.3" x-text="p.tema||p.nome"></div>
@@ -1905,7 +1906,8 @@
           <div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px">
             <div class="flex items-center gap-2 mb-2" style="flex-wrap:wrap">
               <span class="badge" style="background:var(--surface-2);color:var(--text-2)" x-text="'Post '+(i+1)"></span>
-              <input class="form-input" type="date" style="width:150px" x-model="po.data">
+              <div style="display:flex;flex-direction:column;gap:2px"><span class="fs-12 text-3" style="font-weight:600">Data da postagem</span><input class="form-input" type="date" style="width:150px" x-model="po.data"></div>
+              <div style="display:flex;flex-direction:column;gap:2px"><span class="fs-12 text-3" style="font-weight:600">Prazo de entrega</span><input class="form-input" type="date" style="width:150px" x-model="po.prazoEntrega" title="Deadline interno pra entregar a arte (antes da postagem)"></div>
               <select class="form-select" style="width:120px" x-model="po.tipo"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select>
               <input class="form-input" style="flex:1;min-width:120px" x-model="po.tema" placeholder="Tema (ex: São João)">
               <select class="form-select" style="width:150px" x-model="po.responsavel" title="Responsável deste post (vazio = usa o padrão)">
@@ -1958,8 +1960,9 @@
     <div class="modal-head"><div class="modal-title">Post — <span x-text="postRef&&postRef.cliente"></span></div><button class="btn btn-icon btn-ghost" @click="postModal=false">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px;margin-bottom:12px">
-        <div class="form-group"><label class="form-label">Data <span class="hq" data-tip="Data de emissão.">?</span></label><input class="form-input" type="date" x-model="postForm.data"></div>
+        <div class="form-group"><label class="form-label">Data da postagem <span class="hq" data-tip="Quando o post vai ao ar.">?</span></label><input class="form-input" type="date" x-model="postForm.data"></div>
         <div class="form-group"><label class="form-label">Tipo <span class="hq" data-tip="Tipo do registro.">?</span></label><select class="form-select" x-model="postForm.tipo"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select></div>
+        <div class="form-group"><label class="form-label">Prazo de entrega <span class="hq" data-tip="Deadline interno pra entregar a arte (antes da postagem).">?</span></label><input class="form-input" type="date" x-model="postForm.prazoEntrega"></div>
       </div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Tema <span class="hq" data-tip="Tema/assunto do post ou criativo.">?</span></label><input class="form-input" x-model="postForm.tema" placeholder="Ex: Dia do orgulho"></div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Descrição <span class="hq" data-tip="Descrição do post (o que é/objetivo).">?</span></label><textarea class="form-textarea" x-model="postForm.descricao" style="min-height:70px"></textarea></div>
@@ -2139,8 +2142,9 @@
 
       <!-- Data + (post) tipo -->
       <div class="grid grid-2" style="gap:14px">
-        <div class="tl-section"><div class="tl-section-label">Data de entrega</div><input class="form-input" type="date" x-model="cardRef.prazo" @change="salvarCard()"></div>
+        <div class="tl-section"><div class="tl-section-label" x-text="cardRef&&cardRef.isPost?'Data da postagem':'Data de entrega'"></div><input class="form-input" type="date" x-model="cardRef.prazo" @change="salvarCard()"></div>
         <template x-if="cardRef&&cardRef.isPost"><div class="tl-section"><div class="tl-section-label">Tipo</div><select class="form-select" x-model="cardRef.tipoPost" @change="salvarCard()"><template x-for="t in TIPOS_POST" :key="t"><option x-text="t"></option></template></select></div></template>
+        <template x-if="cardRef&&cardRef.isPost"><div class="tl-section"><div class="tl-section-label">Prazo de entrega <span class="hq" data-tip="Deadline interno pra o time entregar a arte (antes da postagem).">?</span></div><input class="form-input" type="date" x-model="cardRef.prazoEntrega" @change="salvarCard()"></div></template>
       </div>
 
       <!-- (post) descrição + legenda (importadas da programação, com IA) + criativo -->
@@ -2505,7 +2509,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=141"></script>
+<script src="js/app.js?v=142"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

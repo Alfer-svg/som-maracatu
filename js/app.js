@@ -1758,7 +1758,7 @@ ${this._docFoot()}
     async alterarPrazo(p, val) { p.prazo = val || ''; try { await this.salvarProjetoApi(p); } catch (e) { alert(e.message || 'Falha ao salvar a data.'); } },
     // ── Programação: calendário de posts de redes sociais (vários de uma vez) ──
     TIPOS_POST,
-    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '', criativos: [], _novoCriativo: '' }; },
+    postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, prazoEntrega: '', tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '', criativos: [], _novoCriativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
       // Sugere a semana em foco se o usuário navegou; senão, a próxima (seg→dom). Editável.
@@ -1779,7 +1779,7 @@ ${this._docFoot()}
         for (const po of posts) {
           await this.salvarProjetoApi({
             id: '', nome: po.tema || (po.tipo + ' ' + (po.data || '')), cliente: f.cliente, servico: 'Gestão de Redes Sociais',
-            responsavel: po.responsavel || f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', progresso: 0, notas: '',
+            responsavel: po.responsavel || f.responsavel, status: 'A Fazer', boardId: this.boardSel || 'geral', prazo: po.data || f.semanaIni || '', prazoEntrega: po.prazoEntrega || '', progresso: 0, notas: '',
             isPost: true, tipoPost: po.tipo, tema: po.tema, descricao: po.descricao, legenda: po.legenda,
             criativo: po.criativo || (Array.isArray(po.criativos) && po.criativos[0]) || '',
             criativos: Array.isArray(po.criativos) ? po.criativos.filter(Boolean) : [],
@@ -1791,10 +1791,10 @@ ${this._docFoot()}
     },
     // ── Post individual (ver/editar) ──
     diaSemanaLabel(dataStr) { if (!dataStr) return ''; const d = new Date(dataStr + 'T00:00:00'); if (isNaN(d.getTime())) return ''; const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; return dias[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0'); },
-    editarPost(p) { this.postRef = p; this.postForm = { id: p.id, data: p.prazo || '', tipo: p.tipoPost || 'Estático', tema: p.tema || p.nome || '', descricao: p.descricao || '', legenda: p.legenda || '', criativo: p.criativo || '' }; this.postModal = true; },
+    editarPost(p) { this.postRef = p; this.postForm = { id: p.id, data: p.prazo || '', prazoEntrega: p.prazoEntrega || '', tipo: p.tipoPost || 'Estático', tema: p.tema || p.nome || '', descricao: p.descricao || '', legenda: p.legenda || '', criativo: p.criativo || '' }; this.postModal = true; },
     async salvarPost() {
       const f = this.postForm, p = this.postRef; if (!p) return;
-      p.tipoPost = f.tipo; p.tema = f.tema; p.nome = f.tema || p.nome; p.descricao = f.descricao; p.legenda = f.legenda; p.criativo = f.criativo; p.prazo = f.data;
+      p.tipoPost = f.tipo; p.tema = f.tema; p.nome = f.tema || p.nome; p.descricao = f.descricao; p.legenda = f.legenda; p.criativo = f.criativo; p.prazo = f.data; p.prazoEntrega = f.prazoEntrega;
       try { await this.salvarProjetoApi(p); await this.carregarProjetos(); this.postModal = false; }
       catch (e) { alert(e.message || 'Falha ao salvar o post.'); }
     },
