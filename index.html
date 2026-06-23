@@ -650,8 +650,18 @@
 
         <!-- ===== LAYOUTS DA SEMANA (por cliente) ===== -->
         <div x-show="opTab==='layouts'">
-          <div class="text-3 fs-12 mb-3">Semana de <b x-text="semanaAtual.label"></b> · o layout monta com os posts; aprove e envie pro cliente</div>
-          <template x-if="!progClientesSemana().length"><div class="card empty">Nenhum post agendado pra esta semana. Crie uma programação primeiro.</div></template>
+          <div class="flex items-center gap-2 mb-3" style="flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" @click="mudarSemana(-1)" title="Semana anterior"><i class="ph ph-caret-left ic-ph"></i></button>
+            <div style="text-align:center;min-width:150px">
+              <div class="fw-800 fs-14" x-text="semanaAtual.label"></div>
+              <div class="text-3" style="font-size:11px" x-text="semanaRotulo()"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" @click="mudarSemana(1)" title="Próxima semana"><i class="ph ph-caret-right ic-ph"></i></button>
+            <button class="btn btn-ghost btn-sm" x-show="semanaOffset!==0" @click="mudarSemana(-semanaOffset)" title="Voltar pra semana atual">hoje</button>
+            <span style="flex:1"></span>
+            <span class="text-3 fs-12">o layout monta com os posts; aprove e envie pro cliente</span>
+          </div>
+          <template x-if="!progClientesSemana().length"><div class="card empty">Nenhum post agendado pra esta semana. Use ◀ ▶ pra trocar de semana ou crie uma programação.</div></template>
           <div class="grid grid-2" style="align-items:start">
             <template x-for="g in progClientesSemana()" :key="g.cliente">
               <div class="card" style="padding:14px">
@@ -670,7 +680,7 @@
         <!-- ===== PROGRAMAÇÃO SEMANAL (checklist por colaborador) ===== -->
         <div x-show="opTab==='semana'">
           <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
-            <div class="text-3 fs-12">Semana de <b x-text="semanaAtual.label"></b> · cada colaborador toca e marca os projetos</div>
+            <div class="text-3 fs-12">Todos os posts por colaborador · use a aba <b>Layouts</b> pra montar a semana</div>
             <button class="btn btn-primary btn-sm" @click="novoProjeto()">+ Projeto</button>
           </div>
           <template x-if="!progColaboradores().length"><div class="card empty">Nenhum projeto atribuído ainda. Crie um projeto e escolha o responsável.</div></template>
@@ -2489,7 +2499,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=135"></script>
+<script src="js/app.js?v=136"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

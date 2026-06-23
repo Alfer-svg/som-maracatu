@@ -307,6 +307,7 @@ document.addEventListener('alpine:init', () => {
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
+    semanaOffset: 0, // navegação de semana na programação/layouts (0=semana atual, +1=próxima, -1=anterior)
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
     progPosts: [], // posts sendo montados no modal
@@ -1658,12 +1659,15 @@ ${this._docFoot()}
     // ── Programação semanal (checklist por colaborador) ──
     get semanaAtual() {
       const hoje = new Date(Date.now() - 3 * 3600 * 1000); const dow = (hoje.getDay() + 6) % 7; // 0=segunda
-      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
+      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow + (this.semanaOffset || 0) * 7); // navega ± semanas
       const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
       const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
       const iso = d => d.toISOString().slice(0, 10);
       return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
     },
+    // Navega entre semanas na programação/layouts (fecha o layout aberto p/ não misturar).
+    mudarSemana(delta) { this.semanaOffset = (this.semanaOffset || 0) + delta; this.layoutModal = false; this.layoutAtual = null; },
+    semanaRotulo() { const o = this.semanaOffset || 0; return o === 0 ? 'Esta semana' : o === 1 ? 'Próxima semana' : o === -1 ? 'Semana passada' : (o > 0 ? `+${o} semanas` : `${o} semanas`); },
     // Próxima semana (seg→dom) — sugestão padrão da programação.
     get proximaSemana() {
       const ini = new Date(this.semanaAtual.ini + 'T00:00:00'); ini.setDate(ini.getDate() + 7);
@@ -1720,8 +1724,8 @@ ${this._docFoot()}
     postVazio() { return { data: (this.progForm && this.progForm.semanaIni) || this.semanaAtual.ini, tipo: 'Estático', tema: '', responsavel: '', descricao: '', legenda: '', criativo: '' }; },
     abrirProgramacao() {
       if (!this.equipe.length) this.carregarEquipe();
-      // Sugere SEMPRE a próxima semana (seg→dom), editável.
-      this.progForm = { cliente: '', responsavel: '', semanaIni: this.proximaSemana.ini };
+      // Sugere a semana em foco se o usuário navegou; senão, a próxima (seg→dom). Editável.
+      this.progForm = { cliente: '', responsavel: '', semanaIni: this.semanaOffset ? this.semanaAtual.ini : this.proximaSemana.ini };
       this.progPosts = [this.postVazio(), this.postVazio(), this.postVazio()];
       this.progModal = true;
     },
