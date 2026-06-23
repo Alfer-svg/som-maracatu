@@ -2084,6 +2084,15 @@
     <div class="modal-body">
       <div class="text-3 fs-12 mb-3" x-show="cardRef&&cardRef.cliente">em <b x-text="cardRef&&cardRef.cliente"></b><span x-show="cardRef&&cardRef.isPost"> · <span x-text="cardRef.tipoPost"></span></span></div>
 
+      <!-- Cliente (lista suspensa) — usado no criativo avulso e nos posts -->
+      <div class="tl-section" x-show="cardRef&&cardRef.isPost">
+        <div class="tl-section-label">Cliente <span class="hq" data-tip="Cliente deste criativo. O criativo avulso não entra na programação semanal.">?</span></div>
+        <select class="form-select" x-model="cardRef.cliente" @change="salvarCard()">
+          <option value="">— selecione o cliente —</option>
+          <template x-for="cl in clientesLista" :key="cl.id"><option :value="cl.empresa" x-text="cl.empresa"></option></template>
+        </select>
+      </div>
+
       <!-- Produção (cronômetro — alimenta o relatório de tempo) -->
       <div class="tl-section">
         <div class="tl-section-label">Produção</div>
@@ -2544,7 +2553,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=148"></script>
+<script src="js/app.js?v=149"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -1840,7 +1840,7 @@ ${this._docFoot()}
     descartarIA(obj, campo) { delete obj['_ia_' + campo]; },
     progColaboradores() {
       const q = this.busca.toLowerCase();
-      const posts = this.projects.filter(p => p.isPost); // só posts entram na programação semanal (projeto avulso fica fora)
+      const posts = this.projects.filter(p => p.isPost && !p.avulso); // criativo avulso fica fora da programação semanal
       const nomes = this.equipe.map(m => m.nome);
       const temSem = posts.some(p => !(p.responsavel || '').trim());
       const lista = [...nomes]; if (temSem) lista.push('');
@@ -1905,12 +1905,12 @@ ${this._docFoot()}
     async carregarLayouts() { try { this.layouts = (await this.api('GET', '/layouts')) || []; } catch { this.layouts = []; } },
     postsDoClienteSemana(cliente) {
       const s = this.semanaAtual;
-      return this.projects.filter(p => p.isPost && p.cliente === cliente && p.prazo >= s.ini && p.prazo <= s.fim)
+      return this.projects.filter(p => p.isPost && !p.avulso && p.cliente === cliente && p.prazo >= s.ini && p.prazo <= s.fim)
         .sort((a, b) => (a.prazo || '') < (b.prazo || '') ? -1 : 1);
     },
     progClientesSemana() {
       const s = this.semanaAtual;
-      const cli = [...new Set(this.projects.filter(p => p.isPost && p.prazo >= s.ini && p.prazo <= s.fim).map(p => p.cliente))].filter(Boolean).sort();
+      const cli = [...new Set(this.projects.filter(p => p.isPost && !p.avulso && p.prazo >= s.ini && p.prazo <= s.fim).map(p => p.cliente))].filter(Boolean).sort();
       return cli.map(c => ({ cliente: c, posts: this.postsDoClienteSemana(c) }));
     },
     postsProntos(arr) { return arr.filter(p => p.status === 'Concluído').length; },
@@ -1979,7 +1979,7 @@ ${this._docFoot()}
       const novo = {
         id: '', nome: 'Novo criativo', cliente: '', servico: 'Criação de Conteúdo',
         responsavel: '', status: col, boardId: this.boardSel || 'geral', prazo: '', prazoEntrega: '', progresso: 0, notas: '',
-        isPost: true, tipoPost: 'Estático', tema: '', descricao: '', legenda: '', criativo: '', criativos: [],
+        isPost: true, avulso: true, tipoPost: 'Estático', tema: '', descricao: '', legenda: '', criativo: '', criativos: [],
         labels: [], membros: [], checklist: [],
       };
       try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
