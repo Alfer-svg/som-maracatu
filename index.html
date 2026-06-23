@@ -215,7 +215,7 @@
       <button class="btn btn-primary" x-show="page==='servicos'" @click="novoServico()">+ Serviço</button>
       <button class="btn btn-primary" x-show="page==='contratos'" @click="novoContrato()">+ Contrato</button>
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
-      <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
+      <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro' && papel!=='colaborador2'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
     </header>
 
@@ -644,8 +644,8 @@
         <!-- toggle de vista: Quadro | Programação semanal | Layouts -->
         <div class="fichario" style="margin-bottom:14px">
           <div class="fichario-tab" :class="opTab==='quadro'?'active':''" @click="opTab='quadro'">Quadro</div>
-          <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'">Programação semanal</div>
-          <div class="fichario-tab" :class="opTab==='layouts'?'active':''" @click="opTab='layouts'; carregarLayouts()">Layouts</div>
+          <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'" x-show="papel!=='colaborador2'">Programação semanal</div>
+          <div class="fichario-tab" :class="opTab==='layouts'?'active':''" @click="opTab='layouts'; carregarLayouts()" x-show="papel!=='colaborador2'">Layouts</div>
         </div>
 
         <!-- ===== LAYOUTS DA SEMANA (por cliente) ===== -->
@@ -2151,7 +2151,7 @@
             <textarea class="form-textarea" x-model="cardRef.descricao" @change="salvarCard()" placeholder="Descrição do post — rascunho; a IA elabora…" style="min-height:70px"></textarea>
             <template x-if="cardRef._ia_descricao"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_descricao"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'descricao')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'descricao')">Descartar</button></div></div></template>
           </div>
-          <div class="tl-section">
+          <div class="tl-section" x-show="papel!=='colaborador2'">
             <div class="tl-section-label" style="display:flex;justify-content:space-between;align-items:center">Legenda<button type="button" class="btn btn-ghost btn-sm" :disabled="cardRef._iaLoad_legenda" @click="gerarIA(cardRef,'legenda','legenda')"><i class="ph ph-sparkle ic-ph"></i> <span x-text="cardRef._iaLoad_legenda?'gerando…':'Gerar (IA)'"></span></button></div>
             <textarea class="form-textarea" x-model="cardRef.legenda" @change="salvarCard()" placeholder="Legenda do post — rascunho; a IA elabora…" style="min-height:80px"></textarea>
             <template x-if="cardRef._ia_legenda"><div style="background:var(--accent-soft);border-radius:8px;padding:8px;margin-top:5px"><div class="fs-12 text-3" style="margin-bottom:3px">✨ Sugestão da IA</div><div class="fs-13" style="white-space:pre-wrap" x-text="cardRef._ia_legenda"></div><div class="flex gap-2" style="margin-top:7px"><button type="button" class="btn btn-primary btn-sm" @click="aprovarIA(cardRef,'legenda')">Aprovar</button><button type="button" class="btn btn-ghost btn-sm" @click="descartarIA(cardRef,'legenda')">Descartar</button></div></div></template>
@@ -2505,7 +2505,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=140"></script>
+<script src="js/app.js?v=141"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
