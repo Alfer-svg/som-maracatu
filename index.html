@@ -632,7 +632,10 @@
             <template x-for="u in presenca" :key="u.id">
               <div class="flex items-center gap-2" style="padding:7px 11px;border:1px solid var(--border);border-radius:10px;background:var(--surface)" :style="u.online?'':'opacity:.55'">
                 <span style="position:relative;display:inline-flex">
-                  <span style="width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden;background-size:cover;background-position:center" :style="fotoDe(u.nome)?('background-image:url('+fotoDe(u.nome)+')'):('background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor)" x-text="fotoDe(u.nome)?'':(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                  <span style="position:relative;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;overflow:hidden" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+                    <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                    <template x-if="fotoDe(u.nome)"><img :src="fotoDe(u.nome)" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
+                  </span>
                   <span style="position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface)" :style="'background:'+(u.online?'#16a34a':'#9ca3af')"></span>
                 </span>
                 <div style="min-width:0">
@@ -1183,7 +1186,10 @@
                 <tr>
                   <td>
                     <div class="flex items-center gap-3">
-                      <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;font-size:13px" :style="u.foto?('background-image:url('+u.foto+');background-size:cover;background-position:center'):('background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor)" x-text="u.foto?'':(u.nome||'?').trim().charAt(0).toUpperCase()"></div>
+                      <div style="position:relative;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden;font-size:13px" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+                        <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                        <template x-if="u.foto"><img :src="u.foto" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
+                      </div>
                       <div style="min-width:0"><div class="fw-700 truncate" x-text="u.nome"></div><div class="text-3 fs-12 truncate" x-text="u.email"></div></div>
                     </div>
                   </td>
@@ -1222,7 +1228,10 @@
           <template x-if="!usuarios.length"><div class="empty">Nenhum usuário. Clique em <b>+ Usuário</b>.</div></template>
           <template x-for="u in usuarios" :key="u.id">
             <div class="flex items-center gap-3" style="padding:11px 14px;border-bottom:1px solid var(--border)">
-              <div style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden" :style="u.foto?('background-image:url('+u.foto+');background-size:cover;background-position:center'):('background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor)" x-text="u.foto?'':(u.nome||'?').trim().charAt(0).toUpperCase()"></div>
+              <div style="position:relative;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0;overflow:hidden" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor">
+                <span x-text="(u.nome||'?').trim().charAt(0).toUpperCase()"></span>
+                <template x-if="u.foto"><img :src="u.foto" onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></template>
+              </div>
               <div style="flex:1;min-width:0">
                 <div class="fs-14 fw-700 truncate" x-text="u.nome"></div>
                 <div class="text-3 fs-12 truncate" x-text="u.email"></div>
