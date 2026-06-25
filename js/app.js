@@ -309,7 +309,8 @@ document.addEventListener('alpine:init', () => {
     cronTick: 0, // tique de 1s pra o cronômetro ao vivo
     quickAddCol: '', quickAddText: '', // adicionar cartão rápido
     layouts: [], layoutModal: false, layoutAtual: null, // layout da semana (Fase 2/3)
-    semanaOffset: 0, // navegação de semana na programação/layouts (0=semana atual, +1=próxima, -1=anterior)
+    semanaOffset: 0, // navegação de período na programação/layouts (0=atual, +1=próximo, -1=anterior)
+    periodo: 'Semanal', // tipo de período da programação: 'Semanal' | 'Quinzenal' | 'Mensal'
     progModal: false, // modal de criar programação (calendário de posts da semana)
     progForm: { cliente: '', responsavel: '' },
     progPosts: [], // posts sendo montados no modal
@@ -1800,29 +1801,49 @@ ${this._docFoot()}
       catch (e) { alert(e.message); }
     },
     // ── Programação semanal (checklist por colaborador) ──
-    get semanaAtual() {
-      const hoje = new Date(Date.now() - 3 * 3600 * 1000); const dow = (hoje.getDay() + 6) % 7; // 0=segunda
-      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow + (this.semanaOffset || 0) * 7); // navega ± semanas
-      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+    get periodoTipo() { return this.periodo || 'Semanal'; },
+    // Calcula o período (ini/fim) num offset, conforme Semanal (7d, seg→dom),
+    // Quinzenal (14d) ou Mensal (1º→último dia do mês).
+    periodoEm(off) {
+      const hoje = new Date(Date.now() - 3 * 3600 * 1000);
       const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
       const iso = d => d.toISOString().slice(0, 10);
+      let ini, fim;
+      if (this.periodoTipo === 'Mensal') {
+        ini = new Date(hoje.getFullYear(), hoje.getMonth() + off, 1);
+        fim = new Date(hoje.getFullYear(), hoje.getMonth() + off + 1, 0);
+      } else {
+        const dias = this.periodoTipo === 'Quinzenal' ? 14 : 7;
+        const dow = (hoje.getDay() + 6) % 7; // 0=segunda
+        ini = new Date(hoje); ini.setDate(hoje.getDate() - dow + off * dias);
+        fim = new Date(ini); fim.setDate(ini.getDate() + dias - 1);
+      }
       return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
     },
-    // Navega entre semanas na programação/layouts (fecha o layout aberto p/ não misturar).
+    get semanaAtual() { return this.periodoEm(this.semanaOffset || 0); },
+    // Próximo período — sugestão padrão da programação.
+    get proximaSemana() { return this.periodoEm((this.semanaOffset || 0) + 1); },
+    // Navega entre períodos (fecha o layout aberto p/ não misturar).
     mudarSemana(delta) { this.semanaOffset = (this.semanaOffset || 0) + delta; this.layoutModal = false; this.layoutAtual = null; },
-    semanaRotulo() { const o = this.semanaOffset || 0; return o === 0 ? 'Esta semana' : o === 1 ? 'Próxima semana' : o === -1 ? 'Semana passada' : (o > 0 ? `+${o} semanas` : `${o} semanas`); },
-    // Próxima semana (seg→dom) — sugestão padrão da programação.
-    get proximaSemana() {
-      const ini = new Date(this.semanaAtual.ini + 'T00:00:00'); ini.setDate(ini.getDate() + 7);
-      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
-      const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
-      const iso = d => d.toISOString().slice(0, 10);
-      return { ini: iso(ini), fim: iso(fim), label: f(ini) + ' a ' + f(fim) };
+    // Troca o tipo de período (Semanal/Quinzenal/Mensal) — zera a navegação.
+    mudarPeriodo(p) { this.periodo = p; this.semanaOffset = 0; this.layoutModal = false; this.layoutAtual = null; },
+    // Troca o período DENTRO do modal de programação e reposiciona a data sugerida.
+    setPeriodoProg(pp) { this.periodo = pp; this.semanaOffset = 0; this.progForm.semanaIni = this.proximaSemana.ini; },
+    semanaRotulo() {
+      const o = this.semanaOffset || 0;
+      const u = this.periodoTipo === 'Mensal' ? 'mês' : this.periodoTipo === 'Quinzenal' ? 'quinzena' : 'semana';
+      const up = this.periodoTipo === 'Mensal' ? 'meses' : this.periodoTipo === 'Quinzenal' ? 'quinzenas' : 'semanas';
+      if (o === 0) return this.periodoTipo === 'Mensal' ? 'Este mês' : 'Est' + (u === 'mês' ? 'e' : 'a') + ' ' + u;
+      if (o === 1) return 'Próxim' + (u === 'mês' ? 'o' : 'a') + ' ' + u;
+      if (o === -1) return u.charAt(0).toUpperCase() + u.slice(1) + ' passad' + (u === 'mês' ? 'o' : 'a');
+      return (o > 0 ? '+' + o : o) + ' ' + up;
     },
     semanaLabelDe(iniIso) {
       if (!iniIso) return '';
       const ini = new Date(iniIso + 'T00:00:00'); if (isNaN(ini.getTime())) return '';
-      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      let fim;
+      if (this.periodoTipo === 'Mensal') fim = new Date(ini.getFullYear(), ini.getMonth() + 1, 0);
+      else { fim = new Date(ini); fim.setDate(ini.getDate() + (this.periodoTipo === 'Quinzenal' ? 13 : 6)); }
       const f = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
       return f(ini) + ' a ' + f(fim);
     },

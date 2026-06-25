@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-e">
+  <meta name="build" content="2026-06-25-f">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -670,7 +670,7 @@
         <!-- toggle de vista: Quadro | Programação semanal | Layouts -->
         <div class="fichario" style="margin-bottom:14px">
           <div class="fichario-tab" :class="opTab==='quadro'?'active':''" @click="opTab='quadro'">Quadro</div>
-          <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'" x-show="papel!=='colaborador2'">Programação semanal</div>
+          <div class="fichario-tab" :class="opTab==='semana'?'active':''" @click="opTab='semana'" x-show="papel!=='colaborador2'">Programação</div>
           <div class="fichario-tab" :class="opTab==='layouts'?'active':''" @click="opTab='layouts'; carregarLayouts()" x-show="papel!=='colaborador2'">Layouts</div>
         </div>
 
@@ -682,8 +682,13 @@
               <div class="fw-800 fs-14" x-text="semanaAtual.label"></div>
               <div class="text-3" style="font-size:11px" x-text="semanaRotulo()"></div>
             </div>
-            <button class="btn btn-ghost btn-sm" @click="mudarSemana(1)" title="Próxima semana"><i class="ph ph-caret-right ic-ph"></i></button>
-            <button class="btn btn-ghost btn-sm" x-show="semanaOffset!==0" @click="mudarSemana(-semanaOffset)" title="Voltar pra semana atual">hoje</button>
+            <button class="btn btn-ghost btn-sm" @click="mudarSemana(1)" title="Próximo período"><i class="ph ph-caret-right ic-ph"></i></button>
+            <button class="btn btn-ghost btn-sm" x-show="semanaOffset!==0" @click="mudarSemana(-semanaOffset)" title="Voltar pro período atual">hoje</button>
+            <div class="flex gap-1" style="margin-left:8px">
+              <template x-for="pp in ['Semanal','Quinzenal','Mensal']" :key="'lp'+pp">
+                <button class="btn btn-sm" :class="periodo===pp?'btn-primary':'btn-ghost'" @click="mudarPeriodo(pp)" x-text="pp"></button>
+              </template>
+            </div>
             <span style="flex:1"></span>
             <span class="text-3 fs-12">o layout monta com os posts; aprove e envie pro cliente</span>
           </div>
@@ -1946,7 +1951,7 @@
 <!-- PROGRAMAÇÃO — cria vários projetos do mesmo cliente p/ um colaborador -->
 <div class="modal-backdrop" x-show="progModal" x-cloak>
   <div class="modal" style="max-width:640px">
-    <div class="modal-head"><div class="modal-title">Nova programação semanal</div><button class="btn btn-icon btn-ghost" @click="progModal=false">✕</button></div>
+    <div class="modal-head"><div class="modal-title">Nova programação</div><button class="btn btn-icon btn-ghost" @click="progModal=false">✕</button></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px;margin-bottom:6px">
         <div class="form-group"><label class="form-label">Cliente * <span class="hq" data-tip="Cliente vinculado (obrigatório).">?</span></label>
@@ -1963,8 +1968,13 @@
         </div>
       </div>
       <div class="form-group" style="margin-top:4px">
-        <label class="form-label">Semana <span class="hq" data-tip="Sugerimos sempre a próxima semana; ajuste se quiser.">?</span></label>
-        <div class="flex items-center gap-2" style="flex-wrap:wrap"><input class="form-input" type="date" style="width:170px" x-model="progForm.semanaIni"><span class="text-3 fs-13">Semana de <b x-text="semanaLabelDe(progForm.semanaIni)"></b></span></div>
+        <label class="form-label">Período <span class="hq" data-tip="Semanal, quinzenal ou mensal. A data é o início do período; ajuste se quiser.">?</span></label>
+        <div class="flex items-center gap-2" style="flex-wrap:wrap;margin-bottom:8px">
+          <template x-for="pp in ['Semanal','Quinzenal','Mensal']" :key="'mp'+pp">
+            <button type="button" class="btn btn-sm" :class="periodo===pp?'btn-primary':'btn-ghost'" @click="setPeriodoProg(pp)" x-text="pp"></button>
+          </template>
+        </div>
+        <div class="flex items-center gap-2" style="flex-wrap:wrap"><input class="form-input" type="date" style="width:170px" x-model="progForm.semanaIni"><span class="text-3 fs-13" x-text="periodoTipo+' de '"></span><b class="fs-13" x-text="semanaLabelDe(progForm.semanaIni)"></b></div>
       </div>
       <div class="flex items-center justify-between" style="margin-top:8px;margin-bottom:4px">
         <label class="form-label" style="margin:0">Posts da semana <span class="text-3" style="font-weight:400;text-transform:none">(redes sociais)</span></label>
