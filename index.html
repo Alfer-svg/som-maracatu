@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-c">
+  <meta name="build" content="2026-06-25-d">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -2067,7 +2067,7 @@
         <a class="btn btn-ghost btn-sm" :href="layoutAtual?(linkPublicoLayout()+'&preview=1'):''" target="_blank">abrir em nova aba ↗</a>
       </div>
       <template x-if="!layoutPostsAtual.length"><div class="empty" style="margin:14px">Nenhum post nesta semana — use ◀ ▶ pra trocar de semana ou crie a programação.</div></template>
-      <iframe x-show="layoutPostsAtual.length" :src="layoutAtual?(linkPublicoLayout()+'&preview=1'):''" style="width:100%;height:62vh;min-height:380px;border:0;display:block"></iframe>
+      <iframe x-show="layoutPostsAtual.length" :src="layoutAtual?(linkPublicoLayout()+'&preview=1&_b='+((document.querySelector('meta[name=build]')||{}).content||'')):''" style="width:100%;height:62vh;min-height:380px;border:0;display:block"></iframe>
     </div>
     <!-- decisão do cliente -->
     <template x-if="layoutAtual&&layoutAtual.status==='APROVADO_CLIENTE'">
