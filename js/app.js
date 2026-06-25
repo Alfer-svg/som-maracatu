@@ -285,6 +285,7 @@ document.addEventListener('alpine:init', () => {
     radarAberto: true, // painel Radar do Monitoramento expandido
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
+    editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
     // Pessoal — perfis de acesso + gestão de equipe
@@ -1168,6 +1169,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async removerInteracao(c, id) {
       if (!c || !confirm('Remover este registro do histórico?')) return;
       c.timeline = (c.timeline || []).filter(x => x.id !== id);
+      await this.persistirCliente(c);
+    },
+    // Edição de um registro do histórico (só admin).
+    iniciarEditInter(ev) { this.editInter = ev.id; this.editInterTexto = ev.texto || ''; },
+    cancelarEditInter() { this.editInter = null; this.editInterTexto = ''; },
+    async salvarEditInter(c, ev) {
+      const t = (this.editInterTexto || '').trim(); if (!t) return alert('O texto não pode ficar vazio.');
+      ev.texto = t; ev.editadoEm = new Date().toISOString(); ev.editadoPor = (this.usuario && this.usuario.nome) || '';
+      this.editInter = null; this.editInterTexto = '';
       await this.persistirCliente(c);
     },
     // Registra automaticamente a ação feita pelo Radar (parabéns, seguir…) no histórico do cliente
