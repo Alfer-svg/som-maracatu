@@ -764,6 +764,7 @@
               <div class="kanban-body">
                 <template x-for="p in projetosDoBoardStatus(col.nome)" :key="p.id">
                   <div class="kanban-card" :class="dragId===p.id?'dragging':''" draggable="true"
+                       :style="'background:'+(p.isPost?'#E6F8EE':'#E9F2FE')"
                        @dragstart="dragId=p.id" @dragend="dragId=null; dropCol=null"
                        @click="abrirCard(p)">
                     <!-- etiquetas -->
