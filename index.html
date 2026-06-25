@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-b">
+  <meta name="build" content="2026-06-25-c">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -2326,8 +2326,10 @@
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-danger" @click="excluirProjeto(cardRef); cardModal=false">Excluir</button>
-      <button class="btn btn-ghost" @click="arquivarCard()" x-text="cardRef&&cardRef.arquivado?'Desarquivar':'Arquivar'"></button>
+      <div class="flex gap-2" style="margin-right:auto">
+        <button class="btn btn-danger" @click="excluirProjeto(cardRef); cardModal=false">Excluir</button>
+        <button class="btn btn-ghost" @click="arquivarCard()" x-text="cardRef&&cardRef.arquivado?'Desarquivar':'Arquivar'"></button>
+      </div>
       <button class="btn btn-primary" @click="fecharCard()">Pronto</button>
     </div>
   </div>
