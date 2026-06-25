@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-g">
+  <meta name="build" content="2026-06-25-h">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -737,7 +737,7 @@
                         <span x-show="p.isPost" class="tl-type" x-text="p.tipoPost||'Estático'"></span>
                         <span class="fs-13 fw-700 truncate" :style="p.status==='Concluído'?'text-decoration:line-through;color:var(--text-3)':''" x-text="p.tema||p.nome"></span>
                       </div>
-                      <div class="flex items-center gap-1 fs-12 fw-700 truncate" style="margin-top:2px;color:#16a34a" x-show="p.cliente"><i class="ph ph-buildings" style="font-size:13px"></i><span x-text="p.cliente"></span></div>
+                      <div class="fs-12 fw-700 truncate" style="margin-top:2px;color:#16a34a" x-show="p.cliente" x-text="p.cliente"></div>
                       <div class="text-3 fs-12 truncate" style="margin-top:2px">
                         <span x-show="p.isPost && p.legenda" x-text="p.legenda"></span>
                         <template x-if="!p.isPost">
