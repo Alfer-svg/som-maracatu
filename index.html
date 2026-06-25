@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>SOM — Sistema Operacional Maracatu</title>
-  <meta name="build" content="2026-06-25-m">
+  <meta name="build" content="2026-06-25-n">
   <script>
   // Auto-atualização: a aba normal recarrega sozinha quando sai versão nova
   // (resolve o cache do GitHub Pages — não precisa hard refresh).
@@ -354,7 +354,7 @@
               <thead><tr><th>Cliente</th><th>CNPJ</th><th>Serviço</th><th>Mensalidade</th><th>Status</th><th>Cadastro</th><th></th></tr></thead>
               <tbody>
                 <template x-for="c in clientesFiltrados" :key="c.id">
-                  <tr>
+                  <tr style="cursor:pointer" @click="editarCliente(c)">
                     <td><div class="fw-700" x-text="c.empresa"></div><div class="text-3 fs-12" x-text="(c.contato||'')+(c.cidade?' · '+c.cidade:'')"></div></td>
                     <td class="fs-12 text-2" x-text="c.cnpj||'—'"></td>
                     <td><template x-for="sv in clienteServicos(c)" :key="sv"><span class="badge" style="background:#f5f5f1;color:#57564e;margin:1px;border:1px solid var(--border)" x-text="sv"></span></template><span x-show="!clienteServicos(c).length" class="text-3">—</span></td>
@@ -364,7 +364,7 @@
                       <span class="fw-700 fs-12" :style="'color:'+corScore(completudeCadastro(c).pct)" x-text="completudeCadastro(c).pct+'%'"></span>
                       <div class="progress" style="flex:1;min-width:48px"><div :style="'width:'+completudeCadastro(c).pct+'%;background:'+corScore(completudeCadastro(c).pct)"></div></div>
                     </div></td>
-                    <td><div class="flex gap-2" style="justify-content:flex-end">
+                    <td @click.stop><div class="flex gap-2" style="justify-content:flex-end">
                       <button x-show="verArquivados" class="btn btn-sm" @click="ativarCliente(c)" title="Ativar cliente" style="background:#dcfce7;color:#16a34a;font-weight:600"><i class="ph ph-check-circle ic-ph"></i> Ativar</button>
                       <button x-show="!verArquivados" class="btn btn-icon btn-ghost btn-sm" @click="arquivarCliente(c)" title="Arquivar (inativar)"><i class="ph ph-archive ic-ph"></i></button>
                       <button class="btn btn-icon btn-ghost btn-sm" @click="editarCliente(c)" title="Editar cliente"><i class="ph ph-pencil-simple ic-ph"></i></button>
@@ -458,12 +458,12 @@
             <thead><tr><th>Serviço</th><th>Categoria</th><th>Valor padrão</th><th>Escopo</th><th></th></tr></thead>
             <tbody>
               <template x-for="s in catalogoFiltrado" :key="s.id">
-                <tr>
+                <tr style="cursor:pointer" @click="editarServico(s)">
                   <td class="fw-700" x-text="s.nome||'—'"></td>
                   <td class="fs-12 text-2" x-text="s.categoria||'—'"></td>
                   <td class="fw-700 text-green" x-text="s.valor?fmtCur(s.valor)+'/mês':'—'"></td>
                   <td class="fs-12 text-2" x-text="((s.escopo||'').split('\n').filter(Boolean).length||0)+' item(ns)'"></td>
-                  <td><button class="btn btn-ghost btn-sm" @click="editarServico(s)">Editar</button></td>
+                  <td @click.stop><button class="btn btn-ghost btn-sm" @click="editarServico(s)">Editar</button></td>
                 </tr>
               </template>
             </tbody>
@@ -562,13 +562,13 @@
             <template x-for="f in financeFiltrado" :key="f.id">
               <div class="fin-card" :style="finCardBorder(f)">
                 <!-- cabeçalho -->
-                <div class="fin-card-head">
+                <div class="fin-card-head" style="cursor:pointer" @click="editarLancamento(f)">
                   <div style="min-width:0">
                     <div class="fin-card-title">
                       <span class="fin-dot" :style="'background:'+finDotCor(f)"></span>
                       <b x-text="numLancamento(f)"></b>
                       <span x-text="f.descricao || '—'"></span>
-                      <span class="badge" :style="'background:var(--surface-2);color:var(--text-2);font-weight:600'+(f.tipo==='receita'&&f.cliente?';cursor:pointer':'')" :title="f.tipo==='receita'&&f.cliente?'Ver situação financeira do cliente':''" @click="(f.tipo==='receita'&&f.cliente)&&abrirFinanceCliente(f.cliente)" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
+                      <span class="badge" :style="'background:var(--surface-2);color:var(--text-2);font-weight:600'+(f.tipo==='receita'&&f.cliente?';cursor:pointer':'')" :title="f.tipo==='receita'&&f.cliente?'Ver situação financeira do cliente':''" @click.stop="(f.tipo==='receita'&&f.cliente)&&abrirFinanceCliente(f.cliente)" x-text="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria||''" x-show="(f.tipo==='despesa'?f.fornecedor:f.cliente)||f.categoria"></span>
                     </div>
                     <div class="fin-card-sub">
                       <span x-show="f.categoria" x-text="f.categoria+' · '"></span>Vence: <span x-text="fmtDate(f.vencimento)"></span><span x-show="f.pagoEm" x-text="' · Pago: '+fmtDate(f.pagoEm)"></span>
@@ -1393,9 +1393,9 @@
 </div>
 
 <!-- CLIENTE -->
-<div class="modal-backdrop" x-show="modal==='client'" x-cloak>
+<div class="modal-backdrop pagemode" x-show="modal==='client'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
+    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="editing.id?'Editar Cliente':'Novo Cliente'"></div></div>
     <div class="modal-body" style="display:block">
       <div @click="secCli=secCli==='empresa'?'':'empresa'" class="accH"><span><i class="ph ph-buildings ic-ph"></i> Empresa</span><span class="accX" x-text="secCli==='empresa'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='empresa'">
@@ -1587,9 +1587,9 @@
 </div>
 
 <!-- FINANCEIRO -->
-<div class="modal-backdrop" x-show="modal==='finance'" x-cloak>
+<div class="modal-backdrop pagemode" x-show="modal==='finance'" x-cloak>
   <div class="modal">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
+    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+(editing.tipo==='receita'?'Receita':'Despesa')"></div></div>
     <div class="modal-body grid grid-2" style="gap:14px">
       <div class="form-group"><label class="form-label">Tipo <span class="hq" data-tip="Receita = dinheiro que entra (cobrança de cliente). Despesa = dinheiro que sai (fornecedor, ferramenta).">?</span></label><select class="form-select" x-model="editing.tipo"><option value="receita">Receita</option><option value="despesa">Despesa</option></select></div>
       <div class="form-group"><label class="form-label">Valor (R$) <span class="hq" data-tip="Valor total do lançamento, em reais.">?</span></label><input class="form-input" type="number" x-model="editing.valor"></div>
@@ -1891,9 +1891,9 @@
 </div>
 
 <!-- SERVIÇO (catálogo) -->
-<div class="modal-backdrop" x-show="modal==='servico'" x-cloak>
+<div class="modal-backdrop pagemode" x-show="modal==='servico'" x-cloak>
   <div class="modal" style="max-width:520px">
-    <div class="modal-head"><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
+    <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
         <div class="form-group" style="grid-column:1/-1"><label class="form-label">Nome do serviço <span class="hq" data-tip="Nome do serviço no catálogo.">?</span></label><input class="form-input" x-model="editing.nome" placeholder="Ex.: Gestão de Redes Sociais"></div>
