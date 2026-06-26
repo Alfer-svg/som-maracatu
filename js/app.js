@@ -302,7 +302,7 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
-    verArquivadosOrc: false, // lista de Orçamentos: mostrar arquivados (recusados/vencidos)
+    orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos
     opTab: 'quadro', // vista do Operacional: 'quadro' (kanban) | 'semana' (programação) | 'layouts'
     boards: [], boardSel: '', boardEdit: false, // quadros (Trello) — vários, editáveis
@@ -2127,15 +2127,30 @@ ${this._docFoot()}
       const n = Math.max(max + 1, base);
       return pref + '-' + ano + '-' + String(n).padStart(3, '0');
     },
-    // Arquivado = Recusado OU vencido (passou da validade) e não aprovado.
-    orcamentoArquivado(o) { if (o.status === 'Recusado') return true; if (o.status === 'Aprovado') return false; const v = this.validadeData(o); return !!(v && v < MD.today()); },
+    // Arquivado = Recusado, APROVADO, aceito digitalmente (ACEITA) OU vencido (passou da validade).
+    orcamentoArquivado(o) { if (o.status === 'Recusado' || o.status === 'Aprovado') return true; if (o._envio === 'ACEITA') return true; const v = this.validadeData(o); return !!(v && v < MD.today()); },
+    orcEhRascunho(o) { return (!o.status || o.status === 'Rascunho') && !this.orcamentoArquivado(o); },
     get orcamentosArquivadosCount() { return this.proposals.filter(o => this.orcamentoArquivado(o)).length; },
+    get orcamentosRascunhoCount() { return this.proposals.filter(o => this.orcEhRascunho(o)).length; },
     get orcamentosFiltrados() {
       const q = this.busca.toLowerCase();
+      const passa = o => this.orcFiltro === 'arquivados' ? this.orcamentoArquivado(o)
+        : this.orcFiltro === 'rascunhos' ? this.orcEhRascunho(o)
+        : (!this.orcamentoArquivado(o) && !this.orcEhRascunho(o)); // 'ativos' = enviados, aguardando resposta
       return [...this.proposals]
-        .filter(o => this.verArquivadosOrc ? this.orcamentoArquivado(o) : !this.orcamentoArquivado(o))
+        .filter(passa)
         .sort((a, b) => (b.data || '').localeCompare(a.data || ''))
         .filter(o => !q || ((o.numero || '') + ' ' + (o.cliente || '') + ' ' + (o.projeto || '') + ' ' + (o.descricao || '')).toLowerCase().includes(q));
+    },
+    // Marca o orçamento como Aprovado e persiste (chamado ao gerar contrato): sai
+    // de "Ativos" e vai pra "Arquivados".
+    async _marcarOrcamentoAprovado(o) {
+      if (!o || o.status === 'Aprovado') return;
+      o.status = 'Aprovado';
+      const i = this.proposals.findIndex(x => x.id === o.id);
+      if (i > -1) this.proposals[i] = { ...this.proposals[i], status: 'Aprovado' };
+      this.persist('proposals', this.proposals);
+      try { const { _token, _envio, ...dados } = o; await this.api('POST', '/propostas', { id: o.id || undefined, numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }); } catch (e) { /* offline: localStorage mantém */ }
     },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
@@ -2337,6 +2352,7 @@ ${this._docFoot()}
         this.contracts.unshift(ct); this.persist('contracts', this.contracts);
       }
       this.editing = { ...ct };
+      this._marcarOrcamentoAprovado(o); // orçamento aprovado → sai de Ativos, vai pra Arquivados
       this.verDocumento('contrato', ct); // mostra o contrato pronto pra impressão/envio
     },
 

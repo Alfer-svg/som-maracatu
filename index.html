@@ -409,14 +409,15 @@
       <!-- ========== ORÇAMENTOS ========== -->
       <section x-show="page==='orcamentos'">
         <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
-          <div class="text-3 fs-12"><span x-text="verArquivadosOrc?'Arquivados':'Ativos'"></span>: <span x-text="orcamentosFiltrados.length"></span></div>
-          <button class="btn btn-ghost btn-sm" @click="verArquivadosOrc=!verArquivadosOrc" title="Arquivados = recusados ou vencidos (passou da validade sem aprovação)">
-            <i class="ph ph-archive ic-ph"></i>
-            <span x-text="verArquivadosOrc ? 'Ver ativos' : ('Ver arquivados ('+orcamentosArquivadosCount+')')"></span>
-          </button>
+          <div class="flex" style="gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" :class="orcFiltro==='ativos'?'btn-primary':'btn-ghost'" @click="orcFiltro='ativos'" title="Em aberto — enviados, aguardando resposta">Ativos</button>
+            <button class="btn btn-sm" :class="orcFiltro==='rascunhos'?'btn-primary':'btn-ghost'" @click="orcFiltro='rascunhos'" title="Ainda não enviados"><i class="ph ph-pencil-simple ic-ph"></i> Rascunhos (<span x-text="orcamentosRascunhoCount"></span>)</button>
+            <button class="btn btn-sm" :class="orcFiltro==='arquivados'?'btn-primary':'btn-ghost'" @click="orcFiltro='arquivados'" title="Aprovados, recusados ou vencidos"><i class="ph ph-archive ic-ph"></i> Arquivados (<span x-text="orcamentosArquivadosCount"></span>)</button>
+          </div>
+          <div class="text-3 fs-12"><span x-text="orcamentosFiltrados.length"></span> na lista</div>
         </div>
         <template x-if="proposals.length===0"><div class="card empty">Nenhum orçamento ainda. Clique em “+ Orçamento” pra criar a primeira proposta.</div></template>
-        <template x-if="proposals.length>0 && orcamentosFiltrados.length===0"><div class="card empty" x-text="verArquivadosOrc ? 'Nenhum orçamento arquivado.' : 'Nenhum orçamento ativo. Veja os arquivados ou crie um novo.'"></div></template>
+        <template x-if="proposals.length>0 && orcamentosFiltrados.length===0"><div class="card empty" x-text="orcFiltro==='arquivados' ? 'Nenhum orçamento arquivado.' : orcFiltro==='rascunhos' ? 'Nenhum rascunho.' : 'Nenhum orçamento ativo. Veja os rascunhos/arquivados ou crie um novo.'"></div></template>
         <div class="card" x-show="orcamentosFiltrados.length">
           <table class="table">
             <thead><tr><th>Número</th><th>Cliente</th><th>Projeto</th><th>Serviços</th><th>Data</th><th>Mensalidade</th><th>Status</th><th></th></tr></thead>
@@ -2679,7 +2680,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=150"></script>
+<script src="js/app.js?v=151"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
