@@ -1570,7 +1570,16 @@ ${this._docFoot()}
       return { label: f.tipo === 'receita' ? 'A receber' : 'A pagar', style: 'background:#fef3c7;color:#a16207' };
     },
     finDotCor(f) { return f.status === 'pago' ? '#16a34a' : (f.vencimento && f.vencimento < MD.today()) ? '#dc2626' : '#C9A24B'; },
-    finCardBorder(f) { return 'border-left:3px solid ' + this.finDotCor(f); },
+    // Fundo do card: recebido/pago = verde clarinho · atrasado = vermelho clarinho · pendente no prazo = padrão.
+    finCardBg(f) {
+      if (f.status === 'pago') return '#f0fdf4';
+      if (f.vencimento && f.vencimento < MD.today()) return '#fef2f2';
+      return '';
+    },
+    finCardBorder(f) {
+      const bg = this.finCardBg(f);
+      return 'border-left:3px solid ' + this.finDotCor(f) + (bg ? ';background:' + bg : '');
+    },
     copiar(txt, label) { if (!txt) return; (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => alert((label || 'Texto') + ' copiado!')).catch(() => prompt('Copie:', txt)); },
     abrirUrl(u) { if (u) window.open(u, '_blank'); else alert('Sem link disponível.'); },
     // Base da série de um lançamento de contrato: tira o sufixo " (n/N)" da
