@@ -597,6 +597,7 @@
 
                 <!-- ações -->
                 <div class="fin-acoes">
+                  <button x-show="f.tipo==='receita' && f.cliente" @click="abrirFinanceCliente(f.cliente)" title="Ver a situação financeira do cliente — histórico de faturas, pagas e a receber"><i class="ph ph-chart-line-up ic-ph"></i> Situação do cliente</button>
                   <button x-show="f.tipo==='receita'" @click="gerarFatura(f)" title="Gerar a fatura em PDF pra imprimir ou enviar ao cliente"><i class="ph ph-file-text ic-ph"></i> PDF</button>
                   <button x-show="f.tipo==='receita' && !f.boletoId && f.status!=='pago'" class="fin-btn-cora" @click="gerarBoleto(f)" :disabled="f._cobrando" title="Emitir um boleto bancário (com Pix) no Banco Inter pra esta cobrança"><i class="ph ph-barcode ic-ph"></i> Gerar boleto (Inter)</button>
                   <button x-show="f.tipo==='receita'" @click="cobrarEmail(f)" :disabled="f._cobrando" title="Enviar a cobrança/boleto por e-mail pro cliente"><i class="ph ph-envelope ic-ph"></i> E-mail</button>
