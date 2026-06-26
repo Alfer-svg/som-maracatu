@@ -347,6 +347,7 @@ document.addEventListener('alpine:init', () => {
     modal: null, // 'lead' | 'client' | 'finance' | 'project' | 'venc'
     editing: {},
     vencEdit: {}, // modal de alterar vencimento (calendário + cascata p/ faturas seguintes)
+    pagoEdit: {}, // modal de quitação (calendário p/ a data do recebimento/pagamento)
     projetoSel: '', // dropdown de tipo de projeto no orçamento ('Outros' libera texto livre)
     docHtml: '', docTipo: '', docObj: null, // preview de documento pronto (contrato/proposta)
     assinaturaLoading: false, // gerando PDF / enviando p/ ZapSign
@@ -1449,11 +1450,15 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     _parseDataBR(s) { const m = String(s || '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (!m) return ''; const d = m[1].padStart(2, '0'), mo = m[2].padStart(2, '0'); return `${m[3]}-${mo}-${d}`; },
     togglePago(f) {
       if (f.status === 'pago') { f.status = 'pendente'; delete f.pagoEm; this.persist('finance', this.finance); return; }
-      const resp = prompt('Data da quitação (dd/mm/aaaa):', MD.fmtDate(MD.today()));
-      if (resp === null) return; // cancelou: não liquida
-      f.pagoEm = this._parseDataBR(resp) || MD.today();
-      f.status = 'pago';
-      this.persist('finance', this.finance);
+      // Abre o modal com calendário (antes era um prompt de texto dd/mm/aaaa).
+      this.pagoEdit = { lancId: f.id, descricao: f.descricao, tipo: f.tipo, data: MD.today() };
+      this.modal = 'pago';
+    },
+    confirmarPago() {
+      const pe = this.pagoEdit; if (!pe.data) return alert('Escolha a data.');
+      const f = this.finance.find(x => x.id === pe.lancId); if (!f) { this.modal = null; return; }
+      f.pagoEm = pe.data; f.status = 'pago';
+      this.persist('finance', this.finance); this.modal = null;
     },
     excluirLancamento(f) { if (!confirm('Excluir este lançamento?')) return; this.finance = this.finance.filter(x => x.id !== f.id); this.persist('finance', this.finance); this.modal = null; },
 

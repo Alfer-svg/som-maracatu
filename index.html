@@ -1656,6 +1656,21 @@
   </div>
 </div>
 
+<!-- QUITAÇÃO (receber/pagar) -->
+<div class="modal-backdrop" x-show="modal==='pago'" x-cloak>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title"><i class="ph ph-check-circle ic-ph"></i> <span x-text="pagoEdit.tipo==='receita'?'Confirmar recebimento':'Confirmar pagamento'"></span></div><button class="btn btn-icon btn-ghost" @click="modal=null" title="Fechar">✕</button></div>
+    <div class="modal-body" style="display:block">
+      <div class="text-3 fs-12 mb-2" x-text="pagoEdit.descricao"></div>
+      <div class="form-group"><label class="form-label" x-text="pagoEdit.tipo==='receita'?'Data do recebimento':'Data do pagamento'"></label><input class="form-input" type="date" x-model="pagoEdit.data"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="modal=null">Cancelar</button>
+      <button class="btn btn-primary" @click="confirmarPago()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- DASHBOARD FINANCEIRO DO CLIENTE -->
 <div class="modal-backdrop" x-show="modal==='finCliente'" x-cloak>
   <div class="modal" style="max-width:720px" x-data x-show="finClienteResumo">
@@ -2680,7 +2695,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=153"></script>
+<script src="js/app.js?v=154"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
