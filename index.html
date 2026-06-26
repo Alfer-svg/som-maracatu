@@ -29,7 +29,7 @@
   <link rel="icon" href="assets/favicon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=76">
+  <link rel="stylesheet" href="css/styles.css?v=77">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1808,7 +1808,7 @@
 
 <!-- ORÇAMENTO / PROPOSTA -->
 <div class="modal-backdrop pagemode" x-show="modal==='orcamento'" x-cloak>
-  <div class="modal" style="max-width:700px">
+  <div class="modal">
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="(editing.id?'Editar ':'Nova ')+'Proposta'"></div></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
@@ -1929,7 +1929,7 @@
 
 <!-- SERVIÇO (catálogo) -->
 <div class="modal-backdrop pagemode" x-show="modal==='servico'" x-cloak>
-  <div class="modal" style="max-width:520px">
+  <div class="modal">
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Serviço'"></div></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
@@ -1976,7 +1976,7 @@
 
 <!-- CONTRATO -->
 <div class="modal-backdrop pagemode" x-show="modal==='contrato'" x-cloak>
-  <div class="modal" style="max-width:700px">
+  <div class="modal">
     <div class="modal-head"><button class="btn btn-ghost btn-sm" @click="modal=null" title="Voltar"><i class="ph ph-arrow-left ic-ph"></i> Voltar</button><div class="modal-title" x-text="(editing.id?'Editar ':'Novo ')+'Contrato'"></div></div>
     <div class="modal-body">
       <div class="grid grid-2" style="gap:14px">
