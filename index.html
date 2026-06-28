@@ -180,8 +180,8 @@
         <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Relatórios</span>
       </div>
 
-      <!-- Pessoal (só admin) — fichas de registro -->
-      <div class="nav-item" x-show="ehAdmin" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Fichas de registro dos empregados (documento de RH).">
+      <!-- Pessoal — cada um vê a própria ficha; admin vê toda a equipe -->
+      <div class="nav-item" x-show="podeVer('pessoal')" :class="page==='pessoal'?'active':''" @click="go('pessoal')" title="Sua ficha de registro (RH).">
         <span class="nav-icon"><i class="ph ph-identification-badge ic-ph"></i></span><span>Pessoal</span>
       </div>
 
@@ -2705,7 +2705,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=159"></script>
+<script src="js/app.js?v=160"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

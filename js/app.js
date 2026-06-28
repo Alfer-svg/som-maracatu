@@ -231,11 +231,12 @@ const PAPEIS_INFO = [
 // '*' = todas as páginas. Demais: lista de páginas liberadas.
 const PERMISSOES = {
   admin: '*',
-  gestor: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding'],
-  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding'],
-  colaborador: ['dashboard', 'comercial', 'operacional', 'monitoramento', 'onboarding'],
-  colaborador2: ['operacional'], // só o Operacional — e dentro dele, só os trabalhos em que está envolvido (filtrado em carregarProjetos)
-  financeiro: ['dashboard', 'comercial', 'orcamentos', 'contratos', 'financeiro'],
+  // Dashboard é exclusivo do admin. 'pessoal' liberado a todos (cada um vê só a própria ficha).
+  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  comercial: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
+  colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
+  financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
 };
 
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
@@ -550,7 +551,7 @@ document.addEventListener('alpine:init', () => {
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
     podeVer(p) { const perm = PERMISSOES[this.papel]; return perm === '*' ? true : (Array.isArray(perm) && perm.includes(p)); },
-    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial'].find(p => this.podeVer(p)) || 'dashboard'); },
+    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
     // PAPEIS_INFO com os nomes/descrições editados aplicados (cor/bg/permissões seguem fixos pelo id).
@@ -567,7 +568,12 @@ document.addEventListener('alpine:init', () => {
       if (!this.ehAdmin) return;
       try { await this.api('PUT', '/config/ui.papeis', { valor: JSON.stringify(this.papeisCustom) }); try { await this.carregarEquipe(); } catch {} alert('Nomes dos perfis salvos.'); } catch (e) { alert(e.message || e); }
     },
-    async carregarUsuarios() { if (!this.ehAdmin) return; try { this.usuarios = (await this.api('GET', '/auth/usuarios')) || []; } catch (e) { this.usuarios = []; } },
+    async carregarUsuarios() {
+      try {
+        if (this.ehAdmin) this.usuarios = (await this.api('GET', '/auth/usuarios')) || [];
+        else { const eu = await this.api('GET', '/auth/me'); this.usuarios = eu ? [eu] : []; } // não-admin: só a própria ficha
+      } catch (e) { this.usuarios = []; }
+    },
     async carregarEquipe() { try { this.equipe = (await this.api('GET', '/auth/equipe')) || []; } catch { this.equipe = []; } },
     // ── Presença / online (Operacional) ──
     async heartbeat() { try { await this.api('POST', '/auth/heartbeat', {}); } catch {} },
@@ -618,7 +624,9 @@ document.addEventListener('alpine:init', () => {
     async salvarFicha() {
       const f = this.fichaForm; this.fichaMsg = '';
       try {
-        await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, ficha: f.ficha || {} });
+        // admin edita a ficha de qualquer um; demais editam só a própria (via /auth/me)
+        if (this.ehAdmin) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, ficha: f.ficha || {} });
+        else await this.api('PATCH', '/auth/me', { nome: f.nome, ficha: f.ficha || {} });
         await this.carregarUsuarios(); this.carregarEquipe(); this.fichaModal = false;
       } catch (e) { this.fichaMsg = '⚠ ' + e.message; }
     },
