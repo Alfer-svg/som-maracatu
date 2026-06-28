@@ -132,8 +132,8 @@ const EMPRESA = {
   fone: '(11) 96624-9876',
   endereco: 'Av. A, 4165 – Torre 6, Sl 611 e 612 – Paiva, Cabo de Santo Agostinho – PE · CEP 54522-005',
   cidade: 'Cabo de Santo Agostinho/PE',
-  representante: 'Laura', // representante legal da Maracatu (CONTRATADA) — completar nome
-  repCpf: '',            // CPF da representante da Maracatu (preencher)
+  representante: 'Maria Laura Alves Ferreira', // representante legal da Maracatu (CONTRATADA)
+  repCpf: '089.974.194-04',                    // CPF da representante da Maracatu
 };
 // Texto institucional fixo da proposta (modelo Bella Napoli).
 const PROPOSTA_INTRO = 'É com satisfação que encaminhamos esta proposta comercial para a sua avaliação. A proposta foi elaborada segundo as melhores práticas profissionais, a fim de atender aos altos padrões de qualidade de serviço. As informações contidas neste documento são confidenciais e de propriedade da Maracatu Digital Intelligence.\n\nEm um mundo que vive quase 100% conectado, a Maracatu Digital Intelligence nasceu para tornar a sua presença on-line cada vez mais forte. Somos uma agência de marketing digital com foco em RESULTADOS. Unimos vibrações, ferramentas atuais, inteligência de mercado e muita criatividade para elevar o potencial do seu negócio.';
@@ -665,7 +665,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async salvarColaborador() {
       const f = this.pessoaForm; this.pessoaMsg = '';
       try {
-        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '' });
+        if (f.id) await this.api('PATCH', '/auth/usuarios/' + f.id, { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha || undefined, foto: f.foto || '' });
         else await this.api('POST', '/auth/usuarios', { nome: f.nome, email: f.email, papel: f.papel, senha: f.senha, foto: f.foto || '' });
         await this.carregarUsuarios(); this.carregarEquipe(); this.pessoaModal = false;
       } catch (e) { this.pessoaMsg = '⚠ ' + e.message; }

@@ -2533,7 +2533,7 @@
         </div>
       </div>
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">Nome * <span class="hq" data-tip="Nome (obrigatório).">?</span></label><input class="form-input" x-model="pessoaForm.nome" placeholder="Nome do colaborador"></div>
-      <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail * <span class="hq" data-tip="E-mail (obrigatório) — também usado como login.">?</span></label><input class="form-input" type="email" x-model="pessoaForm.email" :disabled="!!pessoaForm.id" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">O e-mail de login não pode ser alterado.</div></div>
+      <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail * <span class="hq" data-tip="E-mail (obrigatório) — também usado como login.">?</span></label><input class="form-input" type="email" x-model="pessoaForm.email" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">Alterar o e-mail muda o login de acesso desse usuário.</div></div>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Perfil de acesso * <span class="hq" data-tip="Nível de acesso do usuário no sistema (obrigatório).">?</span></label>
         <select class="form-select" x-model="pessoaForm.papel"><template x-for="p in PAPEIS_INFO" :key="p.id"><option :value="p.id" x-text="p.nome"></option></template></select>
@@ -2697,7 +2697,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=157"></script>
+<script src="js/app.js?v=158"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
