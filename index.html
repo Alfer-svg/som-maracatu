@@ -1184,6 +1184,7 @@
                 <select class="form-select" x-model="novaInter.tipo" style="width:140px">
                   <template x-for="t in TIPOS_INTER" :key="t[0]"><option :value="t[0]" x-text="t[0]"></option></template>
                 </select>
+                <input type="date" class="form-input" style="width:150px" x-model="novaInter.data" x-show="novaInter.tipo==='Reunião'" title="Data da reunião (em branco = hoje)">
                 <textarea class="form-textarea" style="flex:1;min-width:200px;min-height:46px" x-model="novaInter.texto" placeholder="O que aconteceu? (Enter quebra linha · Cmd/Ctrl+Enter registra)" @keydown.enter.meta.prevent="addInteracao()" @keydown.enter.ctrl.prevent="addInteracao()"></textarea>
                 <button class="btn btn-primary btn-sm" @click="addInteracao()">+ Registrar</button>
               </div>
@@ -1320,11 +1321,18 @@
         <div class="grid grid-4 mb-3">
           <template x-for="p in PAPEIS_INFO" :key="p.id">
             <div class="card" style="padding:12px">
-              <span class="badge" :style="'background:'+p.bg+';color:'+p.cor" x-text="p.nome"></span>
-              <div class="text-3 fs-12" style="margin-top:6px" x-text="p.desc"></div>
+              <span class="badge" :style="'background:'+p.bg+';color:'+p.cor" x-text="(papeisCustom[p.id]&&papeisCustom[p.id].nome)||p.nome"></span>
+              <template x-if="ehAdmin">
+                <div style="margin-top:8px">
+                  <input class="form-input fs-12" x-model="papeisCustom[p.id].nome" placeholder="Nome do perfil">
+                  <input class="form-input fs-12" style="margin-top:4px" x-model="papeisCustom[p.id].desc" placeholder="Descrição">
+                </div>
+              </template>
+              <template x-if="!ehAdmin"><div class="text-3 fs-12" style="margin-top:6px" x-text="(papeisCustom[p.id]&&papeisCustom[p.id].desc)||p.desc"></div></template>
             </div>
           </template>
         </div>
+        <template x-if="ehAdmin"><div class="mb-3"><button class="btn btn-primary btn-sm" @click="salvarPapeis()"><i class="ph ph-check ic-ph"></i> Salvar nomes dos perfis</button> <span class="text-3 fs-12" style="margin-left:6px">Só muda o nome exibido — o que cada perfil acessa continua igual.</span></div></template>
         <div class="card mb-4" style="padding:0;overflow:hidden">
           <template x-if="!usuarios.length"><div class="empty">Nenhum usuário. Clique em <b>+ Usuário</b>.</div></template>
           <template x-for="u in usuarios" :key="u.id">
@@ -2536,7 +2544,7 @@
       <div class="form-group" style="margin-bottom:12px"><label class="form-label">E-mail * <span class="hq" data-tip="E-mail (obrigatório) — também usado como login.">?</span></label><input class="form-input" type="email" x-model="pessoaForm.email" placeholder="email@maracatu.com" autocomplete="off"><div class="text-3 fs-12" x-show="pessoaForm.id" style="margin-top:4px">Alterar o e-mail muda o login de acesso desse usuário.</div></div>
       <div class="form-group" style="margin-bottom:12px">
         <label class="form-label">Perfil de acesso * <span class="hq" data-tip="Nível de acesso do usuário no sistema (obrigatório).">?</span></label>
-        <select class="form-select" x-model="pessoaForm.papel"><template x-for="p in PAPEIS_INFO" :key="p.id"><option :value="p.id" x-text="p.nome"></option></template></select>
+        <select class="form-select" x-model="pessoaForm.papel"><template x-for="p in papeis" :key="p.id"><option :value="p.id" x-text="p.nome"></option></template></select>
         <div class="text-3 fs-12" style="margin-top:4px" x-text="papelInfo(pessoaForm.papel).desc"></div>
       </div>
       <div class="form-group"><label class="form-label" x-text="pessoaForm.id?'Nova senha (deixe em branco pra manter)':'Senha *'"></label><input class="form-input" type="password" x-model="pessoaForm.senha" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></div>
@@ -2697,7 +2705,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=158"></script>
+<script src="js/app.js?v=159"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

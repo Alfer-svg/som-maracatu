@@ -289,12 +289,14 @@ document.addEventListener('alpine:init', () => {
     metaBusy: false,
     radarAberto: true, // painel Radar do Monitoramento expandido
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
-    novaInter: { tipo: 'Ligação', texto: '' }, // form de nova interação na timeline
+    novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
     editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
     // Pessoal — perfis de acesso + gestão de equipe
     PAPEIS_INFO,
+    // nomes/descrições editáveis dos perfis (sobrescrevem PAPEIS_INFO; salvos em /config/ui.papeis)
+    papeisCustom: PAPEIS_INFO.reduce((m, p) => { m[p.id] = { nome: p.nome, desc: p.desc }; return m; }, {}),
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -375,7 +377,7 @@ document.addEventListener('alpine:init', () => {
       this.finance   = MD.get('som_finance', []);
       this.fornecedores = MD.get('som_fornecedores', []); // cadastro de fornecedores (despesas)
       this.catalogo  = MD.get('som_catalogo', []); // catálogo de serviços reusável no orçamento (cache; fonte = backend)
-      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.startHeartbeat(); this.startChatMonitor(); this.go(this.page); }
+      if (this.token) { this.page = MD.get('som_page', 'dashboard'); this.garantirPaginaPermitida(); this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis(); this.startHeartbeat(); this.startChatMonitor(); this.go(this.page); }
       // Retorno do OAuth da Meta (?meta=ok|erro) — mostra toast, limpa a URL e reabre o cliente
       const _qp = new URLSearchParams(location.search);
       if (_qp.get('meta')) {
@@ -412,7 +414,7 @@ document.addEventListener('alpine:init', () => {
         localStorage.setItem('som_token', d.token); localStorage.setItem('som_usuario', JSON.stringify(d.usuario));
         localStorage.setItem('som_login_visto', '1');
         if (this.lembrarLogin) localStorage.setItem('som_login_email', this.loginEmail); else localStorage.removeItem('som_login_email');
-        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe();
+        this.loginSenha = ''; this.garantirPaginaPermitida(); this.startHeartbeat(); this.heartbeat(); this.initAudio(); this.pedirNotif(); this.startChatMonitor(); await this.carregarClientes(); this.carregarOnboardings(); this.carregarColecoes(); this.carregarEquipe(); this.carregarPapeis();
       } catch (e) { this.loginErro = e.message || 'Falha no login.'; }
       finally { this.logando = false; }
     },
@@ -543,7 +545,7 @@ document.addEventListener('alpine:init', () => {
       const nome = cls.split('ph-').pop();
       return 'assets/icons/' + nome + '.png?v=7';
     },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); } if (p === 'operacional') { if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') this.carregarLeads(); if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -551,7 +553,20 @@ document.addEventListener('alpine:init', () => {
     get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['operacional', 'monitoramento', 'crm', 'financeiro', 'comercial'].find(p => this.podeVer(p)) || 'dashboard'); },
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
-    papelInfo(id) { return PAPEIS_INFO.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
+    // PAPEIS_INFO com os nomes/descrições editados aplicados (cor/bg/permissões seguem fixos pelo id).
+    get papeis() { return PAPEIS_INFO.map(p => { const o = this.papeisCustom[p.id] || {}; return { ...p, nome: o.nome || p.nome, desc: o.desc || p.desc }; }); },
+    papelInfo(id) { return this.papeis.find(x => x.id === id) || { nome: id || '—', cor: '#6b7280', bg: '#f1f5f9', desc: '' }; },
+    async carregarPapeis() {
+      let custom = {};
+      try { const r = await this.api('GET', '/config/ui.papeis'); custom = (r && r.valor) ? JSON.parse(r.valor) : {}; } catch { custom = {}; }
+      const m = {};
+      PAPEIS_INFO.forEach(p => { const o = custom[p.id] || {}; m[p.id] = { nome: o.nome || p.nome, desc: o.desc || p.desc }; });
+      this.papeisCustom = m;
+    },
+    async salvarPapeis() {
+      if (!this.ehAdmin) return;
+      try { await this.api('PUT', '/config/ui.papeis', { valor: JSON.stringify(this.papeisCustom) }); try { await this.carregarEquipe(); } catch {} alert('Nomes dos perfis salvos.'); } catch (e) { alert(e.message || e); }
+    },
     async carregarUsuarios() { if (!this.ehAdmin) return; try { this.usuarios = (await this.api('GET', '/auth/usuarios')) || []; } catch (e) { this.usuarios = []; } },
     async carregarEquipe() { try { this.equipe = (await this.api('GET', '/auth/equipe')) || []; } catch { this.equipe = []; } },
     // ── Presença / online (Operacional) ──
@@ -1199,9 +1214,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       try { await this.api('POST', '/clientes', { id, empresa: c.empresa, dados }); await this.carregarClientes(); }
       catch (e) { alert(e.message || 'Falha ao salvar o cliente.'); }
     },
-    _logInteracao(c, tipo, texto) {
+    _logInteracao(c, tipo, texto, data) {
       if (!c) return; if (!Array.isArray(c.timeline)) c.timeline = [];
-      c.timeline.unshift({ id: MD.uid(), em: new Date().toISOString(), tipo, texto, por: (this.usuario && this.usuario.nome) || '' });
+      // data (YYYY-MM-DD) opcional — ex.: reunião agendada/realizada noutro dia. Sem data = agora. Recife (UTC-3).
+      const em = data ? new Date(data + 'T12:00:00-03:00').toISOString() : new Date().toISOString();
+      c.timeline.unshift({ id: MD.uid(), em, tipo, texto, por: (this.usuario && this.usuario.nome) || '' });
       this.registrarProducao('atendimento', tipo + (c.empresa ? (' · ' + c.empresa) : ''));
       return this.persistirCliente(c);
     },
@@ -1209,8 +1226,8 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     async addInteracao() {
       const c = this.monitorCliente; if (!c) return;
       const t = (this.novaInter.texto || '').trim(); if (!t) return alert('Escreva o que aconteceu.');
-      await this._logInteracao(c, this.novaInter.tipo, t);
-      this.novaInter = { tipo: 'Ligação', texto: '' };
+      await this._logInteracao(c, this.novaInter.tipo, t, this.novaInter.data);
+      this.novaInter = { tipo: 'Ligação', texto: '', data: '' };
     },
     async removerInteracao(c, id) {
       if (!c || !confirm('Remover este registro do histórico?')) return;
