@@ -218,6 +218,9 @@ const respMerge = (arr) => (Array.isArray(arr) ? arr : []).slice(0, 5).map(r => 
 const TIPOS_DOC = ['Contrato', 'Proposta', 'Apresentação', 'Relatório', 'Briefing', 'Identidade visual', 'Outro'];
 const TIPOS_INTER = [['Ligação', '📞'], ['WhatsApp', '💬'], ['E-mail', '✉️'], ['Reunião', '🤝'], ['Visita', '📍'], ['Nota', '📝']];
 const TIPOS_POST = ['Estático', 'Carrossel', 'Animação', 'Vídeo'];
+// Paleta de cores BEM distintas pras bolinhas (avatares) — uma cor por membro,
+// pra diferenciar a equipe (antes a cor vinha do papel = todos iguais). Texto branco.
+const AVATAR_CORES = ['#E11D48', '#F97316', '#0EA5E9', '#16A34A', '#7C3AED', '#DB2777', '#0D9488', '#CA8A04', '#2563EB', '#65A30D', '#9333EA', '#0891B2', '#DC2626', '#059669', '#4F46E5', '#C026D3'];
 
 /* ---------- Pessoal: perfis de acesso (papéis) e o que cada um enxerga ---------- */
 const PAPEIS_INFO = [
@@ -1781,8 +1784,14 @@ ${this._docFoot()}
     toggleLabel(key) { if (!Array.isArray(this.editing.labels)) this.editing.labels = []; const i = this.editing.labels.indexOf(key); if (i >= 0) this.editing.labels.splice(i, 1); else this.editing.labels.push(key); },
     prazoCor(p) { if (!p.prazo || p.status === 'Concluído') return ''; const s = this.semanaAtual; if (p.prazo < s.ini) return '#eb5a46'; if (p.prazo <= s.fim) return '#ff9f1a'; return ''; },
     iniciais(nome) { return (nome || '?').trim().split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase(); },
-    avatarBg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).bg : '#dfe1e6'; },
-    avatarFg(nome) { const m = (this.equipe || []).find(x => x.nome === nome); return m ? this.papelInfo(m.papel).cor : '#5e6c84'; },
+    // Cor distinta por MEMBRO (índice na equipe → paleta); fallback por hash do nome.
+    avatarBg(nome) {
+      const eq = this.equipe || [];
+      let i = eq.findIndex(x => x.nome === nome);
+      if (i < 0) { i = 0; const s = (nome || ''); for (let k = 0; k < s.length; k++) i = (i * 31 + s.charCodeAt(k)) >>> 0; }
+      return AVATAR_CORES[i % AVATAR_CORES.length];
+    },
+    avatarFg() { return '#ffffff'; },
     onDropProjeto(status) { const p = this.projects.find(x => x.id === this.dragId); if (p && p.status !== status) this.moverProjeto(p, status); this.dragId = null; this.dropCol = null; },
     onDropColuna(alvoNome) {
       const b = this.boardAtual, from = b.colunas.findIndex(c => c.nome === this.dragColNome), to = b.colunas.findIndex(c => c.nome === alvoNome);
