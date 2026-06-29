@@ -1346,6 +1346,7 @@
                 <div class="text-3 fs-12 truncate" x-text="u.email"></div>
               </div>
               <span class="badge" :style="'background:'+papelInfo(u.papel).bg+';color:'+papelInfo(u.papel).cor" x-text="papelInfo(u.papel).nome"></span>
+              <button class="btn btn-icon btn-ghost btn-sm" @click="enviarBoasVindas(u)" title="Enviar e-mail de boas-vindas (reseta a senha para 123456)" style="color:#22C55E"><i class="ph ph-envelope-simple ic-ph"></i></button>
               <button class="btn btn-icon btn-ghost btn-sm" @click="editarColaborador(u)" title="Editar acesso"><i class="ph ph-pencil-simple ic-ph"></i></button>
               <button class="btn btn-icon btn-ghost btn-sm" @click="removerColaborador(u)" :disabled="u.id===(usuario&&usuario.id)" :title="u.id===(usuario&&usuario.id)?'Você não pode remover a si mesmo':'Remover'" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
             </div>
@@ -2705,7 +2706,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=161"></script>
+<script src="js/app.js?v=162"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

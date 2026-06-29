@@ -718,6 +718,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       try { await this.api('DELETE', '/auth/usuarios/' + u.id); await this.carregarUsuarios(); }
       catch (e) { alert(e.message); }
     },
+    async enviarBoasVindas(u) {
+      if (!confirm('Enviar e-mail de boas-vindas para ' + u.nome + ' (' + u.email + ')?\n\nA senha dele será redefinida para 123456 e ele receberá as instruções para acessar e cadastrar uma nova senha.')) return;
+      try { await this.api('POST', '/auth/usuarios/' + u.id + '/boas-vindas'); alert('E-mail de boas-vindas enviado para ' + u.email + ' ✅'); }
+      catch (e) { alert(e.message); }
+    },
     // ── Onboardings recebidos do site ──
     async carregarOnboardings() { try { this.onboardings = (await this.api('GET', '/onboarding/admin')) || []; } catch { this.onboardings = []; } this.autoConverterOnboardings(); },
     get onbPendentes() { return (this.onboardings || []).filter(o => o.status === 'pendente'); },
