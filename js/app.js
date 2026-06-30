@@ -946,6 +946,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (!confirm('Arquivar o onboarding de "' + o.empresa + '"? (sai da fila, sem virar cliente)')) return;
       try { await this.api('POST', '/onboarding/admin/' + o.id + '/arquivar', {}); await this.carregarOnboardings(); } catch (e) { alert(e.message); }
     },
+    // Apaga o onboarding de vez (não mexe no cliente já criado, se houver). Ação irreversível.
+    async excluirOnboarding(o) {
+      if (!confirm('Apagar definitivamente o onboarding de "' + o.empresa + '"?\n\nIsto remove o registro da fila para sempre' + (o.status === 'convertido' ? ' (o cliente já criado NÃO é apagado)' : '') + '. Não dá pra desfazer.')) return;
+      try { await this.api('DELETE', '/onboarding/admin/' + o.id); await this.carregarOnboardings(); this.mostrarToast('Onboarding apagado.'); } catch (e) { alert(e.message); }
+    },
     // Grava local (cache offline) e, se for coleção compartilhada, sincroniza no backend.
     persist(key, arr) { MD.set('som_' + key, arr); if (this.token && COLECOES_SYNC.includes(key)) this.api('POST', '/colecoes/' + key, { itens: arr }).catch(() => {}); },
     // Remove itens com nome repetido (mantém o 1º) — usado pra limpar catálogo duplicado.

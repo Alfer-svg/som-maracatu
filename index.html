@@ -588,6 +588,7 @@
                 <button class="btn btn-primary btn-sm" x-show="o.status==='convertido'" @click="irClienteOnb(o)">ver cliente</button>
                 <button class="btn btn-primary btn-sm" x-show="o.status!=='convertido'" @click="converterOnboarding(o)">criar cliente</button>
                 <button class="btn btn-ghost btn-sm" x-show="o.status==='pendente'" @click="arquivarOnboarding(o)">arquivar</button>
+                <button class="btn btn-icon btn-ghost btn-sm" @click="excluirOnboarding(o)" title="Apagar onboarding (definitivo)" style="color:#dc2626"><i class="ph ph-trash ic-ph"></i></button>
               </div>
             </template>
           </div>
@@ -3050,7 +3051,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=182"></script>
+<script src="js/app.js?v=183"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
