@@ -289,8 +289,8 @@ const PAPEIS_INFO = [
 const PERMISSOES = {
   admin: '*',
   // Dashboard é exclusivo do admin. 'pessoal' liberado a todos (cada um vê só a própria ficha).
-  gestor: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
-  comercial: ['crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
+  gestor: ['painelComercial', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  comercial: ['painelComercial', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
@@ -393,6 +393,7 @@ document.addEventListener('alpine:init', () => {
     modelosFav: MD.get('som_modelos_fav', []), // nomes dos modelos favoritados (sobem no dropdown)
     colaboradores: MD.get('som_colaboradores', []), // nomes da equipe (cresce sozinho ao salvar projeto)
     versiculo: null, // Salmo/Provérbio aleatório do topo do Operacional
+    metas: { prospeccoes: 50, contatos: 25, propostas: 2 }, metasEdit: false, metasForm: {}, // metas semanais do comercial (editáveis pelo admin)
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -633,7 +634,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'painelComercial') { this.carregarLeads(); this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -995,6 +996,72 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       return (i % 2) ? 'background:rgba(0,0,0,.022)' : '';
     },
     get mrr()        { return this.clients.filter(c => c.status !== 'Inativo').reduce((a, c) => a + (+c.mensalidade || 0), 0); },
+
+    // ───────────────── PAINEL COMERCIAL ─────────────────
+    // Semana corrente (segunda→domingo, America/Recife) — base das metas semanais.
+    get semanaMetas() {
+      const hoje = new Date(Date.now() - 3 * 3600 * 1000);
+      const iso = d => d.toISOString().slice(0, 10);
+      const dow = (hoje.getDay() + 6) % 7; // 0 = segunda
+      const ini = new Date(hoje); ini.setDate(hoje.getDate() - dow);
+      const fim = new Date(ini); fim.setDate(ini.getDate() + 6);
+      return { ini: iso(ini), fim: iso(fim) };
+    },
+    get semanaMetasLabel() { const s = this.semanaMetas; return MD.fmtDate(s.ini) + ' a ' + MD.fmtDate(s.fim); },
+    _naSemanaMetas(dataISO) { if (!dataISO) return false; const d = String(dataISO).slice(0, 10); const s = this.semanaMetas; return d >= s.ini && d <= s.fim; },
+    _tiposContato: ['Ligar', 'Novo contato', 'E-mail', 'Reunião', 'Visita', 'Follow-up'],
+    // todas as ações de todos os leads, com referência ao lead dono
+    get _todasAcoes() { const out = []; for (const l of (this.leads || [])) for (const a of (l.acoes || [])) out.push({ ...a, _lead: l }); return out; },
+    // ── métricas da semana (numeradores das metas) ──
+    get metricaProspeccoes() { return (this.leads || []).filter(l => this._naSemanaMetas(l.createdAt)).length; },
+    get metricaContatos() { return this._todasAcoes.filter(a => a.status === 'feita' && this._tiposContato.includes(a.tipo) && this._naSemanaMetas(a.feitoEm)).length; },
+    get metricaPropostas() { return this._todasAcoes.filter(a => a.status === 'feita' && a.tipo === 'Enviar proposta' && this._naSemanaMetas(a.feitoEm)).length; },
+    pctMeta(atual, meta) { meta = +meta || 0; return meta <= 0 ? 0 : Math.min(100, Math.round((atual / meta) * 100)); },
+    get metasCards() {
+      return [
+        { key: 'prospeccoes', label: 'Prospecções', ico: 'ph-target',     dica: 'Leads novos criados nesta semana.', atual: this.metricaProspeccoes, meta: this.metas.prospeccoes, cor: '#6366f1' },
+        { key: 'contatos',    label: 'Contatos',     ico: 'ph-phone-call', dica: 'Ações de contato concluídas nesta semana (ligação, novo contato, e-mail, reunião, visita, follow-up).', atual: this.metricaContatos, meta: this.metas.contatos, cor: '#f59e0b' },
+        { key: 'propostas',   label: 'Propostas',    ico: 'ph-file-text',  dica: 'Ações "Enviar proposta" concluídas nesta semana.', atual: this.metricaPropostas, meta: this.metas.propostas, cor: '#f97316' },
+      ];
+    },
+    metaCor(c) { const p = this.pctMeta(c.atual, c.meta); return p >= 100 ? '#16a34a' : (p >= 60 ? c.cor : '#dc2626'); },
+    // ── funil (panorama) ──
+    get funilResumo() {
+      const cols = (this.crmStages && this.crmStages.length) ? this.crmStages : STAGES;
+      const prim = cols[0].id;
+      const ids = cols.map(c => c.id);
+      return cols.map(s => {
+        const ls = (this.leads || []).filter(l => (ids.includes(l.stage) ? l.stage : prim) === s.id);
+        return { id: s.id, ico: s.ico, color: s.color, count: ls.length, valor: ls.reduce((a, l) => a + (+l.valor || 0), 0) };
+      });
+    },
+    get funilMax() { return Math.max(1, ...this.funilResumo.map(f => f.count)); },
+    // ── pipeline / conversão ──
+    get leadsAbertosArr() { return (this.leads || []).filter(l => !['Ganho', 'Perdido'].includes(l.stage)); },
+    get pipelineValor() { return this.leadsAbertosArr.reduce((a, l) => a + (+l.valor || 0), 0); },
+    get ganhosCount() { return (this.leads || []).filter(l => l.stage === 'Ganho').length; },
+    get ganhosValor() { return (this.leads || []).filter(l => l.stage === 'Ganho').reduce((a, l) => a + (+l.valor || 0), 0); },
+    get perdidosCount() { return (this.leads || []).filter(l => l.stage === 'Perdido').length; },
+    get winRate() { const t = this.ganhosCount + this.perdidosCount; return t ? Math.round((this.ganhosCount / t) * 100) : 0; },
+    get ticketMedio() { return this.ganhosCount ? Math.round(this.ganhosValor / this.ganhosCount) : 0; },
+    // ── origens (de onde vêm e o que converte) ──
+    get origemResumo() {
+      const m = {};
+      for (const l of (this.leads || [])) { const o = l.origem || 'Outros'; (m[o] = m[o] || { origem: o, total: 0, ganho: 0 }); m[o].total++; if (l.stage === 'Ganho') m[o].ganho++; }
+      return Object.values(m).map(x => ({ ...x, conv: x.total ? Math.round((x.ganho / x.total) * 100) : 0 })).sort((a, b) => b.total - a.total);
+    },
+    get origemMax() { return Math.max(1, ...this.origemResumo.map(o => o.total)); },
+    // ── alertas que turbinam o processo ──
+    get followupsVencidos() { const h = MD.today(); return this._todasAcoes.filter(a => a.status === 'pendente' && a.data && a.data < h).sort((a, b) => (a.data < b.data ? -1 : 1)); },
+    get followupsHoje() { const h = MD.today(); return this._todasAcoes.filter(a => a.status === 'pendente' && a.data === h); },
+    get leadsSemAcao() { return this.leadsAbertosArr.filter(l => !(l.acoes || []).some(a => a.status === 'pendente')); },
+    get leadsParados() { const lim = this._dataEm(-14); return this.leadsAbertosArr.filter(l => String(l.createdAt || '').slice(0, 10) <= lim && ['Novo', 'Contatado'].includes(l.stage) && !(l.acoes || []).some(a => a.status === 'pendente')); },
+    get acoesConcluidasSemana() { return this._todasAcoes.filter(a => a.status === 'feita' && this._naSemanaMetas(a.feitoEm)).length; },
+    // ── metas: carregar/editar (admin) ──
+    async carregarMetas() { try { const r = await this.api('GET', '/config/ui.metasComercial'); const v = r && r.valor ? JSON.parse(r.valor) : null; if (v && typeof v === 'object') this.metas = { prospeccoes: +v.prospeccoes || 0, contatos: +v.contatos || 0, propostas: +v.propostas || 0 }; } catch { } },
+    abrirEditMetas() { this.metasForm = { ...this.metas }; this.metasEdit = true; },
+    async salvarMetas() { const f = this.metasForm; this.metas = { prospeccoes: Math.max(0, +f.prospeccoes || 0), contatos: Math.max(0, +f.contatos || 0), propostas: Math.max(0, +f.propostas || 0) }; this.metasEdit = false; try { await this.api('PUT', '/config/ui.metasComercial', { valor: JSON.stringify(this.metas) }); } catch (e) { alert(e.message); } },
+    irLeadCrm(l) { if (!l) return; this.page = 'crm'; MD.set('som_page', 'crm'); this.busca = ''; this.carregarCrmStages(); this.editarLead(l); },
 
     // ───────────────── CRM ─────────────────
     leadsDoEstagio(s) {

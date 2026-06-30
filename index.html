@@ -119,12 +119,15 @@
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
       <template x-if="podeVer('crm')||podeVer('orcamentos')||podeVer('servicos')||podeVer('contratos')">
         <div>
-          <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
+          <div class="nav-item" :class="(page==='painelComercial'||page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — painel, funil de vendas (CRM), orçamentos e contratos.">
             <span class="nav-icon"><i class="ph ph-briefcase ic-ph"></i></span>
             <span>Comercial</span>
             <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
           </div>
           <div class="nav-sub" x-show="comOpen">
+            <div class="nav-item nav-subitem" x-show="podeVer('painelComercial')" :class="page==='painelComercial'?'active':''" @click="go('painelComercial')" title="Painel do comercial — metas da semana, funil, conversão e alertas pra turbinar o processo.">
+              <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Painel</span>
+            </div>
             <div class="nav-item nav-subitem" x-show="podeVer('crm')" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
               <span class="nav-icon"><i class="ph ph-target ic-ph"></i></span><span>CRM</span>
               <span x-show="alertasAcoes.length" class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" :title="alertasAcoes.length+' ação(ões) pra hoje/atrasada(s)'" x-text="alertasAcoes.length"></span>
@@ -225,7 +228,7 @@
   <main class="main">
     <header class="topbar">
       <div>
-        <div class="page-title" x-text="{dashboard:'Dashboard',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Fichas de Registro',configuracoes:'Configurações',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
+        <div class="page-title" x-text="{dashboard:'Dashboard',painelComercial:'Painel Comercial',crm:'CRM — Funil de Vendas',comercial:'Clientes',orcamentos:'Orçamentos',servicos:'Serviços — Catálogo',contratos:'Contratos',financeiro:'Financeiro',operacional:'Operacional — Projetos',monitoramento:'Monitoramento de Clientes',onboarding:'Onboardings recebidos',pessoal:'Pessoal — Fichas de Registro',configuracoes:'Configurações',relatorios:'Relatórios — Ponto e Produção'}[page]"></div>
       </div>
       <div class="spacer"></div>
       <div class="search" x-show="page!=='dashboard'">
@@ -307,6 +310,127 @@
                 <div class="fw-700 fs-12" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></div>
               </div>
             </template>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== PAINEL COMERCIAL ========== -->
+      <section x-show="page==='painelComercial'">
+        <!-- Metas da semana -->
+        <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:8px">
+          <div class="fw-800 fs-16"><i class="ph ph-target ic-ph"></i> Metas da semana <span class="text-3 fs-13 fw-600" x-text="'· '+semanaMetasLabel"></span></div>
+          <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirEditMetas()"><i class="ph ph-pencil-simple ic-ph"></i> Editar metas</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px">
+          <template x-for="c in metasCards" :key="c.key">
+            <div class="card" style="padding:16px">
+              <div class="flex items-center gap-2 mb-1">
+                <i class="ph ic-ph" :class="c.ico" :style="'color:'+c.cor"></i>
+                <span class="fw-700 fs-14" x-text="c.label"></span>
+                <span class="hq" :data-tip="c.dica" style="margin-left:4px;color:#9ca3af;cursor:help">?</span>
+              </div>
+              <div class="flex items-end gap-2">
+                <span class="fw-800" style="font-size:30px;line-height:1" :style="'color:'+metaCor(c)" x-text="c.atual"></span>
+                <span class="text-3 fs-15 fw-600" style="padding-bottom:2px" x-text="'/ '+c.meta"></span>
+                <span class="fw-800 fs-16" style="margin-left:auto" :style="'color:'+metaCor(c)" x-text="pctMeta(c.atual,c.meta)+'%'"></span>
+              </div>
+              <div class="progress" style="margin-top:8px;height:8px"><div :style="'width:'+pctMeta(c.atual,c.meta)+'%;background:'+metaCor(c)"></div></div>
+              <div class="text-3 fs-12" style="margin-top:6px" x-text="c.atual>=c.meta ? '✅ Meta batida!' : ('Faltam '+(c.meta-c.atual)+' esta semana')"></div>
+            </div>
+          </template>
+        </div>
+
+        <!-- KPIs do funil -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px">
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Pipeline aberto</div><div class="fw-800 fs-18" x-text="fmtCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ganhos</div><div class="fw-800 fs-18" style="color:#16a34a" x-text="fmtCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Taxa de conversão</div><div class="fw-800 fs-18" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ticket médio</div><div class="fw-800 fs-18" x-text="fmtCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
+          <!-- Funil -->
+          <div class="card" style="padding:16px">
+            <div class="fw-700 fs-14 mb-2"><i class="ph ph-funnel ic-ph"></i> Funil de vendas</div>
+            <template x-for="f in funilResumo" :key="f.id">
+              <div class="flex items-center gap-2" style="margin:7px 0">
+                <span class="fs-13 fw-600" style="width:96px" x-text="f.id"></span>
+                <div class="progress" style="flex:1;height:14px"><div :style="'width:'+(f.count/funilMax*100)+'%;background:'+f.color"></div></div>
+                <span class="fs-13 fw-700" style="width:26px;text-align:right" x-text="f.count"></span>
+                <span class="text-3 fs-12" style="width:92px;text-align:right" x-text="f.valor?fmtCur(f.valor):''"></span>
+              </div>
+            </template>
+          </div>
+          <!-- Origens -->
+          <div class="card" style="padding:16px">
+            <div class="fw-700 fs-14 mb-2"><i class="ph ph-map-pin ic-ph"></i> Origem dos leads <span class="hq" data-tip="Quantos leads vieram de cada origem e quantos % viraram cliente (Ganho)." style="color:#9ca3af;cursor:help">?</span></div>
+            <template x-for="o in origemResumo" :key="o.origem">
+              <div class="flex items-center gap-2" style="margin:7px 0">
+                <span class="fs-13 fw-600" style="width:96px" x-text="o.origem"></span>
+                <div class="progress" style="flex:1;height:14px"><div :style="'width:'+(o.total/origemMax*100)+'%;background:#6366f1'"></div></div>
+                <span class="fs-13 fw-700" style="width:26px;text-align:right" x-text="o.total"></span>
+                <span class="fs-12 fw-700" style="width:62px;text-align:right" :style="o.conv>0?'color:#16a34a':'color:#9ca3af'" x-text="o.conv+'% ✓'"></span>
+              </div>
+            </template>
+            <div x-show="!origemResumo.length" class="text-3 fs-13">Sem leads ainda.</div>
+          </div>
+        </div>
+
+        <!-- Alertas que turbinam -->
+        <div class="fw-800 fs-16" style="margin:20px 0 8px"><i class="ph ph-lightning ic-ph" style="color:#f59e0b"></i> Pra turbinar — precisa de ação</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px">
+          <!-- Follow-ups atrasados -->
+          <div class="card" style="padding:16px">
+            <div class="flex items-center gap-2 mb-1"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i><span class="fw-700 fs-14">Follow-ups atrasados</span><span class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="followupsVencidos.length"></span></div>
+            <div class="text-3 fs-12 mb-2">Ações pendentes já vencidas. Resolva ou reagende.</div>
+            <template x-for="a in followupsVencidos.slice(0,6)" :key="a.id">
+              <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(a._lead)" title="Abrir o lead">
+                <i class="ph ic-ph" :class="acaoTipoIco(a.tipo)"></i>
+                <span class="fw-600 truncate" style="flex:1" x-text="(a._lead&&a._lead.empresa||'Lead')+' — '+a.tipo"></span>
+                <span style="color:#dc2626" class="fs-12 fw-700" x-text="fmtDate(a.data)"></span>
+              </div>
+            </template>
+            <div x-show="!followupsVencidos.length" class="text-3 fs-13">Nada atrasado. 👏</div>
+          </div>
+          <!-- Leads sem ação -->
+          <div class="card" style="padding:16px">
+            <div class="flex items-center gap-2 mb-1"><i class="ph ph-bell-slash ic-ph" style="color:#f59e0b"></i><span class="fw-700 fs-14">Leads sem próxima ação</span><span class="badge" style="background:#f59e0b;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsSemAcao.length"></span></div>
+            <div class="text-3 fs-12 mb-2">Abertos sem follow-up agendado — risco de esfriar.</div>
+            <template x-for="l in leadsSemAcao.slice(0,6)" :key="l.id">
+              <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(l)" title="Abrir o lead">
+                <span class="fw-600 truncate" style="flex:1" x-text="l.empresa||'Lead'"></span>
+                <span class="text-3 fs-12" x-text="l.stage"></span>
+              </div>
+            </template>
+            <div x-show="!leadsSemAcao.length" class="text-3 fs-13">Todos com ação agendada. 👍</div>
+          </div>
+          <!-- Leads parados -->
+          <div class="card" style="padding:16px">
+            <div class="flex items-center gap-2 mb-1"><i class="ph ph-snowflake ic-ph" style="color:#0ea5e9"></i><span class="fw-700 fs-14">Leads parados (+14 dias)</span><span class="badge" style="background:#0ea5e9;color:#fff;margin-left:auto;min-width:18px;justify-content:center" x-text="leadsParados.length"></span></div>
+            <div class="text-3 fs-12 mb-2">Criados há +14 dias, em Novo/Contatado e sem ação.</div>
+            <template x-for="l in leadsParados.slice(0,6)" :key="l.id">
+              <div class="flex items-center gap-2 fs-13" style="padding:6px 0;border-top:1px solid var(--border);cursor:pointer" @click="irLeadCrm(l)" title="Abrir o lead">
+                <span class="fw-600 truncate" style="flex:1" x-text="l.empresa||'Lead'"></span>
+                <span class="text-3 fs-12" x-text="fmtDate(l.createdAt)"></span>
+              </div>
+            </template>
+            <div x-show="!leadsParados.length" class="text-3 fs-13">Funil fluindo. 🚀</div>
+          </div>
+        </div>
+        <div class="text-3 fs-12" style="margin-top:14px">Atividade da semana: <b x-text="acoesConcluidasSemana"></b> ações concluídas · <b x-text="metricaProspeccoes"></b> leads novos.</div>
+
+        <!-- Modal: editar metas (admin) -->
+        <div x-show="metasEdit" x-transition.opacity style="position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px" @click.self="metasEdit=false">
+          <div class="card" style="max-width:380px;width:100%;padding:20px">
+            <div class="fw-800 fs-16 mb-1">Metas semanais do comercial</div>
+            <div class="text-3 fs-12" style="margin-bottom:14px">Valem pra toda a equipe comercial, por semana (segunda a domingo).</div>
+            <div class="form-group"><label class="form-label">Prospecções (leads novos)</label><input type="number" min="0" class="form-input" x-model.number="metasForm.prospeccoes"></div>
+            <div class="form-group"><label class="form-label">Contatos (ações de contato)</label><input type="number" min="0" class="form-input" x-model.number="metasForm.contatos"></div>
+            <div class="form-group" style="margin-bottom:16px"><label class="form-label">Propostas enviadas</label><input type="number" min="0" class="form-input" x-model.number="metasForm.propostas"></div>
+            <div class="flex gap-2" style="justify-content:flex-end">
+              <button class="btn btn-ghost" @click="metasEdit=false">Cancelar</button>
+              <button class="btn btn-primary" @click="salvarMetas()">Salvar metas</button>
+            </div>
           </div>
         </div>
       </section>
@@ -2830,7 +2954,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=173"></script>
+<script src="js/app.js?v=174"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
