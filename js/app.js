@@ -2735,11 +2735,13 @@ ${this._docFoot()}
       await this.carregarPropostas(); this.modal = null;
       const saved = this.proposals.find(x => x.id === e.id);
       if (saved && saved.status === 'Aprovado') { this._aoAprovarProposta(saved); if (!saved.financeId) this.lancarOrcamentoFinanceiro(saved); }
+      else if (e.cliente && (e.status === 'Enviado' || (saved && saved.status === 'Enviado'))) this._moverLeadParaProposta(e.cliente); // orçamento enviado → lead pra coluna Proposta
     },
     async excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; try { await this.api('DELETE', '/propostas/' + o.id); } catch (e) { return alert('Erro ao excluir: ' + (e.message || e)); } await this.carregarPropostas(); this.modal = null; },
     // Cria a proposta DIGITAL no backend e devolve o link público (aceite online).
     async _criarLinkProposta(o) {
       if (o.status === 'Rascunho' || !o.status) { o.status = 'Enviado'; const i = this.proposals.findIndex(x => x.id === o.id); if (i > -1) this.proposals[i] = { ...o }; } // rascunho → enviado
+      this._moverLeadParaProposta(o.cliente); // enviou proposta → lead vai pra coluna Proposta
       const html = this._propostaHTML({ ...o, modoAssinatura: 'digital' });
       const { _token, _envio, ...dados } = o;
       // Atualiza o MESMO orçamento (por id) marcando como ENVIADA — não duplica a linha.
@@ -3286,6 +3288,16 @@ ${this._docFoot()}
       if (this.clients.some(c => (c.empresa || '').trim().toLowerCase() === nome)) return; // já é cliente
       const lead = (this.leads || []).find(l => (l.empresa || '').trim().toLowerCase() === nome);
       if (lead) this._criarClienteDeLead(lead, 'recorrente');
+    },
+    // Proposta enviada → o lead vinculado (mesmo nome) vai pra coluna "Proposta" do funil.
+    _moverLeadParaProposta(clienteNome) {
+      const nome = (clienteNome || '').trim().toLowerCase(); if (!nome) return;
+      const lead = (this.leads || []).find(l => (l.empresa || '').trim().toLowerCase() === nome);
+      if (!lead) return;
+      const ps = ((this.crmStages && this.crmStages.length) ? this.crmStages : STAGES).find(s => /proposta/i.test(s.id));
+      const alvo = ps ? ps.id : 'Proposta';
+      if (['Ganho', 'Perdido'].includes(lead.stage) || lead.stage === alvo) return; // não rebaixa fechado nem repete
+      lead.stage = alvo; this.salvarLeadApi(lead).catch(() => {});
     },
     async ganharLead(l) {
       const antes = l.stage;
