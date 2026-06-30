@@ -232,6 +232,7 @@
         <span class="ico"><i class="ph ph-magnifying-glass ic-ph"></i></span>
         <input type="text" placeholder="Buscar…" x-model="busca">
       </div>
+      <button class="btn btn-ghost btn-sm" x-show="page==='dashboard'" @click="toggleValores()" :title="ocultarValores?'Mostrar valores':'Ocultar valores'"><i class="ic-ph" :class="ocultarValores?'ph ph-eye-slash':'ph ph-eye'"></i> <span x-text="ocultarValores?'Mostrar':'Ocultar'"></span></button>
       <button class="btn btn-ghost btn-sm" x-show="page==='crm' && crmEdit" @click="addStage()" title="Adicionar coluna ao funil"><i class="ph ph-plus ic-ph"></i> Coluna</button>
       <button class="btn btn-sm" :class="crmEdit?'btn-primary':'btn-ghost'" x-show="page==='crm'" @click="crmEdit=!crmEdit" title="Editar as colunas do funil (renomear, mover, excluir)"><i class="ph ph-columns ic-ph"></i> <span x-text="crmEdit?'concluir':'editar colunas'"></span></button>
       <button class="btn btn-primary" x-show="page==='crm'" @click="novoLead()">+ Lead</button>
@@ -263,15 +264,15 @@
         </div>
         <div class="grid grid-4 mb-4">
           <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-handshake ic-ph"></i></span> Recorrentes ativos</div><div class="kpi-value" x-text="clientesAtivos"></div></div>
-          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-wallet ic-ph"></i></span> Receita do mês</div><div class="kpi-value text-green" x-text="fmtCur(receitaMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-wallet ic-ph"></i></span> Receita do mês</div><div class="kpi-value text-green" x-text="mascCur(receitaMes)"></div></div>
           <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-target ic-ph"></i></span> Leads no funil</div><div class="kpi-value" x-text="leadsAbertos"></div></div>
           <div class="card kpi"><div class="kpi-label"><span class="kpi-ico" style="background:transparent"><i class="ph ph-kanban ic-ph"></i></span> Projetos ativos</div><div class="kpi-value" x-text="projetosAndamento"></div></div>
         </div>
         <div class="grid grid-4 mb-4">
-          <div class="card kpi"><div class="kpi-label">MRR (recorrente)</div><div class="kpi-value fs-22" x-text="fmtCur(mrr)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-22 text-green" x-text="fmtCur(aReceber)"></div></div>
-          <div class="card kpi"><div class="kpi-label">A pagar</div><div class="kpi-value fs-22 text-red" x-text="fmtCur(aPagar)"></div></div>
-          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="fmtCur(saldoMes)"></div></div>
+          <div class="card kpi"><div class="kpi-label">MRR (recorrente)</div><div class="kpi-value fs-22" x-text="mascCur(mrr)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A receber</div><div class="kpi-value fs-22 text-green" x-text="mascCur(aReceber)"></div></div>
+          <div class="card kpi"><div class="kpi-label">A pagar</div><div class="kpi-value fs-22 text-red" x-text="mascCur(aPagar)"></div></div>
+          <div class="card kpi"><div class="kpi-label">Saldo do mês</div><div class="kpi-value fs-22" :class="saldoMes>=0?'text-green':'text-red'" x-text="mascCur(saldoMes)"></div></div>
         </div>
         <!-- 📡 Radar — resumo das pendências (clique vai pro Monitoramento) -->
         <div class="card mb-4" x-show="clients.length" style="padding:0;overflow:hidden">
@@ -312,7 +313,7 @@
             <template x-for="f in finance.filter(f=>f.status!=='pago').slice(0,8)" :key="f.id">
               <div class="flex items-center justify-between mb-2">
                 <div><div class="fw-700 fs-12" x-text="f.descricao"></div><div class="text-3 fs-12" x-text="(f.tipo==='receita'?'Receber · ':'Pagar · ')+fmtDate(f.vencimento)"></div></div>
-                <div class="fw-700 fs-12" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="fmtCur(f.valor)"></div>
+                <div class="fw-700 fs-12" :class="f.tipo==='receita'?'text-green':'text-red'" x-text="mascCur(f.valor)"></div>
               </div>
             </template>
           </div>
@@ -369,10 +370,10 @@
 
         <!-- KPIs do funil -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px">
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Pipeline aberto</div><div class="fw-800 fs-18" x-text="fmtCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ganhos</div><div class="fw-800 fs-18" style="color:#16a34a" x-text="fmtCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Pipeline aberto</div><div class="fw-800 fs-18" x-text="mascCur(pipelineValor)"></div><div class="text-3 fs-12" x-text="leadsAbertosArr.length+' leads em aberto'"></div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ganhos</div><div class="fw-800 fs-18" style="color:#16a34a" x-text="mascCur(ganhosValor)"></div><div class="text-3 fs-12" x-text="ganhosCount+' fechados'"></div></div>
           <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Taxa de conversão</div><div class="fw-800 fs-18" x-text="winRate+'%'"></div><div class="text-3 fs-12" x-text="ganhosCount+' ganhos · '+perdidosCount+' perdidos'"></div></div>
-          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ticket médio</div><div class="fw-800 fs-18" x-text="fmtCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
+          <div class="card" style="padding:14px"><div class="text-3 fs-12 fw-600">Ticket médio</div><div class="fw-800 fs-18" x-text="mascCur(ticketMedio)"></div><div class="text-3 fs-12">por negócio ganho</div></div>
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px">
@@ -384,7 +385,7 @@
                 <span class="fs-13 fw-600" style="width:96px" x-text="f.id"></span>
                 <div class="progress" style="flex:1;height:14px"><div :style="'width:'+(f.count/funilMax*100)+'%;background:'+f.color"></div></div>
                 <span class="fs-13 fw-700" style="width:26px;text-align:right" x-text="f.count"></span>
-                <span class="text-3 fs-12" style="width:92px;text-align:right" x-text="f.valor?fmtCur(f.valor):''"></span>
+                <span class="text-3 fs-12" style="width:92px;text-align:right" x-text="f.valor?mascCur(f.valor):''"></span>
               </div>
             </template>
           </div>
@@ -3097,7 +3098,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=192"></script>
+<script src="js/app.js?v=193"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

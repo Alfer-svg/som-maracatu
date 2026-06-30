@@ -659,6 +659,9 @@ document.addEventListener('alpine:init', () => {
 
     // helpers de formatação expostos ao template
     fmtDate: MD.fmtDate, fmtCur: MD.fmtCur, daysDiff: MD.daysDiff, redeIcon,
+    ocultarValores: MD.get('som_ocultar_valores', false), // olho do dashboard (estilo banco)
+    mascCur(v) { return this.ocultarValores ? '••••••' : MD.fmtCur(v); }, // moeda mascarada quando o olho está fechado
+    toggleValores() { this.ocultarValores = !this.ocultarValores; MD.set('som_ocultar_valores', this.ocultarValores); },
     // ícones: classe Phosphor a partir do emoji-chave + cor (p/ sinais de saúde)
     phClass(e) { return PH_ICON[e] || 'ph ph-circle'; },
     phCor(e) { return SINAL_COR[e] || ''; },
