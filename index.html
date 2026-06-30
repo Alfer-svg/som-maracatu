@@ -119,15 +119,12 @@
       <!-- Comercial (grupo: CRM + Orçamentos + Contratos) -->
       <template x-if="podeVer('crm')||podeVer('orcamentos')||podeVer('servicos')||podeVer('contratos')">
         <div>
-          <div class="nav-item" :class="(page==='painelComercial'||page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — painel, funil de vendas (CRM), orçamentos e contratos.">
+          <div class="nav-item" :class="(page==='crm'||page==='orcamentos'||page==='servicos'||page==='contratos')&&!comOpen?'active':''" @click="comOpen=!comOpen" title="Comercial — funil de vendas (CRM), orçamentos e contratos.">
             <span class="nav-icon"><i class="ph ph-briefcase ic-ph"></i></span>
             <span>Comercial</span>
             <span class="nav-caret" x-text="comOpen?'▾':'▸'"></span>
           </div>
           <div class="nav-sub" x-show="comOpen">
-            <div class="nav-item nav-subitem" x-show="podeVer('painelComercial')" :class="page==='painelComercial'?'active':''" @click="go('painelComercial')" title="Painel do comercial — metas da semana, funil, conversão e alertas pra turbinar o processo.">
-              <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Painel</span>
-            </div>
             <div class="nav-item nav-subitem" x-show="podeVer('crm')" :class="page==='crm'?'active':''" @click="go('crm')" title="Funil de vendas — gerencie os leads do primeiro contato ao fechamento.">
               <span class="nav-icon"><i class="ph ph-target ic-ph"></i></span><span>CRM</span>
               <span x-show="alertasAcoes.length" class="badge" style="background:#dc2626;color:#fff;margin-left:auto;min-width:18px;justify-content:center" :title="alertasAcoes.length+' ação(ões) pra hoje/atrasada(s)'" x-text="alertasAcoes.length"></span>
@@ -252,6 +249,14 @@
 
       <!-- ========== DASHBOARD ========== -->
       <section x-show="page==='dashboard'">
+        <!-- Abas do Dashboard -->
+        <div class="tabs">
+          <div class="tab" x-show="ehAdmin" :class="dashTab==='geral'?'active':''" @click="dashTab='geral'"><i class="ph ph-squares-four ic-ph"></i> Visão geral</div>
+          <div class="tab" :class="dashTab==='comercial'?'active':''" @click="dashTab='comercial'"><i class="ph ph-chart-line-up ic-ph"></i> Comercial</div>
+        </div>
+
+        <!-- ===== ABA: VISÃO GERAL ===== -->
+        <div x-show="dashTab==='geral'">
         <div class="mb-4">
           <div style="font-size:23px;font-weight:800;letter-spacing:-.3px" x-text="saudacao + ' 👋'"></div>
           <div class="text-3" style="font-size:13px;margin-top:3px">Bem-vindo de volta — aqui está o resumo da sua agência.</div>
@@ -312,32 +317,36 @@
             </template>
           </div>
         </div>
-      </section>
+        </div><!-- fim aba Visão geral -->
 
-      <!-- ========== PAINEL COMERCIAL ========== -->
-      <section x-show="page==='painelComercial'">
-        <!-- Metas da semana -->
-        <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:8px">
-          <div class="fw-800 fs-16"><i class="ph ph-target ic-ph"></i> Metas da semana <span class="text-3 fs-13 fw-600" x-text="'· '+semanaMetasLabel"></span></div>
-          <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirEditMetas()"><i class="ph ph-pencil-simple ic-ph"></i> Editar metas</button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:18px">
-          <template x-for="c in metasCards" :key="c.key">
-            <div class="card" style="padding:16px">
-              <div class="flex items-center gap-2 mb-1">
-                <i class="ph ic-ph" :class="c.ico" :style="'color:'+c.cor"></i>
-                <span class="fw-700 fs-14" x-text="c.label"></span>
-                <span class="hq" :data-tip="c.dica" style="margin-left:4px;color:#9ca3af;cursor:help">?</span>
+      <!-- ===== ABA: COMERCIAL (painel + metas) ===== -->
+      <div x-show="dashTab==='comercial'">
+        <!-- Metas da semana — destaque com gráfico de rosca -->
+        <div class="card" style="padding:18px 18px 20px;margin-bottom:18px">
+          <div class="flex items-center justify-between mb-2" style="flex-wrap:wrap;gap:8px">
+            <div class="fw-800 fs-18"><i class="ph ph-target ic-ph" style="color:#818cf8"></i> Metas da semana <span class="text-3 fs-13 fw-600" x-text="'· '+semanaMetasLabel"></span></div>
+            <button class="btn btn-ghost btn-sm" x-show="ehAdmin" @click="abrirEditMetas()"><i class="ph ph-pencil-simple ic-ph"></i> Editar metas</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+            <template x-for="c in metasCards" :key="c.key">
+              <div style="text-align:center;padding:8px 6px">
+                <svg viewBox="0 0 100 100" style="width:130px;height:130px">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="#eef1f6" stroke-width="11"/>
+                  <circle cx="50" cy="50" r="42" fill="none" :stroke="metaCor(c)" stroke-width="11" stroke-linecap="round"
+                    stroke-dasharray="263.9" :stroke-dashoffset="263.9*(1-Math.min(100,pctMeta(c.atual,c.meta))/100)"
+                    transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .5s ease"></circle>
+                  <text x="50" y="47" text-anchor="middle" font-size="22" font-weight="800" :fill="metaCor(c)" x-text="pctMeta(c.atual,c.meta)+'%'"></text>
+                  <text x="50" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#6b7280" x-text="c.atual+'/'+c.meta"></text>
+                </svg>
+                <div class="flex items-center justify-center gap-1" style="margin-top:2px">
+                  <i class="ph ic-ph" :class="c.ico" :style="'color:'+c.cor"></i>
+                  <span class="fw-700 fs-15" x-text="c.label"></span>
+                  <span class="hq" :data-tip="c.dica" style="color:#9ca3af;cursor:help">?</span>
+                </div>
+                <div class="text-3 fs-12" style="margin-top:2px" x-text="c.atual>=c.meta ? '✅ Meta batida!' : ('Faltam '+(c.meta-c.atual)+' esta semana')"></div>
               </div>
-              <div class="flex items-end gap-2">
-                <span class="fw-800" style="font-size:30px;line-height:1" :style="'color:'+metaCor(c)" x-text="c.atual"></span>
-                <span class="text-3 fs-15 fw-600" style="padding-bottom:2px" x-text="'/ '+c.meta"></span>
-                <span class="fw-800 fs-16" style="margin-left:auto" :style="'color:'+metaCor(c)" x-text="pctMeta(c.atual,c.meta)+'%'"></span>
-              </div>
-              <div class="progress" style="margin-top:8px;height:8px"><div :style="'width:'+pctMeta(c.atual,c.meta)+'%;background:'+metaCor(c)"></div></div>
-              <div class="text-3 fs-12" style="margin-top:6px" x-text="c.atual>=c.meta ? '✅ Meta batida!' : ('Faltam '+(c.meta-c.atual)+' esta semana')"></div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
 
         <!-- KPIs do funil -->
@@ -433,7 +442,8 @@
             </div>
           </div>
         </div>
-      </section>
+      </div><!-- fim aba Comercial -->
+      </section><!-- fim Dashboard -->
 
       <!-- ========== CRM (kanban) ========== -->
       <section x-show="page==='crm'">
@@ -2954,7 +2964,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=174"></script>
+<script src="js/app.js?v=175"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

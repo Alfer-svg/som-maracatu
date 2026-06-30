@@ -288,9 +288,9 @@ const PAPEIS_INFO = [
 // '*' = todas as páginas. Demais: lista de páginas liberadas.
 const PERMISSOES = {
   admin: '*',
-  // Dashboard é exclusivo do admin. 'pessoal' liberado a todos (cada um vê só a própria ficha).
-  gestor: ['painelComercial', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
-  comercial: ['painelComercial', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
+  // Dashboard: admin vê as 2 abas (Visão geral + Comercial); gestor/comercial veem só a aba Comercial. 'pessoal' liberado a todos.
+  gestor: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'financeiro', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
+  comercial: ['dashboard', 'crm', 'comercial', 'orcamentos', 'servicos', 'contratos', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
@@ -394,6 +394,7 @@ document.addEventListener('alpine:init', () => {
     colaboradores: MD.get('som_colaboradores', []), // nomes da equipe (cresce sozinho ao salvar projeto)
     versiculo: null, // Salmo/Provérbio aleatório do topo do Operacional
     metas: { prospeccoes: 50, contatos: 25, propostas: 2 }, metasEdit: false, metasForm: {}, // metas semanais do comercial (editáveis pelo admin)
+    dashTab: 'geral', // aba do Dashboard: 'geral' (visão geral) | 'comercial' (painel + metas)
     credenciais: [], credModal: false, credForm: {}, revelar: {}, // cofre de acessos
     cofreMasterDef: null, cofreMaster: '', cofreRevelado: {}, cofreModal: null, cofreA: '', cofreB: '', cofreAtual: '', cofreMsg: '', // senha master do cofre
     onboardings: [], onbModal: false, onbSel: {}, onbLink: 'https://alfer-svg.github.io/som-maracatu/onboarding.html', // fila de onboardings do site
@@ -634,7 +635,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'painelComercial') { this.carregarLeads(); this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarLeads(); this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -1019,12 +1020,12 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     pctMeta(atual, meta) { meta = +meta || 0; return meta <= 0 ? 0 : Math.min(100, Math.round((atual / meta) * 100)); },
     get metasCards() {
       return [
-        { key: 'prospeccoes', label: 'Prospecções', ico: 'ph-target',     dica: 'Leads novos criados nesta semana.', atual: this.metricaProspeccoes, meta: this.metas.prospeccoes, cor: '#6366f1' },
-        { key: 'contatos',    label: 'Contatos',     ico: 'ph-phone-call', dica: 'Ações de contato concluídas nesta semana (ligação, novo contato, e-mail, reunião, visita, follow-up).', atual: this.metricaContatos, meta: this.metas.contatos, cor: '#f59e0b' },
-        { key: 'propostas',   label: 'Propostas',    ico: 'ph-file-text',  dica: 'Ações "Enviar proposta" concluídas nesta semana.', atual: this.metricaPropostas, meta: this.metas.propostas, cor: '#f97316' },
+        { key: 'prospeccoes', label: 'Prospecções', ico: 'ph-target',     dica: 'Leads novos criados nesta semana.', atual: this.metricaProspeccoes, meta: this.metas.prospeccoes, cor: '#818cf8' },
+        { key: 'contatos',    label: 'Contatos',     ico: 'ph-phone-call', dica: 'Ações de contato concluídas nesta semana (ligação, novo contato, e-mail, reunião, visita, follow-up).', atual: this.metricaContatos, meta: this.metas.contatos, cor: '#fbbf24' },
+        { key: 'propostas',   label: 'Propostas',    ico: 'ph-file-text',  dica: 'Ações "Enviar proposta" concluídas nesta semana.', atual: this.metricaPropostas, meta: this.metas.propostas, cor: '#fb923c' },
       ];
     },
-    metaCor(c) { const p = this.pctMeta(c.atual, c.meta); return p >= 100 ? '#16a34a' : (p >= 60 ? c.cor : '#dc2626'); },
+    metaCor(c) { const p = this.pctMeta(c.atual, c.meta); return p >= 100 ? '#22c55e' : (p >= 50 ? c.cor : '#f87171'); },
     // ── funil (panorama) ──
     get funilResumo() {
       const cols = (this.crmStages && this.crmStages.length) ? this.crmStages : STAGES;
