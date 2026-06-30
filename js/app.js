@@ -2954,6 +2954,30 @@ ${this._docFoot()}
       w.document.write(html); w.document.close(); w.focus();
       setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
     },
+    // Documento do briefing do onboarding (mesma identidade dos outros docs) → PDF/impressão.
+    _briefingHTML(o) {
+      const e = this._esc;
+      const d = (o && o.dados) || {};
+      const tipo = d.tipo === 'site' ? 'SITE' : 'MARKETING';
+      const data = o && o.createdAt ? MD.fmtDate(o.createdAt) : '';
+      const rows = this.onbLinhas(o).map(l => `<tr><td style="font-weight:600;width:36%;vertical-align:top;padding:7px 10px;border-bottom:1px solid #eee">${e(l.label)}</td><td style="vertical-align:top;padding:7px 10px;border-bottom:1px solid #eee;white-space:pre-wrap">${e(l.v)}</td></tr>`).join('');
+      const logo = (typeof LOGO_DATAURI !== 'undefined' && LOGO_DATAURI) ? `<img class="logo" src="${LOGO_DATAURI}" alt="">` : '<div class="wm">MARACATU DIGITAL<span>INTELLIGENCE</span></div>';
+      const banner = (typeof BANNER_DATAURI !== 'undefined' && BANNER_DATAURI) ? `<div class="head-banner"><img src="${BANNER_DATAURI}" alt=""></div>` : '';
+      return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Briefing ${e((o && o.empresa) || '')}</title><style>${this._cssDoc()}</style></head><body>
+${banner}<div class="head"><div class="head-brand">${logo}</div><div class="head-doc"><div class="doc-type">BRIEFING · ${tipo}</div>${data ? `<div class="sub">Recebido: ${e(data)}</div>` : ''}</div></div>
+<div class="pad">
+<h2>${e((o && o.empresa) || 'Onboarding')}</h2>
+${rows ? `<table style="width:100%;border-collapse:collapse;font-size:13px">${rows}</table>` : '<div class="bloco">Sem detalhes preenchidos.</div>'}
+${this._docFoot()}
+</div>
+</body></html>`;
+    },
+    imprimirOnboarding(o) {
+      const w = window.open('', '_blank');
+      if (!w) { alert('Permita pop-ups neste site pra gerar o PDF.'); return; }
+      w.document.write(this._briefingHTML(o)); w.document.close(); w.focus();
+      setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+    },
     _esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); },
     _cssDoc() {
       return `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');

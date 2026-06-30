@@ -3046,6 +3046,7 @@
       <div x-show="!onbLinhas(onbSel).length" class="text-3">Sem detalhes preenchidos.</div>
     </div>
     <div class="modal-foot">
+      <button class="btn btn-ghost" @click="imprimirOnboarding(onbSel)" title="Gerar PDF do briefing"><i class="ph ph-file-pdf ic-ph"></i> Gerar PDF</button>
       <button class="btn btn-ghost" @click="arquivarOnboarding(onbSel); onbModal=false">Arquivar</button>
       <button class="btn btn-primary" @click="converterOnboarding(onbSel)">Criar cliente</button>
     </div>
@@ -3056,7 +3057,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=186"></script>
+<script src="js/app.js?v=187"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
