@@ -672,11 +672,19 @@ document.addEventListener('alpine:init', () => {
     async carregarPresenca() { try { this.presenca = (await this.api('GET', '/auth/presenca')) || []; } catch { this.presenca = []; } },
     startHeartbeat() {
       if (this._hbStarted) return; this._hbStarted = true;
-      if (this.token) this.heartbeat();
+      this._lastActivity = Date.now();
+      const marcar = () => { this._lastActivity = Date.now(); };
+      ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(ev => window.addEventListener(ev, marcar, { passive: true }));
+      // ao voltar pra aba (foco), conta como atividade e pinga na hora pra reaparecer rápido
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && this.token) { this._lastActivity = Date.now(); this.heartbeat(); } });
+      if (this.token && !document.hidden) this.heartbeat();
       setInterval(() => {
         if (!this.token) return;
-        this.heartbeat();
-        if (this.page === 'operacional') this.carregarPresenca(); // mantém os tempos vivos
+        // Só conta como "online agora" se a aba está VISÍVEL e houve atividade real há < 3min.
+        // (Aba aberta/minimizada sem ninguém na frente NÃO mantém o usuário online — evita "logado há 28h".)
+        const presente = !document.hidden && (Date.now() - (this._lastActivity || 0) < 180000);
+        if (presente) this.heartbeat();
+        if (this.page === 'operacional') this.carregarPresenca(); // atualiza a lista de online (GET, não conta presença)
       }, 45000);
     },
     durHuman(iso) { if (!iso) return '—'; let s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60); if (h > 0) return h + 'h' + (m ? (' ' + m + 'min') : ''); if (m > 0) return m + 'min'; return 'agora mesmo'; },
