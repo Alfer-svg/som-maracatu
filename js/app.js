@@ -56,7 +56,7 @@ const STAGES = [
   { id: 'Reunião',     ico: '🤝', color: '#0ea5e9', desc: 'Reunião ou diagnóstico agendado / realizado.' },
   { id: 'Proposta',    ico: '📄', color: '#f97316', desc: 'Proposta comercial enviada, aguardando retorno.' },
   { id: 'Negociação',  ico: '💬', color: '#db2777', desc: 'Ajustes finais de escopo, preço e condições.' },
-  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente (arquivado até fechar o contrato).' },
+  { id: 'Ganho',       ico: '🏆', color: '#16a34a', desc: 'Fechou! O lead vira cliente.' },
   { id: 'Perdido',     ico: '✕',  color: '#dc2626', desc: 'Não avançou — registre o motivo pra aprender e melhorar.' },
 ];
 const SERVICOS = ['Gestão de Redes Sociais', 'Criação de Conteúdo', 'ADS / Tráfego Pago', 'Audiovisual', 'Sites & Apps', 'Branding', 'SEO / Growth', 'Marketing Político', 'Consultoria'];
@@ -397,6 +397,7 @@ document.addEventListener('alpine:init', () => {
     comTab: 'lista', // aba ativa em Clientes: 'lista' | 'onboarding'
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
     cliTipoTab: 'recorrente', // aba de tipo na lista de Clientes: 'recorrente' | 'avulso'
+    crmTab: 'funil', // CRM: 'funil' (kanban) | 'lista' (tabela de leads)
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
     orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos
@@ -914,7 +915,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           contato: '', cargo: '', email: '', whatsapp: '', telefone: '', instagram: '',
           servicos: [], redes: redesVazias(), site: { url: a.empresa_site || '', seo: 0, sgo: 0 },
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
-          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(),
+          briefing: b, responsaveis: [], documentos: docs, mensalidade: 0, tipoCliente: 'recorrente', status: 'Ativo', desde: MD.today(),
           notas: a.empresa_gmn ? ('Google Meu Negócio: ' + a.empresa_gmn) : '',
         };
       } else {
@@ -928,7 +929,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
           dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [],
           briefing: briefingMerge(d.briefing),
           responsaveis: (r.nome || r.email || r.whatsapp) ? [{ id: MD.uid(), nome: r.nome || '', cargo: r.cargo || '', whatsapp: r.whatsapp || '', email: r.email || '', nascimento: '', instagram: '', linkedin: '', seguindo: false, notas: '' }] : [],
-          documentos: [], mensalidade: 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(),
+          documentos: [], mensalidade: 0, tipoCliente: 'recorrente', status: 'Ativo', desde: MD.today(),
           notas: (d.gmn && d.gmn.acesso) ? ('Google Meu Negócio: ' + d.gmn.acesso) : '',
         };
       }
@@ -961,7 +962,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       // Abre o cadastro pré-preenchido pra você ESCOLHER O TIPO (site sugere Avulso) e revisar.
       // Nasce arquivado (Inativo) — vira ativo só ao fechar contrato. Ao salvar, marca o onboarding como convertido.
       this.editing = { id: '', ...this._dadosDoOnboarding(o), empresa: o.empresa,
-        tipoCliente: ((o.dados || {}).tipo === 'site') ? 'avulso' : 'recorrente', status: 'Inativo', desde: MD.today() };
+        tipoCliente: ((o.dados || {}).tipo === 'site') ? 'avulso' : 'recorrente', status: 'Ativo', desde: MD.today() };
       this._onbConvertendo = o.id;
       this.cnpjMsg = ''; this.cepMsg = ''; this.onbModal = false; this.modal = 'client';
     },
@@ -1122,6 +1123,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get funilMax() { return Math.max(1, ...this.funilResumo.map(f => f.count)); },
     // ── pipeline / conversão ──
     get leadsAbertosArr() { return (this.leads || []).filter(l => !['Ganho', 'Perdido'].includes(l.stage)); },
+    get leadsOrdenados() { const q = this.busca.toLowerCase(); return (this.leads || []).filter(l => !q || ((l.empresa || '') + ' ' + (l.contato || '') + ' ' + (l.cnpj || '')).toLowerCase().includes(q)).sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
     get pipelineValor() { return this.leadsAbertosArr.reduce((a, l) => a + (+l.valor || 0), 0); },
     get ganhosCount() { return (this.leads || []).filter(l => l.stage === 'Ganho').length; },
     get ganhosValor() { return (this.leads || []).filter(l => l.stage === 'Ganho').reduce((a, l) => a + (+l.valor || 0), 0); },
@@ -1281,7 +1283,13 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     get clientesLista() { return this.clients.filter(c => (c.status || 'Ativo') !== 'Inativo').sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
     // Igual ao clientesLista, mas INCLUI arquivados — usado só no seletor de cliente da proposta:
     // arquivado pode RECEBER proposta; só vira Ativo quando fecha contrato (ver _ativarClienteDoContrato).
-    get clientesListaProposta() { return [...this.clients].sort((a, b) => (a.empresa || '').localeCompare(b.empresa || '')); },
+    // Seletor de cliente da PROPOSTA: leads + clientes (ativos, avulsos e arquivados), únicos por nome.
+    get clientesListaProposta() {
+      const map = new Map();
+      (this.clients || []).forEach(c => { const n = (c.empresa || '').trim(); if (n) map.set(n.toLowerCase(), { empresa: n, _tipo: this.clienteTipo(c) === 'avulso' ? 'Cliente avulso' : (c.status === 'Inativo' ? 'Cliente arquivado' : 'Cliente') }); });
+      (this.leads || []).forEach(l => { const n = (l.empresa || '').trim(); if (n && !map.has(n.toLowerCase())) map.set(n.toLowerCase(), { empresa: n, _tipo: 'Lead' }); });
+      return [...map.values()].sort((a, b) => a.empresa.localeCompare(b.empresa));
+    },
     ativarCliente(c) { c.status = 'Ativo'; return this.persistirCliente(c); },
     arquivarCliente(c) { c.status = 'Inativo'; return this.persistirCliente(c); },
     // Fechou contrato (Assinado) ⇒ o cliente arquivado é promovido a Ativo. Chamado no aceite digital e na marcação manual.
@@ -1355,7 +1363,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       finally { this.psiLoading = false; }
     },
     novoCliente() {
-      this._onbConvertendo = null;
+      this._onbConvertendo = null; this._leadConvertendo = null;
       this.editing = {
         id: '', cnpj: '', razaoSocial: '', empresa: '', slogan: '', inscEstadual: '',
         cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '',
@@ -1366,7 +1374,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         hospedagem: { provedor: '', vencimento: '' },
         ads: adsVazio(),
         objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
-        mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Inativo', desde: MD.today(), notas: '',
+        mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Ativo', desde: MD.today(), notas: '',
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -1380,7 +1388,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       return rs;
     },
     editarCliente(c) {
-      this._onbConvertendo = null;
+      this._onbConvertendo = null; this._leadConvertendo = null;
       this.editing = {
         ...c,
         tipoCliente: c.tipoCliente || 'recorrente',
@@ -1730,6 +1738,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         if (this._onbConvertendo) { // veio de um onboarding → tira da fila (marca convertido)
           try { await this.api('POST', '/onboarding/admin/' + this._onbConvertendo + '/convertido', {}); } catch {}
           this._onbConvertendo = null; this.carregarOnboardings();
+        }
+        if (this._leadConvertendo) { // veio de um lead → marca o lead como Ganho
+          const l = (this.leads || []).find(x => x.id === this._leadConvertendo);
+          if (l && l.stage !== 'Ganho') { l.stage = 'Ganho'; this.salvarLeadApi(l).catch(() => {}); this.registrarProducao('negocio', l.empresa || '', +l.valor || 0); }
+          this._leadConvertendo = null;
         }
         await this.carregarClientes(); this.modal = null;
       } catch (err) { alert(err.message || 'Falha ao salvar o cliente.'); }
@@ -2650,6 +2663,7 @@ ${this._docFoot()}
       if (i > -1) this.proposals[i] = { ...this.proposals[i], status: 'Aprovado' };
       this.persist('proposals', this.proposals);
       try { const { _token, _envio, ...dados } = o; await this.api('POST', '/propostas', { id: o.id || undefined, numero: o.numero, cliente: o.cliente, email: o.email || '', valorTotal: this.orcTotal(o), dados }); } catch (e) { /* offline: localStorage mantém */ }
+      this._aoAprovarProposta(o); // aprovou → se o cliente ainda é lead, vira cliente
     },
     orcStatusInfo(s) { return ORC_STATUS.find(x => x.id === s) || ORC_STATUS[0]; },
     // Total mensal = soma dos serviços (fallback no campo valor legado de orçamentos antigos).
@@ -2720,7 +2734,7 @@ ${this._docFoot()}
       } catch (err) { return alert('Erro ao salvar o orçamento: ' + (err.message || err)); }
       await this.carregarPropostas(); this.modal = null;
       const saved = this.proposals.find(x => x.id === e.id);
-      if (saved && saved.status === 'Aprovado' && !saved.financeId) this.lancarOrcamentoFinanceiro(saved);
+      if (saved && saved.status === 'Aprovado') { this._aoAprovarProposta(saved); if (!saved.financeId) this.lancarOrcamentoFinanceiro(saved); }
     },
     async excluirOrcamento(o) { if (!confirm('Excluir o orçamento ' + (o.numero || '') + '?')) return; try { await this.api('DELETE', '/propostas/' + o.id); } catch (e) { return alert('Erro ao excluir: ' + (e.message || e)); } await this.carregarPropostas(); this.modal = null; },
     // Cria a proposta DIGITAL no backend e devolve o link público (aceite online).
@@ -3243,13 +3257,42 @@ ${this._docFoot()}
     },
 
     // converte lead Ganho → cliente
+    // Monta o `dados` do cliente a partir de um lead (nasce ATIVO; tipo escolhido).
+    _dadosClienteDeLead(l, tipo) {
+      return { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, tipoCliente: tipo || 'recorrente', status: 'Ativo', desde: MD.today(), notas: l.notas };
+    },
+    // Botão "Tornar cliente": abre o cadastro pré-preenchido do lead (você ESCOLHE o tipo). Ao salvar, marca o lead como Ganho.
+    transformarLeadEmCliente(l) {
+      const nome = (l.empresa || '').trim().toLowerCase();
+      if (this.clients.some(c => (c.empresa || '').trim().toLowerCase() === nome)) { if (!confirm('Já existe um cliente com esse nome. Abrir o cadastro mesmo assim?')) return; }
+      this._onbConvertendo = null;
+      this.editing = { id: '', ...this._dadosClienteDeLead(l, 'recorrente') };
+      this._leadConvertendo = l.id;
+      this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
+    },
+    // Conversão direta (sem modal) — usada na aprovação automática de proposta.
+    async _criarClienteDeLead(l, tipo) {
+      if (!l || !l.empresa) return;
+      const nome = (l.empresa || '').trim().toLowerCase();
+      if (!this.clients.some(c => (c.empresa || '').trim().toLowerCase() === nome)) {
+        try { await this.api('POST', '/clientes', { empresa: l.empresa, dados: this._dadosClienteDeLead(l, tipo || 'recorrente') }); await this.carregarClientes(); } catch {}
+      }
+      if (l.stage !== 'Ganho') { l.stage = 'Ganho'; try { await this.salvarLeadApi(l); } catch {} }
+    },
+    // Proposta aprovada? Se o cliente dela ainda é um LEAD, vira cliente (Recorrente) automaticamente.
+    _aoAprovarProposta(o) {
+      if (!o || !o.cliente) return;
+      const nome = (o.cliente || '').trim().toLowerCase();
+      if (this.clients.some(c => (c.empresa || '').trim().toLowerCase() === nome)) return; // já é cliente
+      const lead = (this.leads || []).find(l => (l.empresa || '').trim().toLowerCase() === nome);
+      if (lead) this._criarClienteDeLead(lead, 'recorrente');
+    },
     async ganharLead(l) {
       const antes = l.stage;
       l.stage = 'Ganho'; try { await this.salvarLeadApi(l); } catch {}
       if (antes !== 'Ganho') this.registrarProducao('negocio', l.empresa || '', +l.valor || 0);
       if (!this.clients.some(c => c.empresa === l.empresa)) {
-        const dados = { cnpj: l.cnpj || '', razaoSocial: '', empresa: l.empresa, contato: l.contato, email: l.email, whatsapp: l.whatsapp, cidade: l.cidade, servicos: l.servico ? [l.servico] : [], redes: redesVazias(), site: { url: '', seo: 0, sgo: 0 }, dominio: { provedor: '', vencimento: '' }, hospedagem: { provedor: '', vencimento: '' }, ads: adsVazio(), objetivos: [], briefing: briefingVazio(), slogan: '', responsaveis: (l.contato || l.whatsapp || l.email) ? [{ id: MD.uid(), nome: l.contato || '', cargo: '', whatsapp: l.whatsapp || '', email: l.email || '', nascimento: '', notas: '' }] : [], documentos: [], mensalidade: +l.valor || 0, tipoCliente: 'recorrente', status: 'Inativo', desde: MD.today(), notas: l.notas };
-        try { await this.api('POST', '/clientes', { empresa: l.empresa, dados }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
+        try { await this.api('POST', '/clientes', { empresa: l.empresa, dados: this._dadosClienteDeLead(l, 'recorrente') }); await this.carregarClientes(); } catch (e) { alert('Lead ganho, mas falhou ao criar o cliente: ' + e.message); }
       }
       this.modal = null;
     },

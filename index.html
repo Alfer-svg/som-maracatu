@@ -465,6 +465,10 @@
 
       <!-- ========== CRM (kanban) ========== -->
       <section x-show="page==='crm'">
+        <div class="fichario" style="margin-bottom:14px">
+          <div class="fichario-tab" :class="crmTab!=='lista'?'active':''" @click="crmTab='funil'"><i class="ph ph-kanban ic-ph"></i> Funil</div>
+          <div class="fichario-tab" :class="crmTab==='lista'?'active':''" @click="crmTab='lista'"><i class="ph ph-list-bullets ic-ph"></i> Leads (<span x-text="leads.length"></span>)</div>
+        </div>
         <!-- Alertas de ações vencendo hoje / atrasadas -->
         <div x-show="alertasAcoes.length" class="card" style="margin-bottom:12px;border-left:3px solid #d97706;background:#fffbeb;padding:11px 14px">
           <div class="flex items-center gap-2" style="flex-wrap:wrap">
@@ -483,7 +487,7 @@
             </template>
           </div>
         </div>
-        <div class="kanban">
+        <div class="kanban" x-show="crmTab!=='lista'">
           <template x-for="s in crmStages" :key="s.id">
             <div class="kanban-col" :class="(dropStage===s.id?'drop-on':'')+(dragStageId===s.id?' col-dragging':'')"
                  @dragover.prevent="dropStage=s.id" @dragleave="if(dropStage===s.id)dropStage=null" @drop.prevent="dragStageId ? onDropStage(s.id) : onDropLead(s.id)">
@@ -511,11 +515,36 @@
                     <i class="ph ic-ph" :class="acaoTipoIco(proxAcao(l)&&proxAcao(l).tipo)"></i>
                     <span x-text="proxAcao(l) ? (proxAcao(l).tipo+' · '+fmtDate(proxAcao(l).data)) : ''"></span>
                   </div>
+                  <button class="btn btn-sm" x-show="l.stage!=='Ganho'" @click.stop="transformarLeadEmCliente(l)" style="margin-top:8px;width:100%;justify-content:center;background:#dcfce7;color:#16a34a;font-weight:600" title="Criar cliente a partir deste lead"><i class="ph ph-user-plus ic-ph"></i> Tornar cliente</button>
                 </div>
               </template>
               <button class="kanban-add" @click="novoLead(s.id)">+ Adicionar</button>
             </div>
           </template>
+        </div>
+        <!-- ABA: lista de leads -->
+        <div x-show="crmTab==='lista'">
+          <div class="card" x-show="leads.length">
+            <table class="table">
+              <thead><tr><th>Lead</th><th>Contato</th><th>Origem</th><th>Estágio</th><th>Valor</th><th></th></tr></thead>
+              <tbody>
+                <template x-for="l in leadsOrdenados" :key="l.id">
+                  <tr style="cursor:pointer" @click="editarLead(l)">
+                    <td><div class="fw-700" x-text="l.empresa"></div><div class="text-3 fs-12" x-text="(l.cidade||'')+(l.cnpj?(' · '+l.cnpj):'')"></div></td>
+                    <td class="fs-12 text-2" x-text="l.contato||'—'"></td>
+                    <td class="fs-12 text-2" x-text="l.origem||'—'"></td>
+                    <td><span class="badge" :style="'background:'+(stageInfo(l.stage).color||'#888')+'22;color:'+(stageInfo(l.stage).color||'#555')" x-text="l.stage"></span></td>
+                    <td class="fw-700 fs-12" x-text="l.valor?fmtCur(l.valor):'—'"></td>
+                    <td @click.stop><div class="flex gap-2" style="justify-content:flex-end">
+                      <button class="btn btn-sm" x-show="l.stage!=='Ganho'" @click="transformarLeadEmCliente(l)" title="Criar cliente a partir deste lead" style="background:#dcfce7;color:#16a34a;font-weight:600"><i class="ph ph-user-plus ic-ph"></i> Tornar cliente</button>
+                      <button class="btn btn-icon btn-ghost btn-sm" @click="editarLead(l)" title="Abrir lead"><i class="ph ph-pencil-simple ic-ph"></i></button>
+                    </div></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <template x-if="!leads.length"><div class="card empty">Nenhum lead ainda. Use <b>+ Lead</b> pra cadastrar.</div></template>
         </div>
       </section>
 
@@ -2086,7 +2115,7 @@
       <div class="grid grid-2" style="gap:14px">
         <div class="form-group"><label class="form-label">Número <span class="hq" data-tip="Número/identificador do documento (gerado automático, dá pra ajustar).">?</span></label><input class="form-input" x-model="editing.numero"></div>
         <div class="form-group"><label class="form-label">Status <span class="hq" data-tip="Situação atual do registro.">?</span></label><select class="form-select" x-model="editing.status"><template x-for="s in ORC_STATUS"><option :value="s.id" x-text="s.id"></option></template></select></div>
-        <div class="form-group"><label class="form-label">Cliente <span class="hq" data-tip="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clientesListaProposta"><option :value="c.empresa"></option></template></datalist></div>
+        <div class="form-group"><label class="form-label">Cliente <span class="hq" data-tip="Cliente vinculado.">?</span></label><input class="form-input" x-model="editing.cliente" @change="autoPreencherClienteOrc()" list="cli-orc"><datalist id="cli-orc"><template x-for="c in clientesListaProposta" :key="c.empresa"><option :value="c.empresa" :label="c.empresa+' · '+c._tipo"></option></template></datalist></div>
         <div class="form-group"><label class="form-label">Projeto <span class="hq" data-tip="Tipo/nome do projeto (ex.: Gestão + Tráfego).">?</span></label>
           <select class="form-select" x-model="projetoSel" @change="if(projetoSel!=='Outros'){editing.projeto=projetoSel}else if(PROJETO_OPCOES.includes(editing.projeto)){editing.projeto=''}">
             <option value="" disabled>Selecione…</option>
@@ -3068,7 +3097,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=190"></script>
+<script src="js/app.js?v=191"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
