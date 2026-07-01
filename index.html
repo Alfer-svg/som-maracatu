@@ -1483,7 +1483,18 @@
               </div>
 
               <div class="ficha-sec-title"><i class="ph ph-megaphone ic-ph"></i> Tráfego Pago — Google & Meta Ads</div>
-              <template x-for="a in adsAtivos(monitorCliente)" :key="a.id">
+              <!-- Linhas AUTOMÁTICAS (via API do Google Ads / MCC) -->
+              <template x-for="a in adsLinhasAuto(monitorCliente)" :key="a.id">
+                <div class="rede-row" style="gap:8px">
+                  <span class="rede-nome"><img :src="redeIcon(a)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="a.label"><span x-text="a.label"></span></span>
+                  <span class="badge" style="font-weight:800" :style="a.ativo?'background:#dcfce7;color:#16a34a':'background:#f3f4f6;color:#6b7280'" x-text="a.ativo?(a.nCampanhas+' rodando'):'parado'"></span>
+                  <span class="fs-12 fw-700" style="margin-left:auto;white-space:nowrap" x-text="fmtCur(a.gasto)+' no mês'"></span>
+                  <span class="badge" x-show="a.verbaDia!=null&&a.verbaDia>0" style="font-weight:800;background:#fef3c7;color:#b45309;white-space:nowrap" x-text="fmtCur(a.verbaDia)+'/dia'"></span>
+                  <span class="text-3 fs-11" style="white-space:nowrap">automático ✓</span>
+                </div>
+              </template>
+              <!-- Linhas ainda MANUAIS (Meta Ads etc. — até integrar a API de anúncios) -->
+              <template x-for="a in adsLinhasManual(monitorCliente)" :key="a.id">
                 <div class="rede-row">
                   <span class="rede-nome"><img :src="redeIcon(a)" width="16" height="16" style="vertical-align:-3px;margin-right:8px" :alt="a.label"><span x-text="a.label"></span></span>
                   <div class="progress" style="flex:1"><div :style="'width:'+Math.min(100,monitorCliente.ads[a.id].qualidade||0)+'%;background:'+corScore(monitorCliente.ads[a.id].qualidade)"></div></div>
@@ -1491,7 +1502,7 @@
                   <span class="badge" style="margin-left:8px;font-weight:800" :style="'background:'+corSaldo(monitorCliente.ads[a.id].saldo)+'22;color:'+corSaldo(monitorCliente.ads[a.id].saldo)" x-text="'saldo '+fmtCur(monitorCliente.ads[a.id].saldo)"></span>
                 </div>
               </template>
-              <div x-show="!adsAtivos(monitorCliente).length" class="text-3">Sem campanhas de tráfego pago.</div>
+              <div x-show="!adsLinhasAuto(monitorCliente).length && !adsLinhasManual(monitorCliente).length" class="text-3">Sem campanhas de tráfego pago.</div>
 
               <div class="ficha-sec-title"><i class="ph ph-target ic-ph"></i> Métricas / Objetivos do cliente</div>
               <template x-for="o in (monitorCliente.objetivos||[])" :key="o.id">
@@ -3294,7 +3305,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=206"></script>
+<script src="js/app.js?v=207"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

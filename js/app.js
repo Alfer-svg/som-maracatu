@@ -1427,6 +1427,20 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     txtVenc(d) { const n = this.diasVenc(d); if (n === null) return 'sem data'; return n < 0 ? ('vencido há ' + (-n) + 'd') : n === 0 ? 'vence hoje' : ('vence em ' + n + 'd'); },
     corSaldo(n) { n = +n || 0; return n <= 0 ? '#dc2626' : n < 200 ? '#f59e0b' : '#16a34a'; },
     adsAtivos(c) { return ADS.filter(a => c.ads && c.ads[a.id] && c.ads[a.id].ativo); },
+    // Linhas AUTOMÁTICAS de tráfego pago (hoje só Google, via API do MCC). Vira uma
+    // linha com status/gasto/verba reais quando o resumo veio da API (fonte 'auto').
+    adsLinhasAuto(c) {
+      const r = this.adsResumo(c);
+      if (r.fonte !== 'auto') return [];
+      return [{ id: 'google', label: 'Google Ads', slug: 'googleads', cor: '4285F4',
+        ativo: (r.campanhasAtivas || 0) > 0, gasto: r.gasto || 0, verbaDia: r.verbaDiaria,
+        nCampanhas: r.campanhasAtivas || 0 }];
+    },
+    // Linhas ainda MANUAIS (exclui as que já vêm automáticas, ex.: Google quando há API).
+    adsLinhasManual(c) {
+      const autoIds = this.adsLinhasAuto(c).map(x => x.id);
+      return ADS.filter(a => c.ads && c.ads[a.id] && c.ads[a.id].ativo && !autoIds.includes(a.id));
+    },
     progressoObj(o) { return o && +o.alvo > 0 ? Math.min(100, Math.round((+o.atual || 0) / +o.alvo * 100)) : 0; },
     addObjetivo() { if (!this.editing.objetivos) this.editing.objetivos = []; this.editing.objetivos.push({ id: MD.uid(), nome: '', alvo: 0, atual: 0, unidade: '' }); },
     removeObjetivo(i) { this.editing.objetivos.splice(i, 1); },
