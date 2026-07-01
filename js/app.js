@@ -1385,6 +1385,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         time: { atendimento: '', trafego: '', social: '' }, // equipe responsável por papel
         tarefas: [], // próximas ações do cliente (responsável/data/prioridade/status)
         adsManual: { leads: null, custoLead: null }, // Leads/Custo por lead lançados à mão (enquanto não há API do Google Ads)
+        googleAdsId: '', // Customer ID da conta no Gerenciador (MCC) da Maracatu — pra puxar métricas quando a API ligar
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },

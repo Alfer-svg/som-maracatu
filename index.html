@@ -1953,6 +1953,7 @@
       </div>
       <div @click="secCli=secCli==='trafego'?'':'trafego'" class="accH"><span><i class="ph ph-megaphone ic-ph"></i> Tráfego Pago (Google & Meta Ads)</span><span class="accX" x-text="secCli==='trafego'?'▾':'▸'"></span></div>
       <div class="grid grid-2 accB" x-show="secCli==='trafego'">
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">ID Google Ads (Customer ID) <span class="hq" data-tip="ID da conta deste cliente dentro do Gerenciador (MCC) da Maracatu — ex.: 123-456-7890. Serve pra puxar Leads/Custo automaticamente quando a API do Google Ads estiver ligada.">?</span></label><input class="form-input" x-model="editing.googleAdsId" placeholder="123-456-7890" inputmode="numeric"></div>
       <template x-for="a in ADS" :key="a.id">
         <div class="flex items-center gap-2" style="grid-column:1/-1">
           <label class="flex items-center gap-2" style="width:150px;cursor:pointer;font-size:13px"><input type="checkbox" x-model="editing.ads[a.id].ativo"> <img :src="redeIcon(a)" width="15" height="15" :alt="a.label"> <span x-text="a.label"></span></label>
@@ -3252,7 +3253,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=202"></script>
+<script src="js/app.js?v=203"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
