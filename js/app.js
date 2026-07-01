@@ -398,6 +398,7 @@ document.addEventListener('alpine:init', () => {
     verArquivados: false, // lista de Clientes: mostrar arquivados (inativos) em vez dos ativos
     cliTipoTab: 'recorrente', // aba de tipo na lista de Clientes: 'recorrente' | 'avulso'
     crmTab: 'funil', // CRM: 'funil' (kanban) | 'lista' (tabela de leads)
+    fichaTab: 'geral', // ficha de Monitoramento: geral | acoes | historico | documentos | acessos
     verArquivadosContrato: false, // lista de Contratos: mostrar arquivados (encerrados/vencidos +10d)
     orcFiltro: 'ativos', // filtro da lista de Orçamentos: 'ativos' | 'rascunhos' | 'arquivados'
     presenca: [], // quem está online (Operacional); admin vê todos

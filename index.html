@@ -1200,6 +1200,15 @@
                 </div>
               </div>
 
+              <!-- ===== ABAS DA FICHA ===== -->
+              <div class="fichario" style="margin-bottom:12px">
+                <div class="fichario-tab" :class="fichaTab==='geral'?'active':''" @click="fichaTab='geral'"><i class="ph ph-squares-four ic-ph"></i> Visão geral</div>
+                <div class="fichario-tab" :class="fichaTab==='acoes'?'active':''" @click="fichaTab='acoes'"><i class="ph ph-target ic-ph"></i> Próximas ações <span x-show="pendenciasCliente(monitorCliente).length" class="badge" style="background:#fee2e2;color:#dc2626;margin-left:4px;min-width:18px;justify-content:center" x-text="pendenciasCliente(monitorCliente).length"></span></div>
+                <div class="fichario-tab" :class="fichaTab==='historico'?'active':''" @click="fichaTab='historico'"><i class="ph ph-clock-counter-clockwise ic-ph"></i> Histórico</div>
+                <div class="fichario-tab" :class="fichaTab==='documentos'?'active':''" @click="fichaTab='documentos'"><i class="ph ph-paperclip ic-ph"></i> Documentos</div>
+                <div class="fichario-tab" :class="fichaTab==='acessos'?'active':''" @click="fichaTab='acessos'"><i class="ph ph-lock-key ic-ph"></i> Acessos</div>
+              </div>
+              <div x-show="fichaTab==='geral'">
               <!-- PERFIL DO CLIENTE (uso interno) -->
               <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:0;margin-bottom:10px;overflow:hidden">
                 <div class="flex items-center gap-2" style="padding:11px 14px;cursor:pointer;background:var(--surface-2)" @click="perfilAberto=!perfilAberto">
@@ -1420,6 +1429,20 @@
               </div>
               <div x-show="!briefingItens(monitorCliente).length && !briefingAtivos(monitorCliente).length" class="text-3" style="padding:6px 0">Briefing ainda não preenchido. Use "Editar ficha do cliente".</div>
 
+              </div><!-- /geral -->
+              <div x-show="fichaTab==='acoes'">
+                <div class="ficha-sec-title"><i class="ph ph-target ic-ph"></i> Próximas ações / pendências</div>
+                <template x-if="!pendenciasCliente(monitorCliente).length"><div class="text-3 fs-13" style="padding:6px 0">Nenhuma pendência aberta ✅</div></template>
+                <template x-for="(p,i) in pendenciasCliente(monitorCliente)" :key="p.kind+'-'+i">
+                  <div class="flex items-center gap-2" style="padding:9px 0;border-bottom:1px solid var(--border)">
+                    <i class="ic-ph" style="font-size:20px" :class="phClass(p.icon)" :style="phCor(p.icon)?('color:'+phCor(p.icon)):''"></i>
+                    <span class="badge" :style="p.nivel==='alta'?'background:#fee2e2;color:#dc2626':p.nivel==='media'?'background:#fef3c7;color:#92400e':'background:#f1f5f9;color:#475569'" x-text="p.nivel==='alta'?'urgente':p.nivel==='media'?'em breve':'quando der'"></span>
+                    <div class="fs-13 fw-600" style="flex:1;min-width:0" x-text="p.txt"></div>
+                    <a x-show="p.acaoHref" :href="p.acaoHref" target="_blank" rel="noopener" class="btn btn-sm" style="background:var(--accent);color:#fff;border:none" x-text="p.acaoLabel"></a>
+                  </div>
+                </template>
+              </div>
+              <div x-show="fichaTab==='documentos'">
               <div class="ficha-sec-title"><i class="ph ph-paperclip ic-ph"></i> Documentos</div>
               <template x-for="d in (monitorCliente.documentos||[])" :key="d.id">
                 <div class="flex items-center gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
@@ -1430,6 +1453,8 @@
               </template>
               <div x-show="!(monitorCliente.documentos||[]).length" class="text-3" style="padding:4px 0">Nenhum documento anexado.</div>
 
+              </div><!-- /documentos -->
+              <div x-show="fichaTab==='acessos'">
               <div class="ficha-sec-title"><i class="ph ph-lock-key ic-ph"></i> Acessos — logins e senhas das contas do cliente <span class="text-3" style="font-weight:400;text-transform:none">(uso interno · cifrados · liberados por senha master)</span></div>
               <div class="flex items-center gap-2 mb-2">
                 <button class="btn btn-primary btn-sm" x-show="!cofreDesbloqueado" @click="abrirCofre()"><i class="ph ph-lock-key ic-ph"></i> Desbloquear acessos</button>
@@ -1458,6 +1483,8 @@
               <div x-show="!credenciais.length" class="text-3" style="padding:6px 0">Nenhum acesso guardado ainda.</div>
               <div class="mt-2"><button class="btn btn-ghost btn-sm" @click="novaCredencial()">+ Acesso</button></div>
 
+              </div><!-- /acessos -->
+              <div x-show="fichaTab==='historico'">
               <div class="ficha-sec-title"><i class="ph ph-notebook ic-ph"></i> Relacionamento — histórico de contatos</div>
               <!-- registrar nova interação -->
               <div id="nova-inter" class="flex gap-2 items-start mb-2" style="flex-wrap:wrap">
@@ -1490,6 +1517,7 @@
               </template>
               <div x-show="!(monitorCliente.timeline||[]).length" class="text-3" style="padding:4px 0">Sem registros ainda. Toda ligação, zap ou reunião pode entrar aqui pra criar a memória do cliente.</div>
 
+              </div><!-- /historico -->
               <div class="mt-3"><button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar ficha do cliente</button></div>
             </div>
           </template>
@@ -3148,7 +3176,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=196"></script>
+<script src="js/app.js?v=197"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
