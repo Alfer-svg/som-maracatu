@@ -1384,6 +1384,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Ativo', desde: MD.today(), notas: '',
         time: { atendimento: '', trafego: '', social: '' }, // equipe responsável por papel
         tarefas: [], // próximas ações do cliente (responsável/data/prioridade/status)
+        adsManual: { leads: null, custoLead: null }, // Leads/Custo por lead lançados à mão (enquanto não há API do Google Ads)
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -1445,6 +1446,17 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
       if (c.metricasHist.some(s => s.data === hoje)) return; // já tem ponto de hoje
       c.metricasHist.push({ data: hoje, seguidores: ig.seguidores ?? null, alcance: ig.alcance28d ?? null, engaj: ig.engajamentoPct ?? null });
       if (c.metricasHist.length > 90) c.metricasHist = c.metricasHist.slice(-90);
+      this.persistirCliente(c);
+    },
+    // Lançamento manual de Leads / Custo por lead (enquanto não integramos o Google Ads).
+    lancarAdsManual(c, campo) {
+      const label = campo === 'leads' ? 'Leads (Google Ads) no mês' : 'Custo por lead (R$)';
+      const atual = (c.adsManual && c.adsManual[campo] != null) ? c.adsManual[campo] : '';
+      const v = prompt(label + ':', atual);
+      if (v == null) return;
+      const num = campo === 'custoLead' ? parseFloat(String(v).replace(',', '.').replace(/[^\d.]/g, '')) : parseInt(String(v).replace(/\D/g, ''), 10);
+      if (!c.adsManual) c.adsManual = { leads: null, custoLead: null };
+      c.adsManual[campo] = isNaN(num) ? null : num;
       this.persistirCliente(c);
     },
     metaSerie(c, campo) { return ((c && c.metricasHist) || []).map(s => s[campo]).filter(v => v != null); },
