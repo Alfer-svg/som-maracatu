@@ -1432,6 +1432,9 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     diasDesde(iso) { if (!iso) return null; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); },
     statusSaudeLabel(c) { const s = this.saudeCliente(c).score; if (s == null) return 'Sem dados'; if (s >= 70) return 'Saudável'; if (s >= 40) return 'Em atenção'; return 'Crítico'; },
     adsRodando(c) { const a = (c && c.ads) || {}; const p = []; if (a.google && a.google.ativo) p.push('Google Ads'); if (a.meta && a.meta.ativo) p.push('Meta Ads'); return { ativo: p.length > 0, label: p.join(' · ') }; },
+    // Métricas reais do Meta pra ficha (null quando não conectado / sem dado). fmtNum formata milhar.
+    metaVal(c, rede, campo) { const m = c && this.metaMetricas[c.id]; const r = m && m[rede]; return (r && !r.erro && r[campo] != null) ? r[campo] : null; },
+    fmtNum(n) { return (n == null) ? '—' : Number(n).toLocaleString('pt-BR'); },
     // ── Tarefas / próximas ações do cliente (vive em Cliente.dados.tarefas) ──
     tarefasCliente(c) { return (c && Array.isArray(c.tarefas)) ? c.tarefas : []; },
     tarefasPendentes(c) { return this.tarefasCliente(c).filter(t => t.status !== 'feito').sort((a, b) => ((a.data || '9999') < (b.data || '9999') ? -1 : 1)); },
