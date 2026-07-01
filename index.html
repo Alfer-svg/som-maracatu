@@ -1149,12 +1149,55 @@
           <!-- FICHA do cliente selecionado -->
           <template x-if="monitorCliente">
             <div class="ficha">
-              <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
                 <div>
                   <div class="fs-18 fw-800" x-text="monitorCliente.empresa"></div>
-                  <div class="text-3 fs-12" x-text="([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')) || '—'"></div>
+                  <div class="text-3 fs-12" x-text="[clienteServicos(monitorCliente).join(' · '), ([monitorCliente.cidade, monitorCliente.uf].filter(Boolean).join('/')), (monitorCliente.desde?('Desde '+fmtDate(monitorCliente.desde)):'')].filter(Boolean).join('  ·  ') || '—'"></div>
                 </div>
-                <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
+                <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Ligação'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-phone ic-ph"></i> Registrar contato</button>
+                  <button class="btn btn-ghost btn-sm" @click="novaInter.tipo='Reunião'; $nextTick(()=>{var e=document.getElementById('nova-inter');if(e){e.scrollIntoView({behavior:'smooth',block:'center'});var i=e.querySelector('textarea,input');if(i)i.focus();}})"><i class="ph ph-calendar-plus ic-ph"></i> Registrar reunião</button>
+                  <button class="btn btn-ghost btn-sm" @click="editarCliente(monitorCliente)"><i class="ph ph-pencil-simple ic-ph"></i> Editar cliente</button>
+                  <span class="badge" :style="monitorCliente.status==='Inativo'?'background:#fee2e2;color:#dc2626':'background:#dcfce7;color:#16a34a'" x-text="monitorCliente.status||'Ativo'"></span>
+                </div>
+              </div>
+
+              <!-- ===== CARDS KPI (formato ficha) ===== -->
+              <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
+                <div class="card" style="padding:12px 14px">
+                  <div class="text-3 fs-12 fw-600"><i class="ph ph-user-circle ic-ph"></i> Status do cliente</div>
+                  <div class="fw-800 fs-16" style="margin-top:3px" x-text="statusSaudeLabel(monitorCliente)"></div>
+                  <div class="text-3 fs-12" x-text="'saúde '+(saudeCliente(monitorCliente).score!=null?saudeCliente(monitorCliente).score+'%':'—')"></div>
+                </div>
+                <div class="card" style="padding:12px 14px">
+                  <div class="text-3 fs-12 fw-600"><i class="ph ph-list-checks ic-ph"></i> Pendências abertas</div>
+                  <div class="fw-800 fs-22" style="margin-top:3px" :style="pendenciasCliente(monitorCliente).length?'color:#dc2626':''" x-text="pendenciasCliente(monitorCliente).length"></div>
+                </div>
+                <div class="card" style="padding:12px 14px">
+                  <div class="text-3 fs-12 fw-600"><i class="ph ph-target ic-ph"></i> Próxima ação</div>
+                  <div class="fw-700 fs-13" style="margin-top:3px" x-text="pendenciasCliente(monitorCliente).length ? pendenciasCliente(monitorCliente)[0].txt : 'Nenhuma pendente ✅'"></div>
+                </div>
+                <div class="card" style="padding:12px 14px">
+                  <div class="text-3 fs-12 fw-600"><i class="ph ph-calendar-check ic-ph"></i> Último contato</div>
+                  <template x-if="ultimoContato(monitorCliente)">
+                    <div><div class="fw-800 fs-15" style="margin-top:3px" x-text="fmtDate(ultimoContato(monitorCliente).em)"></div>
+                    <div class="text-3 fs-12" x-text="(diasDesde(ultimoContato(monitorCliente).em)===0?'hoje':('há '+diasDesde(ultimoContato(monitorCliente).em)+' dia(s)'))+(ultimoContato(monitorCliente).tipo?' · '+ultimoContato(monitorCliente).tipo:'')"></div></div>
+                  </template>
+                  <div x-show="!ultimoContato(monitorCliente)" class="text-3 fs-13" style="margin-top:3px">Sem contato registrado</div>
+                </div>
+                <div class="card" style="padding:12px 14px">
+                  <div class="text-3 fs-12 fw-600"><i class="ph ph-megaphone ic-ph"></i> Campanhas</div>
+                  <div class="fw-800 fs-16" style="margin-top:3px" :style="adsRodando(monitorCliente).ativo?'color:#16a34a':''" x-text="adsRodando(monitorCliente).ativo?'Rodando':'Parado'"></div>
+                  <div class="text-3 fs-12" x-text="adsRodando(monitorCliente).label||'—'"></div>
+                </div>
+              </div>
+
+              <!-- ===== BARRA DE ALERTAS IMPORTANTES ===== -->
+              <div class="card" x-show="saudeAlertas(monitorCliente).length" style="padding:11px 14px;margin-bottom:12px;border-left:3px solid #dc2626;background:#fef2f2">
+                <div class="flex items-center gap-2" style="flex-wrap:wrap">
+                  <span class="fw-800 fs-13" style="color:#b91c1c"><i class="ph ph-warning ic-ph"></i> Alertas importantes</span>
+                  <template x-for="al in saudeAlertas(monitorCliente)" :key="al"><span class="badge" style="background:#fff;border:1px solid #fecaca;color:#991b1b" x-text="al"></span></template>
+                </div>
               </div>
 
               <!-- PERFIL DO CLIENTE (uso interno) -->
@@ -1417,7 +1460,7 @@
 
               <div class="ficha-sec-title"><i class="ph ph-notebook ic-ph"></i> Relacionamento — histórico de contatos</div>
               <!-- registrar nova interação -->
-              <div class="flex gap-2 items-start mb-2" style="flex-wrap:wrap">
+              <div id="nova-inter" class="flex gap-2 items-start mb-2" style="flex-wrap:wrap">
                 <select class="form-select" x-model="novaInter.tipo" style="width:140px">
                   <template x-for="t in TIPOS_INTER" :key="t[0]"><option :value="t[0]" x-text="t[0]"></option></template>
                 </select>
@@ -3105,7 +3148,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=195"></script>
+<script src="js/app.js?v=196"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

@@ -1422,6 +1422,11 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     addObjetivo() { if (!this.editing.objetivos) this.editing.objetivos = []; this.editing.objetivos.push({ id: MD.uid(), nome: '', alvo: 0, atual: 0, unidade: '' }); },
     removeObjetivo(i) { this.editing.objetivos.splice(i, 1); },
     clienteServicos(c) { return (c.servicos && c.servicos.length) ? c.servicos : (c.servico ? [c.servico] : []); },
+    // ── Helpers da ficha de Monitoramento (cards KPI) ──
+    ultimoContato(c) { return ((c && c.timeline) || [])[0] || null; }, // timeline vem com o mais recente no topo
+    diasDesde(iso) { if (!iso) return null; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); },
+    statusSaudeLabel(c) { const s = this.saudeCliente(c).score; if (s == null) return 'Sem dados'; if (s >= 70) return 'Saudável'; if (s >= 40) return 'Em atenção'; return 'Crítico'; },
+    adsRodando(c) { const a = (c && c.ads) || {}; const p = []; if (a.google && a.google.ativo) p.push('Google Ads'); if (a.meta && a.meta.ativo) p.push('Meta Ads'); return { ativo: p.length > 0, label: p.join(' · ') }; },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     // Linhas preenchidas do briefing (só mostra o que tem conteúdo).
     briefingItens(c) {
