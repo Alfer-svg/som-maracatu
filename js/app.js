@@ -419,9 +419,10 @@ document.addEventListener('alpine:init', () => {
     agendaFiltro: '',       // clienteId do filtro ('' = todos)
     agendaDiaSel: '',       // 'YYYY-MM-DD' selecionado
     agendaHistCli: '',      // clienteId cujo histórico está aberto no painel lateral
+    agendaTempo: 'futuros', // filtro da lista linear: 'todos' | 'futuros' | 'passados'
     eventoModal: false,
-    eventoForm: { id: '', clienteId: '', data: '', tipo: 'Reunião', titulo: '', nota: '' },
-    TIPOS_EVENTO: ['Reunião', 'Campanha', 'Entrega', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Evento'],
+    eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '' },
+    TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Entrega', 'Reunião online', 'Outro'],
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -841,13 +842,29 @@ document.addEventListener('alpine:init', () => {
       for (const c of (this.clients || [])) {
         if (fil && c.id !== fil) continue;
         const nome = c.empresa || c.nome || '—';
-        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
-        for (const t of (c.timeline || [])) { const d = String(t.data || t.em || '').slice(0, 10); if (d) out.push({ data: d, tipo: t.tipo || 'Nota', titulo: t.texto || t.tipo || 'Contato', clienteId: c.id, cliente: nome, fonte: 'interacao', por: t.por || '' }); }
-        for (const tk of (c.tarefas || [])) { if (tk && tk.data) out.push({ data: String(tk.data).slice(0, 10), tipo: 'Tarefa', titulo: tk.titulo || 'Tarefa', clienteId: c.id, cliente: nome, fonte: 'tarefa', status: tk.status || '' }); }
+        for (const e of (c.agenda || [])) { if (e && e.data) out.push({ data: String(e.data).slice(0, 10), hora: e.hora || '', tipo: e.tipo || 'Evento', titulo: e.titulo || e.tipo || 'Evento', nota: e.nota || '', clienteId: c.id, cliente: nome, fonte: 'agenda', id: e.id }); }
+        for (const t of (c.timeline || [])) { const d = String(t.data || t.em || '').slice(0, 10); if (d) out.push({ data: d, hora: '', tipo: t.tipo || 'Nota', titulo: t.texto || t.tipo || 'Contato', clienteId: c.id, cliente: nome, fonte: 'interacao', por: t.por || '' }); }
+        for (const tk of (c.tarefas || [])) { if (tk && tk.data) out.push({ data: String(tk.data).slice(0, 10), hora: '', tipo: 'Tarefa', titulo: tk.titulo || 'Tarefa', clienteId: c.id, cliente: nome, fonte: 'tarefa', status: tk.status || '' }); }
       }
       return out;
     },
     agEventosDoDia(d) { return this.agEventos.filter(e => e.data === d); },
+    // Chave de ordenação (data + hora)
+    _agKey(e) { return e.data + 'T' + (e.hora || '00:00'); },
+    // SÓ eventos AGENDADOS (fonte 'agenda') p/ a lista linear e o resumo — não polui com interações antigas.
+    get agAgendados() { return this.agEventos.filter(e => e.fonte === 'agenda'); },
+    // Lista linear conforme o filtro de tempo (todos/futuros/passados), ordenada.
+    get agLineares() {
+      const h = this._hojeStr();
+      let l = this.agAgendados.slice();
+      if (this.agendaTempo === 'futuros') l = l.filter(e => e.data >= h);
+      else if (this.agendaTempo === 'passados') l = l.filter(e => e.data < h);
+      l.sort((a, b) => this._agKey(a).localeCompare(this._agKey(b)));
+      if (this.agendaTempo === 'passados') l.reverse(); // passados: mais recente primeiro
+      return l;
+    },
+    // Resumo dos 3 últimos eventos que já aconteceram (mais recente primeiro).
+    get agUltimos3() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data <= h).sort((a, b) => this._agKey(b).localeCompare(this._agKey(a))).slice(0, 3); },
     get agContagemPorDia() { const m = {}; for (const e of this.agEventos) m[e.data] = (m[e.data] || 0) + 1; return m; },
     // Grade do mês: 42 células (6 semanas), domingo→sábado.
     get agGrade() {
@@ -862,18 +879,18 @@ document.addEventListener('alpine:init', () => {
       }
       return dias;
     },
-    get agProximos() { const h = this._hojeStr(); return this.agEventos.filter(e => e.data >= h).sort((a, b) => a.data.localeCompare(b.data)).slice(0, 12); },
-    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), tipo: 'Reunião', titulo: '', nota: '' }; this.eventoModal = true; },
-    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '' }; this.eventoModal = true; },
+    get agProximos() { const h = this._hojeStr(); return this.agAgendados.filter(e => e.data >= h).sort((a, b) => this._agKey(a).localeCompare(this._agKey(b))).slice(0, 8); },
+    novoEvento(dia) { if (!this.ehAdmin && this.papel !== 'gestortrafego') return; this.eventoForm = { id: '', clienteId: this.agendaFiltro || '', data: dia || this.agendaDiaSel || this._hojeStr(), hora: '', tipo: 'Reunião', titulo: '', nota: '' }; this.eventoModal = true; },
+    editarEvento(ev) { if (ev.fonte !== 'agenda') return; this.eventoForm = { id: ev.id, clienteId: ev.clienteId, data: ev.data, hora: ev.hora || '', tipo: ev.tipo, titulo: ev.titulo, nota: ev.nota || '' }; this.eventoModal = true; },
     async salvarEvento() {
       const f = this.eventoForm;
       if (!f.clienteId) return alert('Escolha o cliente.');
       if (!f.data) return alert('Escolha a data.');
-      if (!(f.titulo || '').trim()) return alert('Dê um título ao evento.');
+      if (!(f.titulo || '').trim()) return alert('Escreva o assunto do evento.');
       const c = (this.clients || []).find(x => x.id === f.clienteId); if (!c) return alert('Cliente não encontrado.');
       const agenda = Array.isArray(c.agenda) ? c.agenda.slice() : [];
-      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota }; }
-      else agenda.push({ id: MD.uid(), data: f.data, tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
+      if (f.id) { const i = agenda.findIndex(e => e.id === f.id); if (i >= 0) agenda[i] = { ...agenda[i], data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota }; }
+      else agenda.push({ id: MD.uid(), data: f.data, hora: f.hora || '', tipo: f.tipo, titulo: f.titulo.trim(), nota: f.nota || '', por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString() });
       const { id, ...resto } = c; resto.agenda = agenda;
       try { await this.api('POST', '/clientes', { id: c.id, empresa: c.empresa, dados: resto }); c.agenda = agenda; this.eventoModal = false; this.agendaDiaSel = f.data; this.mostrarToast('Evento salvo. 📅'); }
       catch (e) { alert(e.message || e); }
