@@ -378,7 +378,7 @@ document.addEventListener('alpine:init', () => {
     metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
-    radarAberto: true, // painel Radar do Monitoramento expandido
+    radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
     editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
