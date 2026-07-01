@@ -378,6 +378,8 @@ document.addEventListener('alpine:init', () => {
     metaStatus: {},   // {clienteId: {conectado, igUsername, pageName, ...}} — conexão Meta por cliente
     metaMetricas: {}, // {clienteId: {instagram, facebook, posts}} — métricas reais puxadas da Meta
     metaBusy: false,
+    adsLive: {},      // {clienteId: {configurado, leads, custoLead, gasto, ...}} — Google Ads (MCC) puxado ao vivo na ficha
+    adsConfig: null,  // {configurado, mcc} — há credencial da agência? (carregado 1x)
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
@@ -1433,7 +1435,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     ultimoContato(c) { return ((c && c.timeline) || [])[0] || null; }, // timeline vem com o mais recente no topo
     diasDesde(iso) { if (!iso) return null; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); },
     statusSaudeLabel(c) { const s = this.saudeCliente(c).score; if (s == null) return 'Sem dados'; if (s >= 70) return 'Saudável'; if (s >= 40) return 'Em atenção'; return 'Crítico'; },
-    adsRodando(c) { const a = (c && c.ads) || {}; const p = []; if (a.google && a.google.ativo) p.push('Google Ads'); if (a.meta && a.meta.ativo) p.push('Meta Ads'); return { ativo: p.length > 0, label: p.join(' · ') }; },
+    adsRodando(c) { const a = (c && c.ads) || {}; const live = c && this.adsLive[c.id]; const p = []; const googleReal = (live && live.campanhasAtivas > 0) || (c && c.adsAuto && c.adsAuto.campanhasAtivas > 0); if (googleReal || (a.google && a.google.ativo)) p.push('Google Ads'); if (a.meta && a.meta.ativo) p.push('Meta Ads'); return { ativo: p.length > 0, label: p.join(' · ') }; },
     // Métricas reais do Meta pra ficha (null quando não conectado / sem dado). fmtNum formata milhar.
     metaVal(c, rede, campo) { const m = c && this.metaMetricas[c.id]; const r = m && m[rede]; return (r && !r.erro && r[campo] != null) ? r[campo] : null; },
     fmtNum(n) { return (n == null) ? '—' : Number(n).toLocaleString('pt-BR'); },
@@ -1709,7 +1711,27 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     idadeDe(nasc) { if (!nasc) return null; const d = new Date(nasc + 'T00:00:00'); if (isNaN(d.getTime())) return null; const h = new Date(); let a = h.getFullYear() - d.getFullYear(); const m = h.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && h.getDate() < d.getDate())) a--; return a; },
     mediaRedes(c) { const rs = this.redesDoCliente(c).filter(r => r.id !== 'gmn'); return rs.length ? Math.round(rs.reduce((a, r) => a + (+c.redes[r.id].score || 0), 0) / rs.length) : 0; }, // GMN é nota 0–5, não % — fica fora da média
     get monitorCliente() { const list = this.clientesFiltrados; if (!list.length) return null; return list.find(c => c.id === this.monitorSel) || list[0]; },
-    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); this.carregarMetaStatus(id); },
+    async abrirMonitor(id) { this.monitorSel = id; await this.carregarCredenciais(id); this.carregarMetaStatus(id); this.carregarAdsAuto(id); },
+    // ── Google Ads (Gerenciador/MCC da Maracatu) — Leads/Custo automáticos ──
+    // Puxa o resumo do mês do cliente. Só substitui o lançamento manual quando
+    // há credencial da agência E o cliente tem Customer ID no cadastro.
+    async carregarAdsAuto(clienteId) {
+      if (!clienteId) return;
+      if (this.adsConfig === null) { try { this.adsConfig = await this.api('GET', '/google-ads/status'); } catch { this.adsConfig = { configurado: false }; } }
+      if (!this.adsConfig.configurado) return; // sem credencial: fica no manual
+      try { this.adsLive = { ...this.adsLive, [clienteId]: await this.api('GET', '/google-ads/cliente/' + clienteId + '?periodo=ESTE_MES') }; }
+      catch (e) { this.adsLive = { ...this.adsLive, [clienteId]: { erro: e.message } }; }
+    },
+    // Resumo pronto de exibir. Ordem: fetch ao vivo → snapshot persistido
+    // (dados.adsAuto, alimentado de hora em hora pelo backend) → lançamento manual.
+    adsResumo(c) {
+      const live = c && this.adsLive[c.id];
+      if (live && live.configurado && !live.semConta && !live.erro) return { fonte: 'auto', leads: live.leads, custoLead: live.custoLead, gasto: live.gasto };
+      const snap = c && c.adsAuto;
+      if (snap && (snap.leads != null || snap.custoLead != null)) return { fonte: 'auto', leads: snap.leads, custoLead: snap.custoLead, gasto: snap.gasto };
+      const m = (c && c.adsManual) || {};
+      return { fonte: 'manual', leads: m.leads, custoLead: m.custoLead };
+    },
     // ── Monitoramento Meta (Instagram/Facebook) — OAuth por cliente ──
     async conectarMeta(clienteId) {
       if (!clienteId) return;

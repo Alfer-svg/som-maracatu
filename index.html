@@ -1246,13 +1246,15 @@
                   </div>
                   <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
                     <div class="fs-12 text-3">Leads (Google Ads)</div>
-                    <div class="fw-800 fs-18" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.leads!=null)?monitorCliente.adsManual.leads:'—'"></div>
-                    <a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'leads')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.leads!=null)?'editar (manual)':'lançar manual'"></a>
+                    <div class="fw-800 fs-18" x-text="adsResumo(monitorCliente).leads!=null?adsResumo(monitorCliente).leads:'—'"></div>
+                    <template x-if="adsResumo(monitorCliente).fonte==='auto'"><div class="text-3 fs-11">via Google Ads (mês)</div></template>
+                    <template x-if="adsResumo(monitorCliente).fonte!=='auto'"><a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'leads')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.leads!=null)?'editar (manual)':'lançar manual'"></a></template>
                   </div>
                   <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
                     <div class="fs-12 text-3">Custo por lead</div>
-                    <div class="fw-800 fs-18" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.custoLead!=null)?fmtCur(monitorCliente.adsManual.custoLead):'—'"></div>
-                    <a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'custoLead')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.custoLead!=null)?'editar (manual)':'lançar manual'"></a>
+                    <div class="fw-800 fs-18" x-text="adsResumo(monitorCliente).custoLead!=null?fmtCur(adsResumo(monitorCliente).custoLead):'—'"></div>
+                    <template x-if="adsResumo(monitorCliente).fonte==='auto'"><div class="text-3 fs-11">via Google Ads (mês)</div></template>
+                    <template x-if="adsResumo(monitorCliente).fonte!=='auto'"><a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'custoLead')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.custoLead!=null)?'editar (manual)':'lançar manual'"></a></template>
                   </div>
                 </div>
               </div>
@@ -3253,7 +3255,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=203"></script>
+<script src="js/app.js?v=205"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
