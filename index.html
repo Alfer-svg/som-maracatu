@@ -1174,30 +1174,30 @@
 
               <!-- ===== CARDS KPI (formato ficha) ===== -->
               <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
-                <div class="card" style="padding:12px 14px">
-                  <div class="text-3 fs-12 fw-600"><i class="ph ph-user-circle ic-ph"></i> Status do cliente</div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #22c55e;background:#f0fdf4">
+                  <div class="fs-12 fw-600" style="color:#4d7c5a"><i class="ph ph-user-circle ic-ph" style="color:#16a34a"></i> Status do cliente</div>
                   <div class="fw-800 fs-16" style="margin-top:3px" x-text="statusSaudeLabel(monitorCliente)"></div>
                   <div class="text-3 fs-12" x-text="'saúde '+(saudeCliente(monitorCliente).score!=null?saudeCliente(monitorCliente).score+'%':'—')"></div>
                 </div>
-                <div class="card" style="padding:12px 14px">
-                  <div class="text-3 fs-12 fw-600"><i class="ph ph-list-checks ic-ph"></i> Pendências abertas</div>
-                  <div class="fw-800 fs-22" style="margin-top:3px" :style="pendenciasCliente(monitorCliente).length?'color:#dc2626':''" x-text="pendenciasCliente(monitorCliente).length"></div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #f43f5e;background:#fff1f2">
+                  <div class="fs-12 fw-600" style="color:#9f5b63"><i class="ph ph-list-checks ic-ph" style="color:#e11d48"></i> Pendências abertas</div>
+                  <div class="fw-800 fs-22" style="margin-top:3px" :style="pendenciasCliente(monitorCliente).length?'color:#dc2626':'color:#16a34a'" x-text="pendenciasCliente(monitorCliente).length"></div>
                 </div>
-                <div class="card" style="padding:12px 14px">
-                  <div class="text-3 fs-12 fw-600"><i class="ph ph-target ic-ph"></i> Próxima ação</div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #3b82f6;background:#eff6ff">
+                  <div class="fs-12 fw-600" style="color:#5b7aa5"><i class="ph ph-target ic-ph" style="color:#2563eb"></i> Próxima ação</div>
                   <div class="fw-700 fs-13" style="margin-top:3px" x-text="proxTarefa(monitorCliente) ? proxTarefa(monitorCliente).titulo : (pendenciasCliente(monitorCliente).length ? pendenciasCliente(monitorCliente)[0].txt : 'Nenhuma pendente ✅')"></div>
                 </div>
-                <div class="card" style="padding:12px 14px">
-                  <div class="text-3 fs-12 fw-600"><i class="ph ph-calendar-check ic-ph"></i> Último contato</div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #8b5cf6;background:#f5f3ff">
+                  <div class="fs-12 fw-600" style="color:#6f6597"><i class="ph ph-calendar-check ic-ph" style="color:#7c3aed"></i> Último contato</div>
                   <template x-if="ultimoContato(monitorCliente)">
                     <div><div class="fw-800 fs-15" style="margin-top:3px" x-text="fmtDate(ultimoContato(monitorCliente).em)"></div>
                     <div class="text-3 fs-12" x-text="(diasDesde(ultimoContato(monitorCliente).em)===0?'hoje':('há '+diasDesde(ultimoContato(monitorCliente).em)+' dia(s)'))+(ultimoContato(monitorCliente).tipo?' · '+ultimoContato(monitorCliente).tipo:'')"></div></div>
                   </template>
                   <div x-show="!ultimoContato(monitorCliente)" class="text-3 fs-13" style="margin-top:3px">Sem contato registrado</div>
                 </div>
-                <div class="card" style="padding:12px 14px">
-                  <div class="text-3 fs-12 fw-600"><i class="ph ph-megaphone ic-ph"></i> Campanhas</div>
-                  <div class="fw-800 fs-16" style="margin-top:3px" :style="adsRodando(monitorCliente).ativo?'color:#16a34a':''" x-text="adsRodando(monitorCliente).ativo?'Rodando':'Parado'"></div>
+                <div class="card" style="padding:12px 14px;border-left:3px solid #f59e0b;background:#fff7ed">
+                  <div class="fs-12 fw-600" style="color:#9a6a3a"><i class="ph ph-megaphone ic-ph" style="color:#d97706"></i> Campanhas</div>
+                  <div class="fw-800 fs-16" style="margin-top:3px" :style="adsRodando(monitorCliente).ativo?'color:#16a34a':'color:#6b7280'" x-text="adsRodando(monitorCliente).ativo?'Rodando':'Parado'"></div>
                   <div class="text-3 fs-12" x-text="adsRodando(monitorCliente).label||'—'"></div>
                 </div>
               </div>
@@ -1223,36 +1223,36 @@
               <div class="card" style="box-shadow:none;border:1px solid var(--border);padding:12px;margin-bottom:10px">
                 <div class="fw-800 fs-12 mb-2" style="text-transform:uppercase;letter-spacing:.5px"><i class="ph ph-chart-line-up ic-ph"></i> Performance <span class="text-3" style="font-weight:400;text-transform:none">· últimos 28 dias</span></div>
                 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
-                    <div class="fs-12 text-3">Alcance (Instagram)</div>
+                  <div class="card" style="box-shadow:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 12px">
+                    <div class="fs-12" style="color:#4d7c5a">Alcance (Instagram)</div>
                     <div class="fw-800 fs-18" x-text="fmtNum(metaVal(monitorCliente,'instagram','alcance28d'))"></div>
                     <template x-if="metaSerie(monitorCliente,'alcance').length>1"><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style="margin-top:3px;display:block"><path :d="sparkPath(metaSerie(monitorCliente,'alcance'),100,20)" fill="none" stroke="#22c55e" stroke-width="1.5"/></svg></template>
                     <div class="fs-11" style="margin-top:1px" x-show="metaTrend(monitorCliente,'alcance')!=null" :style="metaTrend(monitorCliente,'alcance')>=0?'color:#16a34a':'color:#dc2626'" x-text="(metaTrend(monitorCliente,'alcance')>=0?'↑ ':'↓ ')+Math.abs(metaTrend(monitorCliente,'alcance'))+'%'"></div>
                     <div class="text-3 fs-11" x-text="(metaStatus[monitorCliente.id]&&metaStatus[monitorCliente.id].conectado)?'via Meta':'conecte o Instagram'"></div>
                   </div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
-                    <div class="fs-12 text-3">Engajamento</div>
+                  <div class="card" style="box-shadow:none;background:#eff6ff;border:1px solid #bfdbfe;padding:10px 12px">
+                    <div class="fs-12" style="color:#5b7aa5">Engajamento</div>
                     <div class="fw-800 fs-18" x-text="metaVal(monitorCliente,'instagram','engajamentoPct')!=null ? metaVal(monitorCliente,'instagram','engajamentoPct')+'%' : '—'"></div>
                     <template x-if="metaSerie(monitorCliente,'engaj').length>1"><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style="margin-top:3px;display:block"><path :d="sparkPath(metaSerie(monitorCliente,'engaj'),100,20)" fill="none" stroke="#3b82f6" stroke-width="1.5"/></svg></template>
                     <div class="fs-11" style="margin-top:1px" x-show="metaTrend(monitorCliente,'engaj')!=null" :style="metaTrend(monitorCliente,'engaj')>=0?'color:#16a34a':'color:#dc2626'" x-text="(metaTrend(monitorCliente,'engaj')>=0?'↑ ':'↓ ')+Math.abs(metaTrend(monitorCliente,'engaj'))+'%'"></div>
                     <div class="text-3 fs-11" x-text="(metaStatus[monitorCliente.id]&&metaStatus[monitorCliente.id].conectado)?'via Meta':'conecte o Instagram'"></div>
                   </div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
-                    <div class="fs-12 text-3">Seguidores IG</div>
+                  <div class="card" style="box-shadow:none;background:#f5f3ff;border:1px solid #ddd6fe;padding:10px 12px">
+                    <div class="fs-12" style="color:#6f6597">Seguidores IG</div>
                     <div class="fw-800 fs-18" x-text="fmtNum(metaVal(monitorCliente,'instagram','seguidores'))"></div>
                     <template x-if="metaSerie(monitorCliente,'seguidores').length>1"><svg width="100%" height="22" viewBox="0 0 100 22" preserveAspectRatio="none" style="margin-top:3px;display:block"><path :d="sparkPath(metaSerie(monitorCliente,'seguidores'),100,20)" fill="none" stroke="#8b5cf6" stroke-width="1.5"/></svg></template>
                     <div class="fs-11" style="margin-top:1px" x-show="metaTrend(monitorCliente,'seguidores')!=null" :style="metaTrend(monitorCliente,'seguidores')>=0?'color:#16a34a':'color:#dc2626'" x-text="(metaTrend(monitorCliente,'seguidores')>=0?'↑ ':'↓ ')+Math.abs(metaTrend(monitorCliente,'seguidores'))+'%'"></div>
                     <div class="text-3 fs-11" x-text="(metaStatus[monitorCliente.id]&&metaStatus[monitorCliente.id].conectado)?'via Meta':'conecte o Instagram'"></div>
                   </div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
-                    <div class="fs-12 text-3">Leads (Google Ads)</div>
-                    <div class="fw-800 fs-18" x-text="adsResumo(monitorCliente).leads!=null?adsResumo(monitorCliente).leads:'—'"></div>
+                  <div class="card" style="box-shadow:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 12px">
+                    <div class="fs-12" style="color:#4d7c5a">Leads (Google Ads)</div>
+                    <div class="fw-800 fs-18" style="color:#16a34a" x-text="adsResumo(monitorCliente).leads!=null?adsResumo(monitorCliente).leads:'—'"></div>
                     <template x-if="adsResumo(monitorCliente).fonte==='auto'"><div class="text-3 fs-11">via Google Ads (mês)</div></template>
                     <template x-if="adsResumo(monitorCliente).fonte!=='auto'"><a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'leads')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.leads!=null)?'editar (manual)':'lançar manual'"></a></template>
                   </div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:10px 12px">
-                    <div class="fs-12 text-3">Custo por lead</div>
-                    <div class="fw-800 fs-18" x-text="adsResumo(monitorCliente).custoLead!=null?fmtCur(adsResumo(monitorCliente).custoLead):'—'"></div>
+                  <div class="card" style="box-shadow:none;background:#fff7ed;border:1px solid #fed7aa;padding:10px 12px">
+                    <div class="fs-12" style="color:#9a6a3a">Custo por lead</div>
+                    <div class="fw-800 fs-18" style="color:#b45309" x-text="adsResumo(monitorCliente).custoLead!=null?fmtCur(adsResumo(monitorCliente).custoLead):'—'"></div>
                     <template x-if="adsResumo(monitorCliente).fonte==='auto'"><div class="text-3 fs-11">via Google Ads (mês)</div></template>
                     <template x-if="adsResumo(monitorCliente).fonte!=='auto'"><a class="text-3 fs-11" style="cursor:pointer;text-decoration:underline" @click="lancarAdsManual(monitorCliente,'custoLead')" x-text="(monitorCliente.adsManual&&monitorCliente.adsManual.custoLead!=null)?'editar (manual)':'lançar manual'"></a></template>
                   </div>
@@ -1265,15 +1265,15 @@
                   <span class="text-3" style="font-weight:400;text-transform:none">· este mês · <span x-text="(adsResumo(monitorCliente).campanhasAtivas||0)"></span> ativa(s)</span>
                 </div>
                 <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px">
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Investido</div><div class="fw-800 fs-16" x-text="fmtCur(adsResumo(monitorCliente).gasto||0)"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Impressões</div><div class="fw-800 fs-16" x-text="fmtNum(adsResumo(monitorCliente).impressoes)"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Cliques</div><div class="fw-800 fs-16" x-text="fmtNum(adsResumo(monitorCliente).cliques)"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">CTR</div><div class="fw-800 fs-16" x-text="(adsResumo(monitorCliente).ctr!=null?adsResumo(monitorCliente).ctr:'—')+'%'"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">CPC médio</div><div class="fw-800 fs-16" x-text="adsResumo(monitorCliente).cpcMedio!=null?fmtCur(adsResumo(monitorCliente).cpcMedio):'—'"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Leads</div><div class="fw-800 fs-16" x-text="adsResumo(monitorCliente).leads!=null?adsResumo(monitorCliente).leads:'—'"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Custo / lead</div><div class="fw-800 fs-16" x-text="adsResumo(monitorCliente).custoLead!=null?fmtCur(adsResumo(monitorCliente).custoLead):'—'"></div></div>
-                  <div class="card" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">Conversão</div><div class="fw-800 fs-16" x-text="(adsResumo(monitorCliente).taxaConversao!=null?adsResumo(monitorCliente).taxaConversao:'—')+'%'"></div></div>
-                  <div class="card" x-show="adsResumo(monitorCliente).roas!=null" style="box-shadow:none;background:var(--surface-2);padding:9px 11px"><div class="fs-11 text-3">ROAS</div><div class="fw-800 fs-16" x-text="(adsResumo(monitorCliente).roas||0)+'×'"></div></div>
+                  <div class="card" style="box-shadow:none;background:#fff7ed;border:1px solid #fed7aa;padding:9px 11px"><div class="fs-11" style="color:#9a6a3a">Investido</div><div class="fw-800 fs-16" style="color:#b45309" x-text="fmtCur(adsResumo(monitorCliente).gasto||0)"></div></div>
+                  <div class="card" style="box-shadow:none;background:#eff6ff;border:1px solid #bfdbfe;padding:9px 11px"><div class="fs-11" style="color:#5b7aa5">Impressões</div><div class="fw-800 fs-16" style="color:#2563eb" x-text="fmtNum(adsResumo(monitorCliente).impressoes)"></div></div>
+                  <div class="card" style="box-shadow:none;background:#eff6ff;border:1px solid #bfdbfe;padding:9px 11px"><div class="fs-11" style="color:#5b7aa5">Cliques</div><div class="fw-800 fs-16" style="color:#2563eb" x-text="fmtNum(adsResumo(monitorCliente).cliques)"></div></div>
+                  <div class="card" style="box-shadow:none;background:#eef2ff;border:1px solid #c7d2fe;padding:9px 11px"><div class="fs-11" style="color:#6b6fb0">CTR</div><div class="fw-800 fs-16" style="color:#4f46e5" x-text="(adsResumo(monitorCliente).ctr!=null?adsResumo(monitorCliente).ctr:'—')+'%'"></div></div>
+                  <div class="card" style="box-shadow:none;background:#fff7ed;border:1px solid #fed7aa;padding:9px 11px"><div class="fs-11" style="color:#9a6a3a">CPC médio</div><div class="fw-800 fs-16" style="color:#b45309" x-text="adsResumo(monitorCliente).cpcMedio!=null?fmtCur(adsResumo(monitorCliente).cpcMedio):'—'"></div></div>
+                  <div class="card" style="box-shadow:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:9px 11px"><div class="fs-11" style="color:#4d7c5a">Leads</div><div class="fw-800 fs-16" style="color:#16a34a" x-text="adsResumo(monitorCliente).leads!=null?adsResumo(monitorCliente).leads:'—'"></div></div>
+                  <div class="card" style="box-shadow:none;background:#fff7ed;border:1px solid #fed7aa;padding:9px 11px"><div class="fs-11" style="color:#9a6a3a">Custo / lead</div><div class="fw-800 fs-16" style="color:#b45309" x-text="adsResumo(monitorCliente).custoLead!=null?fmtCur(adsResumo(monitorCliente).custoLead):'—'"></div></div>
+                  <div class="card" style="box-shadow:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:9px 11px"><div class="fs-11" style="color:#4d7c5a">Conversão</div><div class="fw-800 fs-16" style="color:#16a34a" x-text="(adsResumo(monitorCliente).taxaConversao!=null?adsResumo(monitorCliente).taxaConversao:'—')+'%'"></div></div>
+                  <div class="card" x-show="adsResumo(monitorCliente).roas!=null" style="box-shadow:none;background:#ecfdf5;border:1px solid #a7f3d0;padding:9px 11px"><div class="fs-11" style="color:#3f8f74">ROAS</div><div class="fw-800 fs-16" style="color:#059669" x-text="(adsResumo(monitorCliente).roas||0)+'×'"></div></div>
                 </div>
                 <template x-if="(adsResumo(monitorCliente).serie||[]).length>1">
                   <div style="margin-top:10px">
