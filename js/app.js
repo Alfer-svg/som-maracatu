@@ -381,6 +381,7 @@ document.addEventListener('alpine:init', () => {
     radarAberto: false, // painel Radar do Monitoramento: começa recolhido (abre no "Ver tudo")
     radarSnooze: MD.get('som_radar_snooze', {}), // {chave: data-de-volta} — pendências resolvidas/adiadas
     novaInter: { tipo: 'Ligação', texto: '', data: '' }, // form de nova interação na timeline (data: opcional, p/ reunião)
+    novaTarefaForm: { titulo: '', responsavel: '', data: '', prioridade: 'Média' }, // form de nova tarefa na ficha
     editInter: null, editInterTexto: '', // edição de um registro do histórico (admin)
     radarAutolog: MD.get('som_radar_autolog', true), // auto-registrar ações do Radar no histórico
     TIPOS_INTER,
@@ -1382,6 +1383,7 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
         objetivos: [], briefing: briefingVazio(), responsaveis: [], documentos: [],
         mensalidade: 0, tipoCliente: this.cliTipoTab || 'recorrente', status: 'Ativo', desde: MD.today(), notas: '',
         time: { atendimento: '', trafego: '', social: '' }, // equipe responsável por papel
+        tarefas: [], // próximas ações do cliente (responsável/data/prioridade/status)
       };
       this.cnpjMsg = ''; this.cepMsg = ''; this.modal = 'client';
     },
@@ -1430,6 +1432,19 @@ ${f.obs ? grupo('Observações', [`<tr><td colspan="2" class="val" style="font-w
     diasDesde(iso) { if (!iso) return null; return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000); },
     statusSaudeLabel(c) { const s = this.saudeCliente(c).score; if (s == null) return 'Sem dados'; if (s >= 70) return 'Saudável'; if (s >= 40) return 'Em atenção'; return 'Crítico'; },
     adsRodando(c) { const a = (c && c.ads) || {}; const p = []; if (a.google && a.google.ativo) p.push('Google Ads'); if (a.meta && a.meta.ativo) p.push('Meta Ads'); return { ativo: p.length > 0, label: p.join(' · ') }; },
+    // ── Tarefas / próximas ações do cliente (vive em Cliente.dados.tarefas) ──
+    tarefasCliente(c) { return (c && Array.isArray(c.tarefas)) ? c.tarefas : []; },
+    tarefasPendentes(c) { return this.tarefasCliente(c).filter(t => t.status !== 'feito').sort((a, b) => ((a.data || '9999') < (b.data || '9999') ? -1 : 1)); },
+    proxTarefa(c) { return this.tarefasPendentes(c)[0] || null; },
+    addTarefaCliente(c) {
+      const f = this.novaTarefaForm; const titulo = (f.titulo || '').trim(); if (!titulo) return alert('Escreva a tarefa.');
+      if (!Array.isArray(c.tarefas)) c.tarefas = [];
+      c.tarefas.push({ id: MD.uid(), titulo, responsavel: f.responsavel || '', data: f.data || '', prioridade: f.prioridade || 'Média', status: 'pendente', criadoEm: new Date().toISOString() });
+      this.novaTarefaForm = { titulo: '', responsavel: '', data: '', prioridade: 'Média' };
+      this.persistirCliente(c);
+    },
+    toggleTarefaCliente(c, t) { t.status = t.status === 'feito' ? 'pendente' : 'feito'; this.persistirCliente(c); },
+    removerTarefaCliente(c, t) { if (!confirm('Remover esta tarefa?')) return; c.tarefas = (c.tarefas || []).filter(x => x.id !== t.id); this.persistirCliente(c); },
     redesDoCliente(c) { return REDES.filter(r => c.redes && c.redes[r.id] && c.redes[r.id].tem); },
     // Linhas preenchidas do briefing (só mostra o que tem conteúdo).
     briefingItens(c) {
