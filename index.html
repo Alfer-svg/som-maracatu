@@ -1902,19 +1902,17 @@
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
               <span class="text-3 fs-11 fw-400" x-show="trafCliSel && trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
             </div>
-            <!-- Carteira: um chip por cliente com o progresso do dia (clique pra abrir o checklist dele) -->
-            <div class="flex" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
-              <template x-for="c in trafClientes" :key="'tc'+c.id">
-                <button type="button" class="btn btn-sm" @click="trafCliSel=c.id"
-                  :style="trafCliSel===c.id ? 'background:#7c3aed;color:#fff;border-color:#7c3aed'
-                    : (trafFeitosCli(c.id)>=TRAF_TAREFAS.length ? 'background:#dcfce7;color:#15803d;border-color:#bbf7d0'
-                    : 'background:var(--surface-2);color:var(--text-2)')">
-                  <span x-text="c.nome"></span>
-                  <span class="fw-800" x-text="' '+trafFeitosCli(c.id)+'/'+TRAF_TAREFAS.length"></span>
-                </button>
-              </template>
-              <div x-show="!trafClientes.length" class="text-3 fs-12" style="padding:6px 0">Nenhum cliente ativo com tráfego pago ainda.</div>
+            <!-- Cliente do checklist: dropdown só de ativos — ✓ = já fechou as 8 do dia -->
+            <div class="flex items-center gap-2" style="margin-bottom:10px">
+              <select class="form-select" style="flex:1" x-model="trafCliSel">
+                <option value="">Escolha o cliente…</option>
+                <template x-for="c in trafClientes" :key="'tc'+c.id">
+                  <option :value="c.id" x-text="trafCliLabel(c)"></option>
+                </template>
+              </select>
+              <span class="badge fs-11 fw-700" x-show="trafCliSel" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length"></span>
             </div>
+            <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:6px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
             <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <label class="flex items-center gap-2" style="cursor:pointer">
@@ -3771,7 +3769,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=218"></script>
+<script src="js/app.js?v=219"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

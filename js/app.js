@@ -962,14 +962,19 @@ document.addEventListener('alpine:init', () => {
         this.trafChecklists = (Array.isArray(cks) ? cks : []).filter(x => x && x.clienteId);
         this.trafLog = Array.isArray(log) ? log : [];
       } catch (e) { /* sem rede: segue com o que tem em memória */ }
-      if (!this.trafCliSel && this.trafClientes.length) this.trafCliSel = this.trafClientes[0].id;
     },
-    // Carteira do gestor: clientes ativos com tráfego pago (Google/Meta ativo ou Ads sincronizado).
-    // Se ninguém estiver marcado ainda, mostra todos os ativos pra página não nascer vazia.
+    // Carteira do checklist: TODOS os clientes ativos, em ordem alfabética (dropdown).
     get trafClientes() {
-      const ativos = (this.clients || []).filter(c => c.status !== 'Inativo');
-      const comTrafego = ativos.filter(c => (c.ads && ((c.ads.google && c.ads.google.ativo) || (c.ads.meta && c.ads.meta.ativo))) || c.adsAuto);
-      return (comTrafego.length ? comTrafego : ativos).map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }));
+      return (this.clients || [])
+        .filter(c => c.status !== 'Inativo')
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—' }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    },
+    // Rótulo da opção no dropdown: ✓ quando o cliente fechou as 8 do dia; parcial mostra x/8.
+    trafCliLabel(c) {
+      const n = this.trafFeitosCli(c.id);
+      if (n >= TRAF_TAREFAS.length) return '✓ ' + c.nome;
+      return n > 0 ? c.nome + ' — ' + n + '/' + TRAF_TAREFAS.length : c.nome;
     },
     // Checklist do dia+cliente — cria/completa na hora (itens novos entram em dias antigos).
     trafCheckDia(cliId) {
