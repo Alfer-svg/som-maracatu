@@ -185,6 +185,11 @@
         <span class="nav-icon"><i class="ph ph-calendar-dots ic-ph" style="color:#ea580c"></i></span><span>Agenda</span>
       </div>
 
+      <!-- Gestão de Tráfego (admin + gestor de tráfego) -->
+      <div class="nav-item" x-show="podeVer('trafego')" :class="page==='trafego'?'active':''" @click="go('trafego')" title="Rotina diária do gestor de tráfego: checklist com evidências, log de otimizações e indicadores.">
+        <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph" style="color:#7c3aed"></i></span><span>Tráfego</span>
+      </div>
+
       <!-- Relatórios (só admin) -->
       <div class="nav-item" x-show="ehAdmin" :class="page==='relatorios'?'active':''" @click="go('relatorios')" title="Ponto e produção da equipe.">
         <span class="nav-icon"><i class="ph ph-chart-line-up ic-ph"></i></span><span>Relatórios</span>
@@ -1834,6 +1839,115 @@
           </div>
         </div>
       </div>
+
+      <!-- ========== GESTÃO DE TRÁFEGO (checklist diário + log + indicadores) ========== -->
+      <section x-show="page==='trafego'">
+        <div class="flex items-center justify-between mb-3" style="flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="fw-800" style="font-size:18px"><i class="ph ph-chart-line-up ic-ph" style="color:#7c3aed"></i> Gestão de Tráfego</div>
+            <div class="text-3 fs-12">Rotina diária com evidências — o que foi feito, onde e por quê.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input class="form-input" type="date" x-model="trafDia" style="width:auto">
+            <span class="badge fs-12 fw-700" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length+' concluídas'"></span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
+          <!-- Checklist do dia -->
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia
+              <span class="text-3 fs-11 fw-400" x-show="trafCheckDia().por" x-text="'· por '+trafCheckDia().por"></span>
+            </div>
+            <template x-for="t in TRAF_TAREFAS" :key="t.id">
+              <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+                <label class="flex items-center gap-2" style="cursor:pointer">
+                  <input type="checkbox" x-model="trafItem(t.id).feito" @change="salvarTrafego()">
+                  <span class="fw-700 fs-13" :style="trafItem(t.id).feito?'color:var(--text-3);text-decoration:line-through':''" x-text="t.texto"></span>
+                </label>
+                <input class="form-input" style="margin-top:6px;font-size:12px" :placeholder="'Evidência: '+t.dica" x-model="trafItem(t.id).evidencia" @change="salvarTrafego()">
+              </div>
+            </template>
+          </div>
+
+          <!-- Log de otimizações -->
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#7c3aed"></i> Log de otimizações</div>
+            <div class="text-3 fs-11 mb-2">Só mudanças relevantes: pausou, escalou, novo público, verba…</div>
+            <div class="form-group" style="margin-bottom:8px">
+              <select class="form-select" x-model="trafLogForm.clienteId">
+                <option value="">Cliente…</option>
+                <template x-for="c in clients.filter(x=>x.status!=='Inativo')" :key="'lf'+c.id"><option :value="c.id" x-text="c.empresa||c.nome"></option></template>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:8px"><input class="form-input" x-model="trafLogForm.alteracao" placeholder="Alteração — ex.: pausado anúncio X, verba R$50→R$80"></div>
+            <div class="flex gap-2" style="margin-bottom:12px">
+              <input class="form-input" style="flex:1" x-model="trafLogForm.motivo" placeholder="Motivo — ex.: CPA alto, ROAS acima da meta" @keydown.enter="addTrafLog()">
+              <button class="btn btn-sm" @click="addTrafLog()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap">Registrar</button>
+            </div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-3 fs-12" x-text="trafLogVisivel.length+' registro(s)'"></span>
+              <select class="form-select" style="width:auto;font-size:12px;padding:4px 26px 4px 8px" x-model="trafLogFiltro">
+                <option value="">Todos os clientes</option>
+                <template x-for="c in clients.filter(x=>x.status!=='Inativo')" :key="'ff'+c.id"><option :value="c.id" x-text="c.empresa||c.nome"></option></template>
+              </select>
+            </div>
+            <div style="max-height:360px;overflow-y:auto">
+              <template x-for="l in trafLogVisivel" :key="l.id">
+                <div class="flex items-start gap-2" style="padding:7px 0;border-bottom:1px solid var(--border)">
+                  <div style="min-width:44px;text-align:center">
+                    <div class="fw-800 fs-12" style="color:#7c3aed" x-text="fmtDate(l.data).slice(0,5)"></div>
+                    <div class="text-3" style="font-size:10px" x-text="l.hora||''"></div>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div class="fs-12"><b x-text="l.cliente||'—'"></b> · <span x-text="l.alteracao"></span></div>
+                    <div class="text-3 fs-11"><span x-show="l.motivo">Motivo: <span x-text="l.motivo"></span></span><span x-show="l.por"> · <span x-text="l.por"></span></span></div>
+                  </div>
+                  <button class="btn btn-icon btn-ghost btn-sm" @click="removerTrafLog(l.id)" title="Excluir" style="color:var(--red)"><i class="ph ph-trash ic-ph"></i></button>
+                </div>
+              </template>
+              <div x-show="!trafLogVisivel.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhuma otimização registrada ainda.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicadores do gestor (só admin) -->
+        <div class="card" style="padding:14px;margin-top:14px" x-show="ehAdmin">
+          <div class="fw-800 fs-13 mb-2"><i class="ph ph-gauge ic-ph" style="color:#ea580c"></i> Indicadores do gestor <span class="text-3 fs-11 fw-400">· últimos 30 dias, medidos por evidência</span></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas revisadas hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contasHoje"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações hoje</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otimHoje"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Checklist 100% (dias)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.pctCompleto+'%'"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Média de itens/dia</div><div class="fw-800" style="font-size:20px" x-text="trafInd.mediaItens+'/'+TRAF_TAREFAS.length"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Otimizações (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.otim30"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Contas distintas (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.contas30"></div></div>
+            <div class="card" style="padding:10px;background:var(--surface-2)"><div class="text-3 fs-11">Dias com rotina (30d)</div><div class="fw-800" style="font-size:20px" x-text="trafInd.diasAtivos30"></div></div>
+          </div>
+        </div>
+
+        <!-- Resultados das contas (Google Ads, mês corrente) -->
+        <div class="card" style="padding:0;margin-top:14px;overflow:hidden">
+          <div style="padding:12px 14px;border-bottom:1px solid var(--border)" class="fw-800 fs-13"><i class="ph ph-google-logo ic-ph" style="color:#2563eb"></i> Resultados das contas <span class="text-3 fs-11 fw-400">· Google Ads, mês corrente (snapshot automático)</span></div>
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead><tr><th>Cliente</th><th>Leads</th><th>Δ leads (7d)</th><th>Custo/lead</th><th>Gasto</th><th>Campanhas ativas</th></tr></thead>
+              <tbody>
+                <template x-for="r in trafResultados" :key="r.id">
+                  <tr>
+                    <td class="fw-700" x-text="r.nome"></td>
+                    <td x-text="r.leads ?? '—'"></td>
+                    <td><span x-show="r.dLeads !== null" :style="r.dLeads>=0?'color:#15803d':'color:#b91c1c'" x-text="(r.dLeads>=0?'+':'')+r.dLeads"></span><span x-show="r.dLeads === null" class="text-3">—</span></td>
+                    <td x-text="r.custoLead != null ? mascCur(r.custoLead) : '—'"></td>
+                    <td x-text="r.gasto != null ? mascCur(r.gasto) : '—'"></td>
+                    <td x-text="r.campanhas ?? '—'"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+            <div x-show="!trafResultados.length" class="text-3 fs-12" style="padding:14px;text-align:center">Nenhum cliente com Google Ads sincronizado ainda — preencha o Customer ID no cadastro.</div>
+          </div>
+        </div>
+      </section>
 
       <!-- ========== RELATÓRIOS (ponto + produção) ========== -->
       <section x-show="page==='relatorios'">
@@ -3601,7 +3715,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=214"></script>
+<script src="js/app.js?v=215"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

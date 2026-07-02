@@ -328,7 +328,7 @@ const PERMISSOES = {
   colaborador: ['comercial', 'operacional', 'monitoramento', 'onboarding', 'pessoal'],
   colaborador2: ['operacional', 'pessoal'], // Operacional (só os trabalhos em que está) + a própria ficha
   financeiro: ['comercial', 'orcamentos', 'contratos', 'financeiro', 'pessoal'],
-  gestortrafego: ['agenda', 'monitoramento', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
+  gestortrafego: ['agenda', 'trafego', 'monitoramento', 'pessoal'], // painel exclusivo de agenda/tráfego + monitoramento
 };
 // Páginas do sistema que o admin pode liberar/bloquear por perfil (checkboxes em Configurações).
 // 'pessoal' (a própria ficha) é sempre liberado e 'configuracoes' é sempre só-admin — por isso
@@ -345,6 +345,20 @@ const PAGINAS_SISTEMA = [
   { id: 'monitoramento', nome: 'Monitoramento' },
   { id: 'relatorios', nome: 'Relatórios' },
   { id: 'agenda', nome: 'Agenda' },
+  { id: 'trafego', nome: 'Tráfego' },
+];
+
+/* ---------- Gestão de Tráfego: rotina diária do gestor ---------- */
+// Checklist fixo do dia — cada item pede uma EVIDÊNCIA (prova de que foi feito).
+const TRAF_TAREFAS = [
+  { id: 'campanhas', texto: 'Verificou todas as campanhas', dica: 'Print ou observação' },
+  { id: 'orcamento', texto: 'Conferiu orçamento', dica: 'Valor gasto' },
+  { id: 'cpa', texto: 'Analisou CPA/CPL', dica: 'Resultado encontrado' },
+  { id: 'otimizou', texto: 'Otimizou campanhas', dica: 'Quais alterações foram feitas' },
+  { id: 'pausou', texto: 'Pausou anúncios ruins', dica: 'Nome dos anúncios' },
+  { id: 'escalou', texto: 'Escalou campanhas vencedoras', dica: 'Novo orçamento' },
+  { id: 'pixel', texto: 'Verificou pixel/eventos', dica: 'OK ou problema encontrado' },
+  { id: 'relatorio', texto: 'Atualizou relatório', dica: 'Link ou horário' },
 ];
 
 /* ---------- Operacional: modelos de projeto comuns de agência ---------- */
@@ -423,6 +437,13 @@ document.addEventListener('alpine:init', () => {
     eventoModal: false,
     eventoForm: { id: '', clienteId: '', data: '', hora: '', tipo: 'Reunião', titulo: '', nota: '', link: '' },
     TIPOS_EVENTO: ['Reunião', 'Ligação', 'WhatsApp', 'E-mail', 'Visita', 'Campanha', 'Entrega', 'Reunião online', 'Outro'],
+    // ── Gestão de Tráfego (página trafego: admin + gestortrafego) ──
+    TRAF_TAREFAS,
+    trafDia: '',            // 'YYYY-MM-DD' do checklist em edição (default hoje)
+    trafChecklists: [],     // coleção trafego.checklist — um doc por dia
+    trafLog: [],            // coleção trafego.log — otimizações registradas
+    trafLogForm: { clienteId: '', alteracao: '', motivo: '' },
+    trafLogFiltro: '',
     usuarios: [], // equipe completa (só admin lê)
     equipe: [], // equipe enxuta {id,nome,papel} p/ dropdowns (qualquer logado)
     pessoaForm: { id: '', nome: '', email: '', papel: 'colaborador', senha: '', foto: '' },
@@ -712,7 +733,7 @@ document.addEventListener('alpine:init', () => {
       return 'assets/icons/' + nome + '.png?v=7';
     },
     sorteiaVersiculo() { return VERSICULOS[Math.floor(Math.random() * VERSICULOS.length)]; },
-    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); },
+    go(p) { if (!this.podeVer(p)) return; this.page = p; MD.set('som_page', p); this.busca = ''; if (p === 'monitoramento' && this.monitorCliente) this.carregarCredenciais(this.monitorCliente.id); if (p === 'comercial') { this.comTab = 'lista'; this.carregarOnboardings(); } if (p === 'crm') { this.carregarLeads(); this.carregarCrmStages(); } if (p === 'dashboard') { if (!this.ehAdmin) this.dashTab = 'comercial'; this.carregarCrmStages(); this.carregarPropostas(); this.carregarMetas(); this.carregarLeads().then(() => { if (this.page === 'dashboard' && this.dashTab === 'comercial' && this.motivacao) this.mostrarToast(this.motivacaoMsg); }); } if (p === 'pessoal') { this.carregarUsuarios(); } if (p === 'configuracoes') { this.carregarUsuarios(); this.carregarCloud(); this.carregarPapeis(); } if (p === 'operacional') { this.versiculo = this.sorteiaVersiculo(); if (this.papel === 'colaborador2') this.opTab = 'quadro'; this.carregarPresenca(); this.carregarProjetos(); this.carregarLayouts(); this.carregarLabels(); this.carregarBoards(); this.carregarCloud(); } if (p === 'relatorios') this.carregarRelatorio(); if (p === 'trafego') this.carregarTrafego(); },
     // ── Perfis de acesso (RBAC) ──
     get papel() { return (this.usuario && this.usuario.papel) || 'colaborador'; },
     get ehAdmin() { return this.papel === 'admin'; },
@@ -739,7 +760,7 @@ document.addEventListener('alpine:init', () => {
       if (i >= 0) atual.splice(i, 1); else atual.push(page);
       this.permissoesCustom = { ...this.permissoesCustom, [id]: atual };
     },
-    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['agenda', 'operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
+    get paginaInicial() { return this.podeVer('dashboard') ? 'dashboard' : (['agenda', 'trafego', 'operacional', 'monitoramento', 'crm', 'financeiro', 'comercial', 'pessoal'].find(p => this.podeVer(p)) || 'pessoal'); },
     garantirPaginaPermitida() { if (this.token && !this.podeVer(this.page)) this.page = this.paginaInicial; },
     // ── Pessoal: gestão de equipe (admin) ──
     // PAPEIS_INFO com os nomes/descrições editados aplicados (cor/bg/permissões seguem fixos pelo id).
@@ -927,6 +948,90 @@ document.addEventListener('alpine:init', () => {
       if (!f.clienteId) return alert('Escolha o cliente.');
       try { const r = await this.api('POST', '/meet/convite', { clienteId: f.clienteId, link: f.link, titulo: f.titulo, data: f.data, hora: f.hora }); this.mostrarToast('Convite enviado pra ' + r.para + '. ✉️'); }
       catch (e) { alert(e.message || e); }
+    },
+    // ── Gestão de Tráfego: checklist diário + log de otimizações + indicadores ──
+    async carregarTrafego() {
+      if (!this.trafDia) this.trafDia = this._hojeStr();
+      try {
+        const [cks, log] = await Promise.all([
+          this.api('GET', '/colecoes/trafego.checklist'),
+          this.api('GET', '/colecoes/trafego.log'),
+        ]);
+        this.trafChecklists = Array.isArray(cks) ? cks : [];
+        this.trafLog = Array.isArray(log) ? log : [];
+      } catch (e) { /* sem rede: segue com o que tem em memória */ }
+    },
+    // Checklist do dia selecionado — cria/completa na hora (itens novos entram em dias antigos).
+    trafCheckDia() {
+      let c = this.trafChecklists.find(x => x.data === this.trafDia);
+      if (!c) { c = { data: this.trafDia, por: '', itens: TRAF_TAREFAS.map(t => ({ id: t.id, feito: false, evidencia: '' })), em: '' }; this.trafChecklists.push(c); }
+      for (const t of TRAF_TAREFAS) if (!c.itens.some(i => i.id === t.id)) c.itens.push({ id: t.id, feito: false, evidencia: '' });
+      return c;
+    },
+    trafItem(id) { return this.trafCheckDia().itens.find(i => i.id === id); },
+    get trafFeitos() { return this.trafCheckDia().itens.filter(i => i.feito).length; },
+    async salvarTrafego() {
+      const c = this.trafCheckDia();
+      c.por = (this.usuario && this.usuario.nome) || c.por;
+      c.em = new Date().toISOString();
+      try { await this.api('POST', '/colecoes/trafego.checklist', { itens: this.trafChecklists }); }
+      catch (e) { this.mostrarToast('Não salvou o checklist — confira a conexão. ⚠️'); }
+    },
+    async addTrafLog() {
+      const f = this.trafLogForm;
+      if (!(f.alteracao || '').trim()) return alert('Descreva a alteração feita.');
+      const c = (this.clients || []).find(x => x.id === f.clienteId);
+      this.trafLog.unshift({
+        id: MD.uid(), data: this._hojeStr(), hora: new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' }),
+        clienteId: f.clienteId || '', cliente: (c && (c.empresa || c.nome)) || '',
+        alteracao: f.alteracao.trim(), motivo: (f.motivo || '').trim(),
+        por: (this.usuario && this.usuario.nome) || '', em: new Date().toISOString(),
+      });
+      this.trafLogForm = { clienteId: '', alteracao: '', motivo: '' };
+      try { await this.api('POST', '/colecoes/trafego.log', { itens: this.trafLog }); this.mostrarToast('Otimização registrada. 📝'); }
+      catch (e) { alert(e.message || e); }
+    },
+    async removerTrafLog(id) {
+      if (!confirm('Excluir este registro do log?')) return;
+      this.trafLog = this.trafLog.filter(x => x.id !== id);
+      try { await this.api('POST', '/colecoes/trafego.log', { itens: this.trafLog }); } catch (e) { }
+    },
+    get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
+    // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
+    get trafInd() {
+      const hoje = this._hojeStr();
+      const d30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+      const logHoje = this.trafLog.filter(l => l.data === hoje);
+      const log30 = this.trafLog.filter(l => l.data >= d30);
+      const cks30 = this.trafChecklists.filter(c => c.data >= d30 && c.data <= hoje && c.itens.some(i => i.feito));
+      const completos = cks30.filter(c => c.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length).length;
+      const mediaItens = cks30.length ? Math.round(cks30.reduce((a, c) => a + c.itens.filter(i => i.feito).length, 0) / cks30.length * 10) / 10 : 0;
+      return {
+        contasHoje: new Set(logHoje.map(l => l.clienteId).filter(Boolean)).size,
+        otimHoje: logHoje.length,
+        otim30: log30.length,
+        contas30: new Set(log30.map(l => l.clienteId).filter(Boolean)).size,
+        diasAtivos30: cks30.length,
+        pctCompleto: cks30.length ? Math.round(completos / cks30.length * 100) : 0,
+        mediaItens,
+      };
+    },
+    // Resultados reais das contas (snapshot do Google Ads) + variação de leads vs ~7 dias atrás.
+    get trafResultados() {
+      const d7 = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10);
+      return (this.clients || [])
+        .filter(c => c.status !== 'Inativo' && c.adsAuto)
+        .map(c => {
+          const h = Array.isArray(c.adsHist) ? c.adsHist : [];
+          const antigo = h.filter(x => x.data <= d7).slice(-1)[0];
+          return {
+            id: c.id, nome: c.empresa || c.nome || '—',
+            leads: c.adsAuto.leads, custoLead: c.adsAuto.custoLead, gasto: c.adsAuto.gasto,
+            campanhas: c.adsAuto.campanhasAtivas, em: c.adsAuto.em || '',
+            dLeads: antigo ? (Number(c.adsAuto.leads) || 0) - (Number(antigo.leads) || 0) : null,
+          };
+        })
+        .sort((a, b) => (Number(b.gasto) || 0) - (Number(a.gasto) || 0));
     },
     // Convite por WhatsApp — abre o zap do cliente com a mensagem pronta.
     conviteZapMeet() {
