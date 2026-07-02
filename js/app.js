@@ -970,6 +970,7 @@ document.addEventListener('alpine:init', () => {
     // ── Gestão de Tráfego: checklist diário + log de otimizações + indicadores ──
     async carregarTrafego() {
       if (!this.trafDia) this.trafDia = this._hojeStr();
+      if (!(this.projects || []).length) this.carregarProjetos(); // pros cards do quadro Tráfego
       try {
         const [cks, log] = await Promise.all([
           this.api('GET', '/colecoes/trafego.checklist'),
@@ -1072,6 +1073,15 @@ document.addEventListener('alpine:init', () => {
     get trafLogVisivel() { const f = this.trafLogFiltro; return this.trafLog.filter(l => !f || l.clienteId === f).slice(0, 200); },
     // Campanhas ativas AGORA (real, do snapshot Google Ads) somando os clientes ativos.
     get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
+    // Cards do quadro Tráfego (Operacional) ordenados por prioridade — pra lista do módulo.
+    get trafCardsPrioridade() {
+      const peso = { 'Alta': 0, 'Média': 1, 'Baixa': 2 };
+      return (this.projects || [])
+        .filter(p => this.projBoardId(p) === 'trafego' && !p.arquivado && p.status !== 'Concluído')
+        .sort((a, b) => ((peso[a.prioridade] ?? 3) - (peso[b.prioridade] ?? 3)) || String(a.prazo || '9999').localeCompare(String(b.prazo || '9999')));
+    },
+    trafPrioCor(pr) { return pr === 'Alta' ? '#dc2626' : pr === 'Média' ? '#d97706' : pr === 'Baixa' ? '#16a34a' : '#6b7280'; },
+    abrirCardTrafego(p) { this.go('operacional'); this.opTab = 'quadro'; this.selecionarBoard('trafego'); this.$nextTick(() => this.abrirCard(p)); },
     // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200.
     // semInfo = campanha RODANDO no Google mas sem saldo automático (billing inacessível/pós-antiga)
     // e sem valor manual na ficha — pra ninguém ficar invisível pro radar.

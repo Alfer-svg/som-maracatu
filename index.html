@@ -1882,6 +1882,24 @@
               <div x-show="!trafLogVisivel.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhuma otimização registrada ainda.</div>
             </div>
           </div>
+
+          <!-- Tarefas do quadro Tráfego, por prioridade -->
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
+            <div style="max-height:420px;overflow-y:auto">
+              <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
+                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
+                    <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
+                  </div>
+                  <span class="badge fs-11" style="background:var(--surface-2);color:var(--text-2);white-space:nowrap" x-text="p.status"></span>
+                </div>
+              </template>
+              <div x-show="!trafCardsPrioridade.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhum card aberto no quadro Tráfego — crie pelo <b>+ Tráfego</b> no Operacional.</div>
+            </div>
+          </div>
         </div>
 
         <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
@@ -3793,7 +3811,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=231"></script>
+<script src="js/app.js?v=232"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
