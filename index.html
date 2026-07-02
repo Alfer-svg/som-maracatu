@@ -1041,6 +1041,7 @@
         <div class="kanban" x-show="opTab==='quadro'">
           <template x-for="col in boardAtual.colunas" :key="col.nome">
             <div class="kanban-col" :class="(dropCol===col.nome?'drop-on':'')+(dragColNome===col.nome?' col-dragging':'')"
+                 :style="boardSel==='trafego' ? 'background:#F8F5FF;border:1px solid #E9E2FA' : ''"
                  @dragover.prevent="dropCol=col.nome" @dragleave="if(dropCol===col.nome)dropCol=null" @drop.prevent="dragColNome ? onDropColuna(col.nome) : onDropProjeto(col.nome)">
               <div class="kanban-head" draggable="true" @dragstart="dragColNome=col.nome; dragId=null" @dragend="dragColNome=''; dropCol=null" style="cursor:grab" title="Arraste para reordenar a coluna"><span class="dot" :style="'background:'+(col.cor||'#8a8ba3')"></span><span class="fw-700 fs-12" x-text="col.nome"></span><span class="count" x-text="projetosDoBoardStatus(col.nome).length"></span>
                 <template x-if="boardEdit"><span class="flex items-center" style="margin-left:auto;gap:1px">
@@ -1053,7 +1054,7 @@
               <div class="kanban-body">
                 <template x-for="p in projetosDoBoardStatus(col.nome)" :key="p.id">
                   <div class="kanban-card" :class="dragId===p.id?'dragging':''" draggable="true"
-                       :style="'background:'+(p.isPost?'#FEEFDD':'#E9F2FE')"
+                       :style="projBoardId(p)==='trafego' ? 'background:#F4F0FE;border-left:3px solid #7c3aed' : ('background:'+(p.isPost?'#FEEFDD':'#E9F2FE'))"
                        @dragstart="dragId=p.id" @dragend="dragId=null; dropCol=null"
                        @click="abrirCard(p)">
                     <!-- etiquetas -->
@@ -3575,6 +3576,29 @@
 </div>
 
 <!-- NOVO/EDITAR EVENTO (Agenda) -->
+<!-- + Tráfego: criar card no quadro Tráfego (cliente obrigatório) -->
+<div class="modal-backdrop" x-show="trafCardModal" x-cloak @click.self="trafCardModal=false">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><div class="modal-title"><i class="ph ph-chart-line-up ic-ph" style="color:#7c3aed"></i> Nova tarefa de tráfego</div><button class="btn btn-icon btn-ghost" @click="trafCardModal=false">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">Cliente *</label>
+        <select class="form-select" x-model="trafCardForm.clienteId">
+          <option value="">Escolha o cliente…</option>
+          <template x-for="c in trafClientes" :key="'tcm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:10px"><label class="form-label">Nome da tarefa</label><input class="form-input" x-model="trafCardForm.titulo" placeholder="Ex.: Campanha de leads — julho" @keydown.enter="criarCardTrafego()"></div>
+      <div class="form-group"><label class="form-label">Prazo (opcional)</label><input class="form-input" type="date" x-model="trafCardForm.prazo" style="width:auto"></div>
+      <div class="text-3 fs-11" style="margin-top:8px">O card nasce no quadro <b>🎯 Tráfego</b>, atribuído ao gestor de tráfego e com o checklist da função.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" @click="trafCardModal=false">Cancelar</button>
+      <button class="btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed" @click="criarCardTrafego()"><i class="ph ph-plus ic-ph"></i> Criar card</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" x-show="eventoModal" x-cloak>
   <div class="modal" style="max-width:440px">
     <div class="modal-head"><div class="modal-title" x-text="eventoForm.id?'Editar evento':'Novo evento'"></div><button class="btn btn-icon btn-ghost" @click="eventoModal=false">✕</button></div>
@@ -3777,7 +3801,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=227"></script>
+<script src="js/app.js?v=228"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
