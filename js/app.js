@@ -1057,6 +1057,13 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // Checklists JÁ CONCLUÍDOS (8/8) no dia selecionado — histórico mostrado com o checklist fechado.
+    get trafRealizadosDia() {
+      return this.trafChecklists
+        .filter(c => c.data === this.trafDia && c.itens && c.itens.filter(i => i.feito).length >= TRAF_TAREFAS.length)
+        .map(c => ({ clienteId: c.clienteId, cliente: c.cliente || '—', por: c.por || '', hora: c.itens.map(i => i.hora).filter(Boolean).sort().slice(-1)[0] || '' }))
+        .sort((a, b) => (a.hora || '').localeCompare(b.hora || ''));
+    },
     trafTarefa(id) { return TRAF_TAREFAS.find(t => t.id === id) || { texto: id, dica: '' }; },
     async addTrafLog() {
       const f = this.trafLogForm;

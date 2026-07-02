@@ -1830,6 +1830,18 @@
               <span class="badge fs-11 fw-700" x-show="trafCliSel" :style="trafFeitos>=TRAF_TAREFAS.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafFeitos+'/'+TRAF_TAREFAS.length"></span>
             </div>
             <div x-show="!trafCliSel" class="text-3 fs-12" style="padding:16px 0;text-align:center">Escolha um cliente pra abrir o checklist dele.</div>
+            <!-- Histórico do dia: checklists já concluídos (visível com o checklist fechado) -->
+            <div x-show="!trafCliSel && trafRealizadosDia.length" style="margin-top:4px">
+              <div class="fw-800 fs-12 mb-1" style="color:#15803d"><i class="ph ph-check-circle ic-ph"></i> Realizados hoje (<span x-text="trafRealizadosDia.length"></span>)</div>
+              <template x-for="r in trafRealizadosDia" :key="'rd'+r.clienteId">
+                <div class="flex items-center gap-2 fs-12" style="padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="trafCliSel=r.clienteId" title="Abrir o checklist deste cliente">
+                  <span style="color:#16a34a">✅</span>
+                  <span class="fw-700" style="flex:1" x-text="r.cliente"></span>
+                  <span class="text-3 fs-11" x-show="r.hora" x-text="'concluído às '+r.hora"></span>
+                  <span class="text-3 fs-11" x-show="r.por" x-text="'· '+r.por"></span>
+                </div>
+              </template>
+            </div>
             <template x-for="t in trafCliSel ? TRAF_TAREFAS : []" :key="trafCliSel+t.id">
               <div style="padding:8px 0;border-bottom:1px solid var(--border)">
                 <label class="flex items-center gap-2" style="cursor:pointer">
@@ -3824,7 +3836,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=235"></script>
+<script src="js/app.js?v=236"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
