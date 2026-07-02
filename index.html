@@ -1866,6 +1866,22 @@
             <button class="btn" x-show="trafCliSel" @click="salvarTrafego(true)" style="width:100%;margin-top:12px;background:#16a34a;color:#fff;border-color:#16a34a;justify-content:center"><i class="ph ph-floppy-disk ic-ph"></i> Salvar checklist no fichário</button>
           </div>
           <div class="traf-rotina-lateral">
+            <!-- Rosca: quanto falta pra cumprir a demanda do dia (clientes × 8 tarefas) -->
+            <div class="card" style="padding:14px;display:flex;align-items:center;gap:14px">
+              <svg viewBox="0 0 120 120" width="110" height="110" style="flex-shrink:0">
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#dcfce7':'#EDE9FE'" stroke-width="13"/>
+                <circle cx="60" cy="60" r="50" fill="none" :stroke="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" stroke-width="13" stroke-linecap="round"
+                  :stroke-dasharray="(trafProgressoDia.pct*3.1416)+' 999'" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .4s"/>
+                <text x="60" y="57" text-anchor="middle" style="font-size:24px;font-weight:800" :fill="trafProgressoDia.falta===0?'#16a34a':'#7c3aed'" x-text="trafProgressoDia.falta===0?'100%':trafProgressoDia.falta+'%'"></text>
+                <text x="60" y="76" text-anchor="middle" style="font-size:11px;font-weight:700" fill="#8a8ba3" x-text="trafProgressoDia.falta===0?'cumprido':'faltam'"></text>
+              </svg>
+              <div style="min-width:0">
+                <div class="fw-800 fs-13"><i class="ph ph-target ic-ph" style="color:#7c3aed"></i> Demanda do dia</div>
+                <div class="fs-12" style="margin-top:4px" x-show="trafProgressoDia.falta>0"><b x-text="trafProgressoDia.itensFaltam"></b> itens restantes de <span x-text="trafProgressoDia.total"></span> (<span x-text="trafClientes.length"></span> clientes × <span x-text="TRAF_TAREFAS.length"></span> tarefas)</div>
+                <div class="fs-12 fw-700" style="margin-top:4px;color:#16a34a" x-show="trafProgressoDia.falta===0">Rotina do dia 100% cumprida! 🎉</div>
+                <div class="text-3 fs-11" style="margin-top:2px" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos · '+trafProgressoDia.pct+'% feito'"></div>
+              </div>
+            </div>
             <!-- Tarefas do quadro Tráfego, por prioridade -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
@@ -3841,7 +3857,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=238"></script>
+<script src="js/app.js?v=239"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

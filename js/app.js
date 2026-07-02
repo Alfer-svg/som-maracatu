@@ -1068,6 +1068,13 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // Progresso da demanda diária do gestor: itens resolvidos ÷ total (clientes ativos × 8 tarefas).
+    get trafProgressoDia() {
+      const total = this.trafClientes.length * TRAF_TAREFAS.length;
+      const feitos = this.trafClientes.reduce((a, c) => a + this.trafFeitosCli(c.id), 0);
+      const pct = total ? Math.min(100, Math.round(feitos / total * 100)) : 0;
+      return { total, feitos, pct, falta: 100 - pct, itensFaltam: Math.max(0, total - feitos) };
+    },
     // Checklists JÁ CONCLUÍDOS (8/8) no dia selecionado — histórico mostrado com o checklist fechado.
     get trafRealizadosDia() {
       return this.trafChecklists
