@@ -336,3 +336,8 @@ i.ic-ph{font-size:1.25em;line-height:1;vertical-align:-0.18em;display:inline-fle
 .lbl-row-plain:hover{background:var(--accent-soft)}
 .kanban-col.col-dragging{opacity:.45}
 .kanban-head[draggable=true]:active{cursor:grabbing}
+
+/* Tráfego › Rotina: layout mesclado — checklist principal à esquerda, coluna lateral (tarefas + log) à direita */
+.traf-rotina{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;align-items:start}
+.traf-rotina-lateral{display:grid;gap:14px}
+@media (max-width:1100px){.traf-rotina{grid-template-columns:1fr}}

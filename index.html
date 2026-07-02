@@ -33,7 +33,7 @@
   <link rel="apple-touch-icon" href="assets/icon.png?v=7">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
   <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="css/styles.css?v=77">
+  <link rel="stylesheet" href="css/styles.css?v=234">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body x-data="app()" x-cloak>
@@ -1812,8 +1812,8 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- ─────── Aba: Rotina do dia (checklist por cliente + log + tarefas) — 3 colunas lado a lado ─────── -->
-        <div x-show="trafTab==='rotina'" class="grid grid-3" style="align-items:start;gap:14px">
+        <!-- ─────── Aba: Rotina do dia — layout mesclado: checklist principal + lateral (tarefas em cima, log embaixo) ─────── -->
+        <div x-show="trafTab==='rotina'" class="traf-rotina">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
@@ -1842,8 +1842,25 @@
             </template>
             <button class="btn" x-show="trafCliSel" @click="salvarTrafego(true)" style="width:100%;margin-top:12px;background:#16a34a;color:#fff;border-color:#16a34a;justify-content:center"><i class="ph ph-floppy-disk ic-ph"></i> Salvar checklist no fichário</button>
           </div>
-
-          <!-- Log de otimizações -->
+          <div class="traf-rotina-lateral">
+            <!-- Tarefas do quadro Tráfego, por prioridade -->
+          <div class="card" style="padding:14px">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
+            <div style="max-height:420px;overflow-y:auto">
+              <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
+                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
+                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
+                  <div style="flex:1;min-width:0">
+                    <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
+                    <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
+                  </div>
+                  <span class="badge fs-11" style="background:var(--surface-2);color:var(--text-2);white-space:nowrap" x-text="p.status"></span>
+                </div>
+              </template>
+              <div x-show="!trafCardsPrioridade.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhum card aberto no quadro Tráfego — crie pelo <b>+ Tráfego</b> no Operacional.</div>
+            </div>
+          </div>
+            <!-- Log de otimizações -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-list-plus ic-ph" style="color:#7c3aed"></i> Log de otimizações</div>
             <div class="text-3 fs-11 mb-2">Só mudanças relevantes: pausou, escalou, novo público, verba…</div>
@@ -1882,26 +1899,8 @@
               <div x-show="!trafLogVisivel.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhuma otimização registrada ainda.</div>
             </div>
           </div>
-
-          <!-- Tarefas do quadro Tráfego, por prioridade -->
-          <div class="card" style="padding:14px">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-kanban ic-ph" style="color:#7c3aed"></i> Tarefas do quadro <span class="text-3 fs-11 fw-400">· por prioridade</span></div>
-            <div style="max-height:420px;overflow-y:auto">
-              <template x-for="p in trafCardsPrioridade" :key="'tcp'+p.id">
-                <div class="flex items-center gap-2" style="padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" @click="abrirCardTrafego(p)" :title="'Abrir card no quadro Tráfego'">
-                  <span class="badge fs-11 fw-800" style="min-width:64px;justify-content:center" :style="'background:'+trafPrioCor(p.prioridade)+'1a;color:'+trafPrioCor(p.prioridade)" x-text="p.prioridade||'—'"></span>
-                  <div style="flex:1;min-width:0">
-                    <div class="fw-700 fs-12 truncate" x-text="p.nome"></div>
-                    <div class="text-3 fs-11 truncate"><span x-text="p.cliente||'—'"></span><span x-show="p.prazo" x-text="' · prazo '+fmtDate(p.prazo)"></span></div>
-                  </div>
-                  <span class="badge fs-11" style="background:var(--surface-2);color:var(--text-2);white-space:nowrap" x-text="p.status"></span>
-                </div>
-              </template>
-              <div x-show="!trafCardsPrioridade.length" class="text-3 fs-12" style="padding:10px 0;text-align:center">Nenhum card aberto no quadro Tráfego — crie pelo <b>+ Tráfego</b> no Operacional.</div>
-            </div>
           </div>
         </div>
-
         <!-- ─────── Aba: Contas & Campanhas (saldos + resultados) ─────── -->
         <div x-show="trafTab==='contas'">
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px">
@@ -3811,7 +3810,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=233"></script>
+<script src="js/app.js?v=234"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
