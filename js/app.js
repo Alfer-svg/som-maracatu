@@ -1069,6 +1069,91 @@ document.addEventListener('alpine:init', () => {
     trafAbrirFichario() { this.trafTab = 'fichario'; if (!this.trafFichSel && this.trafFichDias.length) this.trafFichSel = this.trafFichDias[0].data; },
     // Otimizações de UM cliente num dia — liga o log ao checklist/ficha do cliente.
     trafLogDe(dia, clienteId) { return this.trafLog.filter(l => l.data === dia && l.clienteId === clienteId); },
+    // ── Relatório de tráfego por período (diário/semanal/mensal/personalizado) ──
+    trafRelModal: false,
+    trafRelForm: { periodo: 'hoje', de: '', ate: '', clienteId: '' },
+    trafRelDados: null, // { de, ate, clientes: [{cliente, dias, otimizacoes, ads, itensFeitos, dias100}] }
+    abrirTrafRel() { this.trafRelForm = { periodo: 'hoje', de: '', ate: '', clienteId: '' }; this.trafRelDados = null; this.trafRelModal = true; },
+    _trafRelRange() {
+      const hoje = this._hojeStr(); const f = this.trafRelForm;
+      if (f.periodo === 'hoje') return { de: hoje, ate: hoje };
+      if (f.periodo === '7d') return { de: new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10), ate: hoje };
+      if (f.periodo === 'mes') return { de: hoje.slice(0, 8) + '01', ate: hoje };
+      return { de: f.de, ate: f.ate };
+    },
+    gerarTrafRel() {
+      const { de, ate } = this._trafRelRange();
+      if (!de || !ate || de > ate) return alert('Período inválido — confira as datas.');
+      const cliFiltro = this.trafRelForm.clienteId;
+      const nomes = {}; this.trafClientes.forEach(c => { nomes[c.id] = c.nome; });
+      const porCli = {};
+      const garante = (cid, nome) => (porCli[cid] = porCli[cid] || { clienteId: cid, cliente: nome || nomes[cid] || '—', dias: [], otimizacoes: [], itensFeitos: 0, dias100: 0, ads: null });
+      for (const c of this.trafChecklists) {
+        if (c.data < de || c.data > ate) continue;
+        if (cliFiltro && c.clienteId !== cliFiltro) continue;
+        const res = this._trafResolvidos(c); if (!res) continue;
+        const r = garante(c.clienteId, c.cliente);
+        r.itensFeitos += res; if (res >= TRAF_TAREFAS.length) r.dias100++;
+        r.dias.push({ data: c.data, res, por: c.por || '', itens: c.itens.filter(i => i.feito || i.na).map(i => ({ texto: this.trafTarefa(i.id).texto, na: !!i.na, hora: i.hora || '', evidencia: i.evidencia || '' })) });
+      }
+      for (const l of this.trafLog) {
+        if (l.data < de || l.data > ate) continue;
+        if (cliFiltro && l.clienteId !== cliFiltro) continue;
+        garante(l.clienteId, l.cliente).otimizacoes.push(l);
+      }
+      for (const cid of Object.keys(porCli)) {
+        const cli = (this.clients || []).find(x => x.id === cid);
+        const per = ((cli && cli.adsHist) || []).filter(x => x.data >= de && x.data <= ate);
+        if (per.length) {
+          const leads = per.reduce((a, x) => a + (+x.leads || 0), 0), gasto = per.reduce((a, x) => a + (+x.gasto || 0), 0);
+          porCli[cid].ads = { leads: Math.round(leads * 10) / 10, gasto: Math.round(gasto * 100) / 100, custoLead: leads > 0 ? Math.round(gasto / leads * 100) / 100 : null };
+        }
+        porCli[cid].dias.sort((a, b) => a.data.localeCompare(b.data));
+        porCli[cid].otimizacoes.sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || '')));
+      }
+      this.trafRelDados = { de, ate, clientes: Object.values(porCli).sort((a, b) => a.cliente.localeCompare(b.cliente, 'pt-BR')) };
+      if (!this.trafRelDados.clientes.length) this.mostrarToast('Nada registrado nesse período. 🤷');
+    },
+    // Abre uma janela limpa com o relatório formatado e chama a impressão (vira PDF no diálogo).
+    imprimirTrafRel() {
+      const d = this.trafRelDados; if (!d || !d.clientes.length) return alert('Gere o relatório primeiro.');
+      const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const per = this.fmtDate(d.de) + (d.de === d.ate ? '' : ' a ' + this.fmtDate(d.ate));
+      let corpo = '';
+      for (const c of d.clientes) {
+        corpo += `<section><h2>${esc(c.cliente)}</h2>`;
+        corpo += `<p class="kpi">Rotina: <b>${c.dias.length}</b> dia(s) trabalhado(s) · <b>${c.dias100}</b> checklist(s) 100% · <b>${c.otimizacoes.length}</b> otimização(ões)`;
+        if (c.ads) corpo += ` &nbsp;|&nbsp; Google Ads no período: <b>${c.ads.leads}</b> leads · gasto <b>${MD.fmtCur(c.ads.gasto)}</b>${c.ads.custoLead != null ? ' · custo/lead <b>' + MD.fmtCur(c.ads.custoLead) + '</b>' : ''}`;
+        corpo += `</p>`;
+        for (const dia of c.dias) {
+          corpo += `<h3>📋 ${this.fmtDate(dia.data)} — ${dia.res}/${TRAF_TAREFAS.length}${dia.por ? ' · por ' + esc(dia.por) : ''}</h3><ul>`;
+          for (const i of dia.itens) corpo += `<li>${i.na ? '<i>– ' + esc(i.texto) + ' (não se aplica)</i>' : '✓ ' + esc(i.texto) + (i.hora ? ' <small>(' + i.hora + ')</small>' : '') + (i.evidencia ? ' — <i>' + esc(i.evidencia) + '</i>' : '')}</li>`;
+          corpo += `</ul>`;
+        }
+        if (c.otimizacoes.length) {
+          corpo += `<h3>⚙️ Otimizações</h3><ul>`;
+          for (const o of c.otimizacoes) corpo += `<li><b>${this.fmtDate(o.data)}${o.hora ? ' ' + o.hora : ''}</b> — ${esc(o.alteracao)}${o.motivo ? ' <i>(motivo: ' + esc(o.motivo) + ')</i>' : ''}${o.por ? ' · ' + esc(o.por) : ''}</li>`;
+          corpo += `</ul>`;
+        }
+        corpo += `</section>`;
+      }
+      const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório de Tráfego — ${per}</title><style>
+        body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;max-width:800px;margin:24px auto;padding:0 16px}
+        h1{font-size:20px;margin-bottom:2px} .sub{color:#6b7280;font-size:13px;margin-bottom:18px}
+        section{border-top:2px solid #7c3aed;margin-top:22px;padding-top:8px;page-break-inside:avoid}
+        h2{font-size:16px;margin:6px 0} h3{font-size:13px;margin:12px 0 4px;color:#374151}
+        ul{margin:4px 0 10px 18px;padding:0} li{font-size:12.5px;margin:3px 0;line-height:1.45}
+        .kpi{font-size:12.5px;background:#F4F0FE;border-radius:8px;padding:8px 10px}
+        small{color:#6b7280} i{color:#6b7280}
+      </style></head><body>
+        <h1>Relatório de Gestão de Tráfego</h1>
+        <div class="sub">Período: <b>${per}</b> · Gerado em ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Recife' })} · Maracatu Digital</div>
+        ${corpo}
+      </body></html>`;
+      const w = window.open('', '_blank'); if (!w) return alert('Libere o pop-up pra imprimir.');
+      w.document.write(html); w.document.close();
+      setTimeout(() => { try { w.print(); } catch (e) { } }, 400);
+    },
     // ── Insights da IA: análise das contas de anúncio de cada cliente → tarefas do dia ──
     trafInsights: null,        // { geradoEm, itens: [{cliente, prioridade, insight, acao}] }
     trafInsightsGerando: false,

@@ -1799,6 +1799,7 @@
           <div class="flex items-center gap-2">
             <input class="form-input" type="date" x-model="trafDia" style="width:auto">
             <span class="badge fs-12 fw-700" :style="trafCliConcluidos>=trafClientes.length&&trafClientes.length?'background:#dcfce7;color:#15803d':'background:var(--surface-2);color:var(--text-2)'" x-text="trafCliConcluidos+'/'+trafClientes.length+' clientes concluídos'"></span>
+            <button class="btn btn-sm" @click="abrirTrafRel()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap" title="Relatório do que foi feito por cliente — diário, semanal, mensal ou período"><i class="ph ph-file-text ic-ph"></i> Relatório</button>
           </div>
         </div>
 
@@ -2103,6 +2104,64 @@
           </div>
         </div>
       </section>
+
+      <!-- Relatório de Tráfego (modal): diário / semanal / mensal / período, por cliente -->
+      <div class="modal-backdrop" x-show="trafRelModal" x-cloak @click.self="trafRelModal=false">
+        <div class="modal" style="max-width:640px">
+          <div class="modal-head"><div class="modal-title"><i class="ph ph-file-text ic-ph" style="color:#7c3aed"></i> Relatório de Tráfego</div><button class="btn btn-icon btn-ghost" @click="trafRelModal=false">✕</button></div>
+          <div class="modal-body">
+            <div class="flex" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+              <template x-for="op in [['hoje','Diário (hoje)'],['7d','Semanal (7 dias)'],['mes','Mensal (mês atual)'],['custom','Período…']]" :key="op[0]">
+                <button type="button" class="btn btn-sm" @click="trafRelForm.periodo=op[0]"
+                  :style="trafRelForm.periodo===op[0]?'background:#7c3aed;color:#fff;border-color:#7c3aed':'background:var(--surface-2);color:var(--text-2)'" x-text="op[1]"></button>
+              </template>
+            </div>
+            <div class="flex items-center gap-2 mb-2" x-show="trafRelForm.periodo==='custom'">
+              <input class="form-input" type="date" x-model="trafRelForm.de" style="width:auto"> <span class="text-3 fs-12">até</span>
+              <input class="form-input" type="date" x-model="trafRelForm.ate" style="width:auto">
+            </div>
+            <div class="flex items-center gap-2 mb-3">
+              <select class="form-select" style="flex:1" x-model="trafRelForm.clienteId">
+                <option value="">Todos os clientes</option>
+                <template x-for="c in trafClientes" :key="'rl'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
+              </select>
+              <button class="btn" @click="gerarTrafRel()" style="background:#7c3aed;color:#fff;border-color:#7c3aed;white-space:nowrap"><i class="ph ph-play ic-ph"></i> Gerar</button>
+            </div>
+
+            <!-- Prévia do relatório -->
+            <div x-show="trafRelDados && trafRelDados.clientes.length" style="max-height:46vh;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div class="text-3 fs-11 mb-2" x-text="trafRelDados ? ('Período: '+fmtDate(trafRelDados.de)+(trafRelDados.de===trafRelDados.ate?'':' a '+fmtDate(trafRelDados.ate))+' · '+trafRelDados.clientes.length+' cliente(s)') : ''"></div>
+              <template x-for="c in (trafRelDados&&trafRelDados.clientes)||[]" :key="'rc'+c.clienteId">
+                <div style="margin-bottom:12px;border-top:2px solid #7c3aed;padding-top:6px">
+                  <div class="fw-800 fs-13" x-text="c.cliente"></div>
+                  <div class="fs-11" style="background:#F4F0FE;border-radius:6px;padding:5px 8px;margin:4px 0">
+                    <span x-text="c.dias.length+' dia(s) · '+c.dias100+' checklist(s) 100% · '+c.otimizacoes.length+' otimização(ões)'"></span>
+                    <span x-show="c.ads" x-text="c.ads ? (' | Ads: '+c.ads.leads+' leads · '+mascCur(c.ads.gasto)+(c.ads.custoLead!=null?' · '+mascCur(c.ads.custoLead)+'/lead':'')) : ''"></span>
+                  </div>
+                  <template x-for="dia in c.dias" :key="'rd'+c.clienteId+dia.data">
+                    <div class="fs-12" style="margin:4px 0 2px"><b x-text="'📋 '+fmtDate(dia.data)+' — '+dia.res+'/'+TRAF_TAREFAS.length"></b><span class="text-3 fs-11" x-show="dia.por" x-text="' · '+dia.por"></span>
+                      <template x-for="(i,ii) in dia.itens" :key="'ri'+ii">
+                        <div class="fs-11" style="margin-left:12px" :style="i.na?'color:var(--text-3);font-style:italic':''"><span x-text="(i.na?'– ':'✓ ')+i.texto+(i.hora&&!i.na?' ('+i.hora+')':'')"></span><span class="text-3" x-show="i.evidencia" x-text="' — '+i.evidencia"></span></div>
+                      </template>
+                    </div>
+                  </template>
+                  <div x-show="c.otimizacoes.length" class="fs-12" style="margin-top:4px"><b>⚙️ Otimizações</b>
+                    <template x-for="o in c.otimizacoes" :key="'ro'+o.id">
+                      <div class="fs-11" style="margin-left:12px"><b x-text="fmtDate(o.data)+(o.hora?' '+o.hora:'')"></b> — <span x-text="o.alteracao"></span><span class="text-3" x-show="o.motivo" x-text="' (motivo: '+o.motivo+')'"></span></div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+            <div x-show="trafRelDados && !trafRelDados.clientes.length" class="text-3 fs-12" style="text-align:center;padding:12px">Nenhuma atividade registrada nesse período.</div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn btn-ghost" @click="trafRelModal=false">Fechar</button>
+            <button class="btn" x-show="trafRelDados && trafRelDados.clientes.length" @click="imprimirTrafRel()" style="background:#141210;color:#fff;border-color:#141210"><i class="ph ph-printer ic-ph"></i> Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ========== RELATÓRIOS (ponto + produção) ========== -->
       <section x-show="page==='relatorios'">
         <!-- seletor de período -->
@@ -3881,7 +3940,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=240"></script>
+<script src="js/app.js?v=241"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
