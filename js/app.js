@@ -3156,19 +3156,11 @@ ${this._docFoot()}
       catch (e) { alert(e.message || 'Falha ao criar o criativo.'); }
     },
     // Card de TRÁFEGO (irmão do + Criativo): nasce SEMPRE no quadro exclusivo "Tráfego"
-    // (criado na 1ª vez, com paleta roxa), com CLIENTE obrigatório (mini-modal), atribuído
-    // a quem tem o perfil gestortrafego e já com o checklist das demandas da função.
-    trafCardModal: false,
-    trafCardForm: { clienteId: '', titulo: '', prazo: '' },
-    novoTrafego() {
+    // (criado na 1ª vez, com paleta roxa), atribuído a quem tem o perfil gestortrafego e
+    // já com o checklist das demandas da função. UMA janela só: abre direto o editor do
+    // card, que tem tudo (cliente, nome, prazo, responsável, checklist).
+    async novoTrafego() {
       if (!this.equipe.length) this.carregarEquipe();
-      this.trafCardForm = { clienteId: '', titulo: '', prazo: '' };
-      this.trafCardModal = true;
-    },
-    async criarCardTrafego() {
-      const f = this.trafCardForm;
-      if (!f.clienteId) return alert('Escolha o cliente.');
-      const cli = this.trafClientes.find(c => c.id === f.clienteId);
       let board = this.boards.find(b => b.id === 'trafego' || /tr[áa]fego/i.test(b.nome || ''));
       if (!board) {
         board = { id: 'trafego', nome: '🎯 Tráfego', colunas: [{ nome: 'A Fazer', cor: '#a78bfa' }, { nome: 'Em Andamento', cor: '#7c3aed' }, { nome: 'Concluído', cor: '#16a34a' }] };
@@ -3188,14 +3180,13 @@ ${this._docFoot()}
         'Registrar resultado no log de otimizações',
       ];
       const novo = {
-        id: '', nome: (f.titulo || '').trim() || ('Tráfego — ' + cli.nome), cliente: cli.nome, servico: 'ADS / Tráfego Pago',
+        id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
         responsavel: (gestor && gestor.nome) || '', status: (board.colunas[0] && board.colunas[0].nome) || 'A Fazer',
-        boardId: board.id, prazo: f.prazo || '', prazoEntrega: '', progresso: 0, notas: '',
+        boardId: board.id, prazo: '', prazoEntrega: '', progresso: 0, notas: '',
         avulso: true, area: '🎯 Tráfego Pago', descricao: '',
         labels: [], membros: [], checklist: DEMANDAS.map(t => ({ id: MD.uid(), texto: t, feito: false })),
       };
-      // Uma janela só: cria e pronto — o card já aparece completo no quadro (sem abrir o editor).
-      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.trafCardModal = false; this.mostrarToast('Card criado no quadro 🎯 Tráfego.'); }
+      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
       catch (e) { alert(e.message || 'Falha ao criar a tarefa de tráfego.'); }
     },
     async salvarProjeto() {

@@ -3576,29 +3576,6 @@
 </div>
 
 <!-- NOVO/EDITAR EVENTO (Agenda) -->
-<!-- + Tráfego: criar card no quadro Tráfego (cliente obrigatório) -->
-<div class="modal-backdrop" x-show="trafCardModal" x-cloak @click.self="trafCardModal=false">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-head"><div class="modal-title"><i class="ph ph-chart-line-up ic-ph" style="color:#7c3aed"></i> Nova tarefa de tráfego</div><button class="btn btn-icon btn-ghost" @click="trafCardModal=false">✕</button></div>
-    <div class="modal-body">
-      <div class="form-group" style="margin-bottom:10px">
-        <label class="form-label">Cliente *</label>
-        <select class="form-select" x-model="trafCardForm.clienteId">
-          <option value="">Escolha o cliente…</option>
-          <template x-for="c in trafClientes" :key="'tcm'+c.id"><option :value="c.id" x-text="c.nome"></option></template>
-        </select>
-      </div>
-      <div class="form-group" style="margin-bottom:10px"><label class="form-label">Nome da tarefa</label><input class="form-input" x-model="trafCardForm.titulo" placeholder="Ex.: Campanha de leads — julho" @keydown.enter="criarCardTrafego()"></div>
-      <div class="form-group"><label class="form-label">Prazo (opcional)</label><input class="form-input" type="date" x-model="trafCardForm.prazo" style="width:auto"></div>
-      <div class="text-3 fs-11" style="margin-top:8px">O card nasce no quadro <b>🎯 Tráfego</b>, atribuído ao gestor de tráfego e com o checklist da função.</div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" @click="trafCardModal=false">Cancelar</button>
-      <button class="btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed" @click="criarCardTrafego()"><i class="ph ph-plus ic-ph"></i> Criar card</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-backdrop" x-show="eventoModal" x-cloak>
   <div class="modal" style="max-width:440px">
     <div class="modal-head"><div class="modal-title" x-text="eventoForm.id?'Editar evento':'Novo evento'"></div><button class="btn btn-icon btn-ghost" @click="eventoModal=false">✕</button></div>
@@ -3801,7 +3778,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=229"></script>
+<script src="js/app.js?v=230"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
