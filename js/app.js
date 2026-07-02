@@ -1030,6 +1030,7 @@ document.addEventListener('alpine:init', () => {
         if (manual) {
           const n = c.itens.filter(i => i.feito).length;
           this.mostrarToast(n >= TRAF_TAREFAS.length ? 'Checklist completo — salvo no fichário do dia. 📁✅' : 'Checklist salvo (' + n + '/' + TRAF_TAREFAS.length + '). 📁');
+          this.trafCliSel = ''; // recolhe o checklist — volta pro dropdown + histórico "Realizados hoje"
         }
       }
       catch (e) { this.mostrarToast('Não salvou o checklist — confira a conexão. ⚠️'); }
