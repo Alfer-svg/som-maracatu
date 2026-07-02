@@ -1895,9 +1895,18 @@
             </div>
           </div>
 
-          <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length">
-            <div class="fw-800 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de recarga</div>
+          <div class="card" style="padding:14px;margin-bottom:14px" x-show="trafSaldoAlertas.sem.length || trafSaldoAlertas.baixo.length || trafSaldoAlertas.semInfo.length">
+            <div class="fw-800 fs-13 mb-2"><i class="ph ph-warning-circle ic-ph" style="color:#dc2626"></i> Contas precisando de atenção</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+              <div x-show="trafSaldoAlertas.semInfo.length">
+                <div class="fs-12 fw-700 mb-1" style="color:#6b7280">Campanha rodando, saldo não informado</div>
+                <template x-for="a in trafSaldoAlertas.semInfo" :key="'si'+a.id">
+                  <div class="flex items-center justify-between fs-12" style="padding:4px 0;border-bottom:1px solid var(--border)">
+                    <span class="truncate"><b x-text="a.nome"></b> <span class="text-3" x-text="'· '+a.canal"></span></span>
+                    <span class="text-3 fs-11" style="white-space:nowrap">preencher na ficha</span>
+                  </div>
+                </template>
+              </div>
               <div x-show="trafSaldoAlertas.sem.length">
                 <div class="fs-12 fw-700 mb-1" style="color:#dc2626">Sem saldo</div>
                 <template x-for="a in trafSaldoAlertas.sem" :key="'ss'+a.canal+a.id">
@@ -3765,7 +3774,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=222"></script>
+<script src="js/app.js?v=223"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){

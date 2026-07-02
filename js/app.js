@@ -1051,10 +1051,15 @@ document.addEventListener('alpine:init', () => {
     // Campanhas ativas AGORA (real, do snapshot Google Ads) somando os clientes ativos.
     get trafCampanhasAtivas() { return (this.clients || []).filter(c => c.status !== 'Inativo' && c.adsAuto).reduce((a, c) => a + (Number(c.adsAuto.campanhasAtivas) || 0), 0); },
     // Alerta de recarga: contas (Google+Meta) sem saldo ou abaixo de R$ 200 — mesmo saldo manual da Agenda.
+    // semInfo = campanha RODANDO no Google (snapshot real) mas canal/saldo nunca preenchido na ficha —
+    // sem isso o cliente fica invisível pro radar de recarga.
     get trafSaldoAlertas() {
       const marcar = (lista, canal) => (lista || []).map(x => ({ ...x, canal }));
       const tudo = [...marcar(this.contasGoogle, 'Google'), ...marcar(this.contasMeta, 'Meta')];
-      return { sem: tudo.filter(x => x.saldo <= 0), baixo: tudo.filter(x => x.saldo > 0 && x.saldo < 200) };
+      const semInfo = (this.clients || [])
+        .filter(c => c.status !== 'Inativo' && c.adsAuto && Number(c.adsAuto.campanhasAtivas) > 0 && !(c.ads && c.ads.google && c.ads.google.ativo))
+        .map(c => ({ id: c.id, nome: c.empresa || c.nome || '—', canal: 'Google' }));
+      return { sem: tudo.filter(x => x.saldo <= 0), baixo: tudo.filter(x => x.saldo > 0 && x.saldo < 200), semInfo };
     },
     // Indicadores do gestor (admin): rotina medida por EVIDÊNCIA, não por "mexeu na campanha".
     // Checklist é POR CLIENTE — "conta revisada" = cliente com item marcado no checklist OU entrada no log.
