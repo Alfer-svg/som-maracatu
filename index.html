@@ -1669,62 +1669,6 @@
           </div>
         </div>
 
-        <!-- ===== Saldos das contas de anúncio (Google / Meta) ===== -->
-        <div class="grid mb-3" style="grid-template-columns:repeat(4,1fr);gap:12px">
-          <!-- Google sem saldo -->
-          <div class="card" style="padding:12px;border-left:3px solid #dc2626;background:#fff1f2">
-            <div class="flex items-center justify-between">
-              <div class="fs-12 fw-700" style="color:#9f1239"><i class="ph ph-google-logo ic-ph"></i> Google · sem saldo</div>
-              <span class="fw-800 fs-20" style="color:#dc2626" x-text="saldoSem(contasGoogle).length"></span>
-            </div>
-            <div style="max-height:120px;overflow-y:auto;margin-top:6px">
-              <template x-for="a in saldoSem(contasGoogle)" :key="a.id">
-                <div class="flex items-center justify-between" style="padding:3px 0;font-size:12px"><span class="truncate" style="max-width:130px" :title="a.nome" x-text="a.nome"></span><span class="fw-700" style="color:#dc2626" x-text="fmtCur(a.saldo)"></span></div>
-              </template>
-              <div x-show="!saldoSem(contasGoogle).length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 🎉</div>
-            </div>
-          </div>
-          <!-- Google saldo baixo -->
-          <div class="card" style="padding:12px;border-left:3px solid #f59e0b;background:#fff7ed">
-            <div class="flex items-center justify-between">
-              <div class="fs-12 fw-700" style="color:#92400e"><i class="ph ph-google-logo ic-ph"></i> Google · saldo baixo</div>
-              <span class="fw-800 fs-20" style="color:#d97706" x-text="saldoBaixo(contasGoogle).length"></span>
-            </div>
-            <div style="max-height:120px;overflow-y:auto;margin-top:6px">
-              <template x-for="a in saldoBaixo(contasGoogle)" :key="a.id">
-                <div class="flex items-center justify-between" style="padding:3px 0;font-size:12px"><span class="truncate" style="max-width:130px" :title="a.nome" x-text="a.nome"></span><span class="fw-700" style="color:#d97706" x-text="fmtCur(a.saldo)"></span></div>
-              </template>
-              <div x-show="!saldoBaixo(contasGoogle).length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 👍</div>
-            </div>
-          </div>
-          <!-- Meta sem saldo -->
-          <div class="card" style="padding:12px;border-left:3px solid #dc2626;background:#fff1f2">
-            <div class="flex items-center justify-between">
-              <div class="fs-12 fw-700" style="color:#9f1239"><i class="ph ph-meta-logo ic-ph"></i> Meta · sem saldo</div>
-              <span class="fw-800 fs-20" style="color:#dc2626" x-text="saldoSem(contasMeta).length"></span>
-            </div>
-            <div style="max-height:120px;overflow-y:auto;margin-top:6px">
-              <template x-for="a in saldoSem(contasMeta)" :key="a.id">
-                <div class="flex items-center justify-between" style="padding:3px 0;font-size:12px"><span class="truncate" style="max-width:130px" :title="a.nome" x-text="a.nome"></span><span class="fw-700" style="color:#dc2626" x-text="fmtCur(a.saldo)"></span></div>
-              </template>
-              <div x-show="!saldoSem(contasMeta).length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 🎉</div>
-            </div>
-          </div>
-          <!-- Meta saldo baixo -->
-          <div class="card" style="padding:12px;border-left:3px solid #f59e0b;background:#fff7ed">
-            <div class="flex items-center justify-between">
-              <div class="fs-12 fw-700" style="color:#92400e"><i class="ph ph-meta-logo ic-ph"></i> Meta · saldo baixo</div>
-              <span class="fw-800 fs-20" style="color:#d97706" x-text="saldoBaixo(contasMeta).length"></span>
-            </div>
-            <div style="max-height:120px;overflow-y:auto;margin-top:6px">
-              <template x-for="a in saldoBaixo(contasMeta)" :key="a.id">
-                <div class="flex items-center justify-between" style="padding:3px 0;font-size:12px"><span class="truncate" style="max-width:130px" :title="a.nome" x-text="a.nome"></span><span class="fw-700" style="color:#d97706" x-text="fmtCur(a.saldo)"></span></div>
-              </template>
-              <div x-show="!saldoBaixo(contasMeta).length" class="text-3 fs-11" style="padding:4px 0">Nenhuma 👍</div>
-            </div>
-          </div>
-        </div>
-
         <!-- ===== Linha superior: mini-calendário + próximos + últimos 3 ===== -->
         <div class="grid mb-3" style="grid-template-columns:300px 1fr 1fr;gap:14px;align-items:start">
           <!-- Mini calendário -->
@@ -3821,7 +3765,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=221"></script>
+<script src="js/app.js?v=222"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
