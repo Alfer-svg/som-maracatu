@@ -1812,8 +1812,8 @@
           <div class="tab" x-show="ehAdmin" :class="trafTab==='indicadores'?'active':''" @click="trafTab='indicadores'"><i class="ph ph-gauge ic-ph"></i> Indicadores</div>
         </div>
 
-        <!-- ─────── Aba: Rotina do dia (checklist por cliente + log) ─────── -->
-        <div x-show="trafTab==='rotina'" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start">
+        <!-- ─────── Aba: Rotina do dia (checklist por cliente + log + tarefas) — 3 colunas lado a lado ─────── -->
+        <div x-show="trafTab==='rotina'" class="grid grid-3" style="align-items:start;gap:14px">
           <!-- Checklist por cliente -->
           <div class="card" style="padding:14px">
             <div class="fw-800 fs-13 mb-2"><i class="ph ph-check-square ic-ph" style="color:#16a34a"></i> Checklist do dia — por cliente
@@ -3811,7 +3811,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=232"></script>
+<script src="js/app.js?v=233"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
