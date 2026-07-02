@@ -3155,6 +3155,21 @@ ${this._docFoot()}
       try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
       catch (e) { alert(e.message || 'Falha ao criar o criativo.'); }
     },
+    // Card de TRÁFEGO no quadro (irmão do + Criativo): tarefa pro gestor de tráfego,
+    // já atribuída a quem tem o perfil gestortrafego na equipe.
+    async novoTrafego(status) {
+      if (!this.equipe.length) this.carregarEquipe();
+      const col = status || (this.boardAtual && this.boardAtual.colunas[0] && this.boardAtual.colunas[0].nome) || 'A Fazer';
+      const gestor = (this.equipe || []).find(u => u.papel === 'gestortrafego');
+      const novo = {
+        id: '', nome: 'Nova tarefa de tráfego', cliente: '', servico: 'ADS / Tráfego Pago',
+        responsavel: (gestor && gestor.nome) || '', status: col, boardId: this.boardSel || 'geral', prazo: '', prazoEntrega: '', progresso: 0, notas: '',
+        avulso: true, area: '🎯 Tráfego Pago', descricao: '',
+        labels: [], membros: [], checklist: [],
+      };
+      try { await this.salvarProjetoApi(novo); this.projects.unshift(novo); this.abrirCard(novo); }
+      catch (e) { alert(e.message || 'Falha ao criar a tarefa de tráfego.'); }
+    },
     async salvarProjeto() {
       const e = this.editing; if (!e.nome) return alert('Informe o nome do projeto.');
       const resp = (e.responsavel || '').trim();

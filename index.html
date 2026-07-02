@@ -253,6 +253,7 @@
       <button class="btn btn-primary" x-show="page==='financeiro'" @click="novoLancamento('receita')">+ Lançamento</button>
       <button class="btn btn-ghost" x-show="page==='operacional' && opTab!=='quadro' && papel!=='colaborador2'" @click="abrirProgramacao()" title="Programação semanal de posts (redes sociais)">+ Programação</button>
       <button class="btn btn-ghost" x-show="page==='operacional' && opTab==='quadro'" @click="novoCriativo()" title="Cria um card de criativo (designer) direto no quadro — igual ao da programação"><i class="ph ph-image ic-ph"></i> + Criativo</button>
+      <button class="btn btn-ghost" x-show="page==='operacional' && opTab==='quadro'" @click="novoTrafego()" title="Cria um card de tráfego pago já atribuído ao gestor de tráfego"><i class="ph ph-chart-line-up ic-ph" style="color:#7c3aed"></i> + Tráfego</button>
       <button class="btn btn-primary" x-show="page==='operacional'" @click="novoProjeto()">+ Projeto</button>
     </header>
 
@@ -3776,7 +3777,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="js/brand.js?v=6"></script>
-<script src="js/app.js?v=225"></script>
+<script src="js/app.js?v=226"></script>
 <!-- Tooltip próprio dos "?" (.hq[data-tip]) — confiável e sem corte em modais -->
 <script>
 (function(){
